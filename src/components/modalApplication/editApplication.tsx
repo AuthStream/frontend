@@ -9,49 +9,51 @@ import {
   DialogDescription,
 } from "../ui/dialog";
 import { Input } from "../ui/input";
-import Textarea from "../ui/textarea";
 
-interface Token {
+interface Application {
   id: string;
   name: string;
-  body: string;
-  encrypt: string;
-  expired: string;
+  provider: string;
+  token: string;
 }
 
-interface EditTokenProps {
+interface EditApplicationProps {
   isOpen: boolean;
   onClose: () => void;
-  tokenToEdit: Token | null;
+  applicationToEdit: Application | null;
 }
 
-const EditToken = ({ isOpen, onClose, tokenToEdit }: EditTokenProps) => {
-  const [editedToken, setEditedToken] = useState<Token | null>(null);
+const EditApplication = ({
+  isOpen,
+  onClose,
+  applicationToEdit,
+}: EditApplicationProps) => {
+  const [editedApplication, setEditedApplication] =
+    useState<Application | null>(null);
 
   useEffect(() => {
-    if (tokenToEdit) {
-      setEditedToken(tokenToEdit);
+    if (applicationToEdit) {
+      setEditedApplication(applicationToEdit);
     }
-  }, [tokenToEdit]);
+  }, [applicationToEdit]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    if (editedToken) {
-      setEditedToken((prev) => ({
+    if (editedApplication) {
+      setEditedApplication((prev) => ({
         ...prev!,
         [name]: value,
       }));
     }
   };
+
   const handleEdit = () => {
-    if (editedToken) {
+    if (editedApplication) {
       onClose();
     }
   };
 
-  if (!editedToken) {
+  if (!editedApplication) {
     return null;
   }
 
@@ -59,43 +61,36 @@ const EditToken = ({ isOpen, onClose, tokenToEdit }: EditTokenProps) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Token</DialogTitle>
+          <DialogTitle>Edit Application</DialogTitle>
           <DialogDescription>
-            Update the details of the token.
+            Update the details of the application.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <Input
             name="id"
-            value={editedToken.id}
+            value={editedApplication.id}
             onChange={handleChange}
-            placeholder="Token ID"
+            placeholder="Application ID"
             disabled
           />
           <Input
             name="name"
-            value={editedToken.name}
+            value={editedApplication.name}
             onChange={handleChange}
-            placeholder="Token Name"
-          />
-          <Textarea
-            name="body"
-            value={editedToken.body}
-            onChange={handleChange}
-            placeholder="Code space"
+            placeholder="Application Name"
           />
           <Input
-            name="encrypt"
-            value={editedToken.encrypt}
+            name="provider"
+            value={editedApplication.provider}
             onChange={handleChange}
-            placeholder="Token Encrypt"
+            placeholder="Application Provider"
           />
           <Input
-            name="expired"
-            type="date"
-            value={editedToken.expired}
+            name="token"
+            value={editedApplication.token}
             onChange={handleChange}
-            placeholder="Token Expired"
+            placeholder="Application Token"
           />
         </div>
         <DialogFooter>
@@ -114,4 +109,4 @@ const EditToken = ({ isOpen, onClose, tokenToEdit }: EditTokenProps) => {
   );
 };
 
-export default EditToken;
+export default EditApplication;
