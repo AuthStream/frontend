@@ -1,6 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import tokenService from "../api/service/tokenService";
 import { Token, TokenResponse, CreateTokenResponse, EditTokenResponse } from "../api/type";
+import useMutationAction from "../provider/queryGlobal";
 
 export const useGetTokens = () => {
     return useQuery<TokenResponse>({
@@ -10,31 +11,13 @@ export const useGetTokens = () => {
 };
 
 export const useCreateToken = () => {
-    const queryClient = useQueryClient();
-    return useMutation<CreateTokenResponse, Error, Token>({
-        mutationFn: tokenService.createToken,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["tokens"] }); // Refetch tokens
-        },
-    });
+    return useMutationAction<CreateTokenResponse, Token>(["tokens"], tokenService.createToken, {});
 };
 
 export const useEditToken = () => {
-    const queryClient = useQueryClient();
-    return useMutation<EditTokenResponse, Error, Token>({
-        mutationFn: tokenService.editToken,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["tokens"] });
-        },
-    });
+    return useMutationAction<EditTokenResponse, Token>(["tokens"], tokenService.editToken, {});
 };
 
 export const useDeleteToken = () => {
-    const queryClient = useQueryClient();
-    return useMutation<{ success: boolean }, Error, string>({
-        mutationFn: tokenService.deleteToken,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["tokens"] });
-        },
-    });
+    return useMutationAction<{ success: boolean }, string>(["tokens"], tokenService.deleteToken, {});
 };
