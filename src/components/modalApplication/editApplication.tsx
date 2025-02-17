@@ -21,12 +21,14 @@ interface EditApplicationProps {
   isOpen: boolean;
   onClose: () => void;
   applicationToEdit: Application | null;
+  onEdit: (updatedApplication: Application) => void;
 }
 
 const EditApplication = ({
   isOpen,
   onClose,
   applicationToEdit,
+  onEdit,
 }: EditApplicationProps) => {
   const [editedApplication, setEditedApplication] =
     useState<Application | null>(null);
@@ -49,6 +51,7 @@ const EditApplication = ({
 
   const handleEdit = () => {
     if (editedApplication) {
+      onEdit(editedApplication);
       onClose();
     }
   };

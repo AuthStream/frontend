@@ -12,6 +12,7 @@ import { Input } from "../components/ui/input";
 import CreateApplication from "./modalApplication/createApplication";
 import { useState } from "react";
 import EditApplication from "./modalApplication/editApplication";
+import applicationService from "../api/service/applicationService";
 
 interface Application {
   id: string;
@@ -25,13 +26,28 @@ interface TableApplicationProps {
 }
 
 const TableApplication = ({ applications }: TableApplicationProps) => {
+  const [applicationList, setApplicationList] = useState(applications);
   const [isOpen, setIsOpen] = useState(false);
   const onClose = () => {
     setIsOpen(false);
   };
-  const onCreate = () => {
-    console.log(onCreate);
+
+  const onCreate = async (newApplication: Application) => {
+    try {
+      const response = await applicationService.createApplication(
+        newApplication
+      );
+      if (response.success) {
+        setApplicationList((prevApplications) => [
+          ...prevApplications,
+          newApplication,
+        ]);
+      }
+    } catch (error) {
+      console.error("Failed to create application", error);
+    }
   };
+
   const handleCreateApplication = () => {
     setIsOpen(true);
   };
@@ -48,6 +64,38 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
   const handleCloseEditModal = () => {
     setIsEditOpen(false);
     setApplicationToEdit(null);
+  };
+
+  const handleEditApplication = async (updatedApplication: Application) => {
+    try {
+      const response = await applicationService.editApplication(
+        updatedApplication
+      );
+      if (response.success) {
+        setApplicationList((prevApplications) =>
+          prevApplications.map((application) =>
+            application.id === updatedApplication.id
+              ? updatedApplication
+              : application
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Failed to edit application", error);
+    }
+  };
+
+  const handleDeleteApplication = async (id: string) => {
+    try {
+      const response = await applicationService.deleteApplication(id);
+      if (response.success) {
+        setApplicationList((prevApplications) =>
+          prevApplications.filter((application) => application.id !== id)
+        );
+      }
+    } catch (error) {
+      console.error("Failed to delete application", error);
+    }
   };
 
   return (
@@ -85,12 +133,12 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
             <TableHead>ID</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Provider</TableHead>
-            <TableHead>Token</TableHead>
+            <TableHead>Application</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {applications.map((application, index) => (
+          {applicationList.map((application, index) => (
             <TableRow key={index}>
               <TableCell>
                 <input type="checkbox" />
@@ -109,7 +157,11 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
                 >
                   <Edit className="w-4 h-4" />
                 </Button>
-                <Button variant="destructive" size="icon">
+                <Button
+                  onClick={() => handleDeleteApplication(application.id)}
+                  variant="destructive"
+                  size="icon"
+                >
                   <Trash className="w-4 h-4" />
                 </Button>
               </TableCell>
@@ -134,6 +186,7 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
           isOpen={isEditOpen}
           onClose={handleCloseEditModal}
           applicationToEdit={applicationToEdit}
+          onEdit={handleEditApplication}
         />
       )}
     </div>

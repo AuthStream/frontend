@@ -18,3 +18,23 @@ export interface TokenResponse {
   export interface EditTokenResponse {
     success: boolean;
   }
+
+  export interface Application {
+    id: string;
+    name: string;
+    provider: string;
+    token: string;
+  };
+  
+export interface ApplicationResponse {
+    contents: Application[];
+    totalElements: number;
+  };
+
+ export interface CreateApplicationResponse {
+    success: boolean;
+  }
+
+  export interface EditApplicationResponse {
+    success: boolean;
+  }

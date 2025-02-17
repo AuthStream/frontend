@@ -1,14 +1,35 @@
 import { AppWindow } from "lucide-react";
 import TableApplication from "../components/tableApplication.tsx";
 import { ToggleButton } from "../context/SidebarContext";
+import applicationService from "../api/service/applicationService.ts";
+import { useEffect, useState } from "react";
+
+interface Application {
+  id: string;
+  name: string;
+  provider: string;
+  token: string;
+}
+
 const Application = () => {
-  const applications = [
-    { id: "ABC1", name: "truongkinhquinh", provider: "bmchien1", token: "---" },
-    { id: "ABC2", name: "tolaokien", provider: "bmchien2", token: "---" },
-    { id: "ABC1", name: "truongkinhquinh", provider: "bmchien3", token: "---" },
-    { id: "ABC2", name: "tolaokien", provider: "bmchien4", token: "---" },
-    { id: "ABC2", name: "tolaokien", provider: "bmchien5", token: "---" },
-  ];
+  const [applications, setApplicationss] = useState<Application[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    const fetchTokens = async () => {
+      try {
+        setLoading(true);
+        const response = await applicationService.getAllApplications();
+        setApplicationss(response.contents);
+      } catch (err) {
+        setError("Failed to load tokens");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTokens();
+  }, []);
 
   return (
     <div className="h-full w-full flex items-center justify-center dark:bg-gray-950 p-6">
@@ -29,8 +50,15 @@ const Application = () => {
             </div>
           </div>
         </div>
-
-        <TableApplication applications={applications} />
+        {loading ? (
+          <p className="text-center text-gray-600 dark:text-gray-400">
+            Loading tokens...
+          </p>
+        ) : error ? (
+          <p className="text-center text-red-500">{error}</p>
+        ) : (
+          <TableApplication applications={applications} />
+        )}{" "}
       </div>
     </div>
   );
