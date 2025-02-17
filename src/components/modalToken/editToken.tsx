@@ -16,16 +16,22 @@ interface Token {
   name: string;
   body: string;
   encrypt: string;
-  expired: string;
+  expired: number;
 }
 
 interface EditTokenProps {
   isOpen: boolean;
   onClose: () => void;
   tokenToEdit: Token | null;
+  onEdit: (updatedToken: Token) => void;
 }
 
-const EditToken = ({ isOpen, onClose, tokenToEdit }: EditTokenProps) => {
+const EditToken = ({
+  isOpen,
+  onClose,
+  tokenToEdit,
+  onEdit,
+}: EditTokenProps) => {
   const [editedToken, setEditedToken] = useState<Token | null>(null);
 
   useEffect(() => {
@@ -47,6 +53,7 @@ const EditToken = ({ isOpen, onClose, tokenToEdit }: EditTokenProps) => {
   };
   const handleEdit = () => {
     if (editedToken) {
+      onEdit(editedToken);
       onClose();
     }
   };
@@ -92,7 +99,7 @@ const EditToken = ({ isOpen, onClose, tokenToEdit }: EditTokenProps) => {
           />
           <Input
             name="expired"
-            type="date"
+            type="number"
             value={editedToken.expired}
             onChange={handleChange}
             placeholder="Token Expired"

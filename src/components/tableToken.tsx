@@ -12,13 +12,14 @@ import { Input } from "../components/ui/input";
 import CreateToken from "./modalToken/createToken";
 import { useState } from "react";
 import EditToken from "./modalToken/editToken";
+import tokenService from "../api/service/tokenService";
 
 interface Token {
   id: string;
   name: string;
   body: string;
   encrypt: string;
-  expired: string;
+  expired: number;
 }
 
 interface TableTokenProps {
@@ -26,13 +27,23 @@ interface TableTokenProps {
 }
 
 const TableToken = ({ tokens }: TableTokenProps) => {
+  const [tokenList, setTokenList] = useState(tokens);
   const [isOpen, setIsOpen] = useState(false);
   const onClose = () => {
     setIsOpen(false);
   };
-  const onCreate = () => {
-    console.log(onCreate);
+
+  const onCreate = async (newToken: Token) => {
+    try {
+      const response = await tokenService.createToken(newToken);
+      if (response.success) {
+        setTokenList((prevTokens) => [...prevTokens, newToken]);
+      }
+    } catch (error) {
+      console.error("Failed to create token", error);
+    }
   };
+
   const handleCreateToken = () => {
     setIsOpen(true);
   };
@@ -48,6 +59,34 @@ const TableToken = ({ tokens }: TableTokenProps) => {
   const handleCloseEditModal = () => {
     setIsEditOpen(false);
     setTokenToEdit(null);
+  };
+
+  const handleEditToken = async (updatedToken: Token) => {
+    try {
+      const response = await tokenService.editToken(updatedToken);
+      if (response.success) {
+        setTokenList((prevTokens) =>
+          prevTokens.map((token) =>
+            token.id === updatedToken.id ? updatedToken : token
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Failed to edit token", error);
+    }
+  };
+
+  const handleDeleteToken = async (id: string) => {
+    try {
+      const response = await tokenService.deleteToken(id);
+      if (response.success) {
+        setTokenList((prevTokens) =>
+          prevTokens.filter((token) => token.id !== id)
+        );
+      }
+    } catch (error) {
+      console.error("Failed to delete token", error);
+    }
   };
 
   return (
@@ -89,7 +128,7 @@ const TableToken = ({ tokens }: TableTokenProps) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tokens.map((token, index) => (
+          {tokenList.map((token, index) => (
             <TableRow key={index}>
               <TableCell>
                 <input type="checkbox" />
@@ -107,7 +146,11 @@ const TableToken = ({ tokens }: TableTokenProps) => {
                 >
                   <Edit className="w-4 h-4" />
                 </Button>
-                <Button variant="destructive" size="icon">
+                <Button
+                  onClick={() => handleDeleteToken(token.id)}
+                  variant="destructive"
+                  size="icon"
+                >
                   <Trash className="w-4 h-4" />
                 </Button>
               </TableCell>
@@ -128,6 +171,7 @@ const TableToken = ({ tokens }: TableTokenProps) => {
           isOpen={isEditOpen}
           onClose={handleCloseEditModal}
           tokenToEdit={tokenToEdit}
+          onEdit={handleEditToken}
         />
       )}
     </div>

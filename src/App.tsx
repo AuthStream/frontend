@@ -3,33 +3,38 @@ import AppRouter from "./router/AppRouter";
 import Sidebar from "./components/Sidebar";
 import { SidebarProvider, useSidebar } from "./context/SidebarContext";
 import Header from "./components/header";
-
+import QueryProvider from "./provider/QueryProvider";
 
 const Content = () => {
   const { isOpenSidebar } = useSidebar();
 
   return (
-    <div className={`transition - all duration-300 flex-1 ${isOpenSidebar ? "ml-64" : "ml-0"} `}>
+    <div
+      className={`transition - all duration-300 flex-1 ${
+        isOpenSidebar ? "ml-64" : "ml-0"
+      } `}
+    >
       <AppRouter />
-    </div >
+    </div>
   );
 };
 
-
 function App() {
   return (
-    <SidebarProvider>
-      <div className="flex h-screen overflow-hidden">
-        <Sidebar />
-        <div className="flex flex-col flex-1 w-full">
-          <Header />
+    <QueryProvider>
+      <SidebarProvider>
+        <div className="flex h-screen overflow-hidden">
+          <Sidebar />
+          <div className="flex flex-col flex-1 w-full">
+            <Header />
 
-          <div className="flex-1 w-full mt-8 overflow-hidden">
-            <Content />
+            <div className="flex-1 w-full mt-8 overflow-hidden">
+              <Content />
+            </div>
           </div>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </QueryProvider>
   );
 }
 

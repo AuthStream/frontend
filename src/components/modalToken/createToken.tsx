@@ -16,7 +16,7 @@ interface Token {
   name: string;
   body: string;
   encrypt: string;
-  expired: string;
+  expired: number;
 }
 
 interface CreateTokenProps {
@@ -31,7 +31,7 @@ const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
     name: "",
     body: "",
     encrypt: "",
-    expired: "",
+    expired: 0,
   });
 
   const handleChange = (
@@ -84,7 +84,7 @@ const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
             placeholder="Token Encrypt"
           />
           <Input
-            type="date"
+            type="number"
             name="expired"
             value={newToken.expired}
             onChange={handleChange}
