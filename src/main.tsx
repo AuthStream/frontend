@@ -10,6 +10,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AppProvider>
       <BrowserRouter>
+
         <SidebarProvider>
 
           <App />

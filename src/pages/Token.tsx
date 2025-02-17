@@ -1,37 +1,10 @@
-import { useEffect, useState } from "react";
 import { Shield } from "lucide-react";
 import TableToken from "../components/tableToken";
 import { ToggleButton } from "../context/SidebarContext";
-import tokenService from "../api/service/tokenService";
-
-interface Token {
-  id: string;
-  name: string;
-  body: string;
-  encrypt: string;
-  expired: number;
-}
+import { useGetTokens } from "../hooks/useTokenQueries";
 
 const Token = () => {
-  const [tokens, setTokens] = useState<Token[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchTokens = async () => {
-      try {
-        setLoading(true);
-        const response = await tokenService.getAllTokens();
-        setTokens(response.contents);
-      } catch (err) {
-        setError("Failed to load tokens");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTokens();
-  }, []);
+  const { data: tokens, isLoading, error } = useGetTokens();
 
   return (
     <div className="h-full w-full flex items-center justify-center dark:bg-gray-950 p-6">
@@ -45,21 +18,25 @@ const Token = () => {
                 Token
               </h2>
               <p className="text-gray-600 dark:text-gray-400 text-sm">
-                Tokens are used throughout AuthStream for Email validation
-                stages, Recovery keys and API access.
+                Tokens are used throughout AuthStream for Email validation,
+                Recovery keys, and API access.
               </p>
             </div>
           </div>
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <p className="text-center text-gray-600 dark:text-gray-400">
             Loading tokens...
           </p>
         ) : error ? (
-          <p className="text-center text-red-500">{error}</p>
+          <p className="text-center text-red-500">
+            {error instanceof Error ? error.message : "An unknown error occurred"}
+          </p>
+        ) : tokens ? (
+          <TableToken tokens={tokens.contents} />
         ) : (
-          <TableToken tokens={tokens} />
+          <p>No tokens available</p>
         )}
       </div>
     </div>

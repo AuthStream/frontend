@@ -43,10 +43,25 @@ const CreateApplication = ({
     }));
   };
 
+  const resetApplication = () => {
+    setNewApplication({
+      id: "",
+      name: "",
+      provider: "",
+      token: "",
+    })
+  }
+
   const handleCreate = () => {
     onCreate(newApplication);
+    resetApplication();
     onClose();
   };
+
+  const handleClose = () => {
+    resetApplication();
+    onClose();
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -84,7 +99,7 @@ const CreateApplication = ({
           />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
           <Button

@@ -1,18 +1,14 @@
-import { Search, Plus, RefreshCw, Trash2, Edit, Trash } from "lucide-react";
+
+import { Search, Plus, Edit, Trash } from "lucide-react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "../components/ui/table";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import CreateToken from "./modalToken/createToken";
 import { useState } from "react";
 import EditToken from "./modalToken/editToken";
-import tokenService from "../api/service/tokenService";
+import { useCreateToken, useEditToken, useDeleteToken } from "../hooks/useTokenQueries";
 
 interface Token {
   id: string;
@@ -27,66 +23,26 @@ interface TableTokenProps {
 }
 
 const TableToken = ({ tokens }: TableTokenProps) => {
-  const [tokenList, setTokenList] = useState(tokens);
   const [isOpen, setIsOpen] = useState(false);
-  const onClose = () => {
-    setIsOpen(false);
-  };
-
-  const onCreate = async (newToken: Token) => {
-    try {
-      const response = await tokenService.createToken(newToken);
-      if (response.success) {
-        setTokenList((prevTokens) => [...prevTokens, newToken]);
-      }
-    } catch (error) {
-      console.error("Failed to create token", error);
-    }
-  };
-
-  const handleCreateToken = () => {
-    setIsOpen(true);
-  };
-
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [tokenToEdit, setTokenToEdit] = useState<Token | null>(null);
 
-  const handleClickEdit = (token: Token) => {
-    setTokenToEdit(token);
-    setIsEditOpen(true);
-  };
+  const createTokenMutation = useCreateToken();
+  const editTokenMutation = useEditToken();
+  const deleteTokenMutation = useDeleteToken();
 
-  const handleCloseEditModal = () => {
-    setIsEditOpen(false);
-    setTokenToEdit(null);
+  const onCreate = async (newToken: Token) => {
+    createTokenMutation.mutate(newToken);
+    setIsOpen(false);
   };
 
   const handleEditToken = async (updatedToken: Token) => {
-    try {
-      const response = await tokenService.editToken(updatedToken);
-      if (response.success) {
-        setTokenList((prevTokens) =>
-          prevTokens.map((token) =>
-            token.id === updatedToken.id ? updatedToken : token
-          )
-        );
-      }
-    } catch (error) {
-      console.error("Failed to edit token", error);
-    }
+    editTokenMutation.mutate(updatedToken);
+    setIsEditOpen(false);
   };
 
   const handleDeleteToken = async (id: string) => {
-    try {
-      const response = await tokenService.deleteToken(id);
-      if (response.success) {
-        setTokenList((prevTokens) =>
-          prevTokens.filter((token) => token.id !== id)
-        );
-      }
-    } catch (error) {
-      console.error("Failed to delete token", error);
-    }
+    deleteTokenMutation.mutate(id);
   };
 
   return (
@@ -99,17 +55,8 @@ const TableToken = ({ tokens }: TableTokenProps) => {
         </div>
 
         <div className="space-x-2">
-          <Button
-            onClick={handleCreateToken}
-            className="bg-blue-500 text-white hover:bg-blue-600"
-          >
+          <Button onClick={() => setIsOpen(true)} className="bg-blue-500 text-white hover:bg-blue-600">
             <Plus className="w-4 h-4 mr-2" /> Create
-          </Button>
-          <Button variant="outline">
-            <RefreshCw className="w-4 h-4 mr-2" /> Refresh
-          </Button>
-          <Button className="bg-red-500 text-white hover:bg-red-600">
-            <Trash2 className="w-4 h-4 mr-2" /> Delete
           </Button>
         </div>
       </div>
@@ -118,9 +65,6 @@ const TableToken = ({ tokens }: TableTokenProps) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-12">
-              <input type="checkbox" />
-            </TableHead>
             <TableHead>ID</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Expired</TableHead>
@@ -128,29 +72,16 @@ const TableToken = ({ tokens }: TableTokenProps) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tokenList.map((token, index) => (
-            <TableRow key={index}>
-              <TableCell>
-                <input type="checkbox" />
-              </TableCell>
+          {tokens.map((token) => (
+            <TableRow key={token.id}>
               <TableCell>{token.id}</TableCell>
               <TableCell>{token.name}</TableCell>
               <TableCell>{token.expired}</TableCell>
-              <TableCell className="flex space-x-2">
-                <Button
-                  onClick={() => {
-                    handleClickEdit(token);
-                  }}
-                  variant="outline"
-                  size="icon"
-                >
+              <TableCell>
+                <Button onClick={() => { setTokenToEdit(token); setIsEditOpen(true); }} variant="outline" size="icon">
                   <Edit className="w-4 h-4" />
                 </Button>
-                <Button
-                  onClick={() => handleDeleteToken(token.id)}
-                  variant="destructive"
-                  size="icon"
-                >
+                <Button onClick={() => handleDeleteToken(token.id)} variant="destructive" size="icon">
                   <Trash className="w-4 h-4" />
                 </Button>
               </TableCell>
@@ -159,21 +90,8 @@ const TableToken = ({ tokens }: TableTokenProps) => {
         </TableBody>
       </Table>
 
-      {/* Pagination */}
-      <div className="flex justify-center mt-4 text-gray-500">
-        1 - 1 &lt; &gt;
-      </div>
-
-      <CreateToken isOpen={isOpen} onClose={onClose} onCreate={onCreate} />
-
-      {tokenToEdit && (
-        <EditToken
-          isOpen={isEditOpen}
-          onClose={handleCloseEditModal}
-          tokenToEdit={tokenToEdit}
-          onEdit={handleEditToken}
-        />
-      )}
+      <CreateToken isOpen={isOpen} onClose={() => setIsOpen(false)} onCreate={onCreate} />
+      {tokenToEdit && <EditToken isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} tokenToEdit={tokenToEdit} onEdit={handleEditToken} />}
     </div>
   );
 };

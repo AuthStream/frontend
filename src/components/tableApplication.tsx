@@ -12,7 +12,7 @@ import { Input } from "../components/ui/input";
 import CreateApplication from "./modalApplication/createApplication";
 import { useState } from "react";
 import EditApplication from "./modalApplication/editApplication";
-import applicationService from "../api/service/applicationService";
+import { useCreateApplications, useDeleteApplications, useEditApplications, useRefreshApplications } from "../hooks/useApplicationQueries";
 
 interface Application {
   id: string;
@@ -26,35 +26,35 @@ interface TableApplicationProps {
 }
 
 const TableApplication = ({ applications }: TableApplicationProps) => {
-  const [applicationList, setApplicationList] = useState(applications);
   const [isOpen, setIsOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [applicationToEdit, setApplicationToEdit] =
+    useState<Application | null>(null);
+
+
+  const createApplicationMutation = useCreateApplications();
+  const editApplicationMutation = useEditApplications();
+  const deleteApplicationMutation = useDeleteApplications();
+  const refreshApplicationMutation = useRefreshApplications()
+
   const onClose = () => {
     setIsOpen(false);
   };
 
   const onCreate = async (newApplication: Application) => {
-    try {
-      const response = await applicationService.createApplication(
-        newApplication
-      );
-      if (response.success) {
-        setApplicationList((prevApplications) => [
-          ...prevApplications,
-          newApplication,
-        ]);
-      }
-    } catch (error) {
-      console.error("Failed to create application", error);
-    }
+    createApplicationMutation.mutate(newApplication);
+    setIsOpen(false);
   };
+
 
   const handleCreateApplication = () => {
     setIsOpen(true);
   };
 
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [applicationToEdit, setApplicationToEdit] =
-    useState<Application | null>(null);
+  const handleClickRefresh = () => {
+    refreshApplicationMutation.refresh()
+  };
+
 
   const handleClickEdit = (application: Application) => {
     setApplicationToEdit(application);
@@ -63,44 +63,25 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
 
   const handleCloseEditModal = () => {
     setIsEditOpen(false);
-    setApplicationToEdit(null);
+    setApplicationToEdit({
+      id: "",
+      name: "",
+      provider: "",
+      token: "",
+    });
   };
 
   const handleEditApplication = async (updatedApplication: Application) => {
-    try {
-      const response = await applicationService.editApplication(
-        updatedApplication
-      );
-      if (response.success) {
-        setApplicationList((prevApplications) =>
-          prevApplications.map((application) =>
-            application.id === updatedApplication.id
-              ? updatedApplication
-              : application
-          )
-        );
-      }
-    } catch (error) {
-      console.error("Failed to edit application", error);
-    }
+    editApplicationMutation.mutate(updatedApplication);
+    setIsEditOpen(false);
   };
 
   const handleDeleteApplication = async (id: string) => {
-    try {
-      const response = await applicationService.deleteApplication(id);
-      if (response.success) {
-        setApplicationList((prevApplications) =>
-          prevApplications.filter((application) => application.id !== id)
-        );
-      }
-    } catch (error) {
-      console.error("Failed to delete application", error);
-    }
+    deleteApplicationMutation.mutate(id);
   };
 
   return (
     <div className="w-full bg-white dark:bg-background border p-5 rounded-lg shadow-md">
-      {/* Search & Actions */}
       <div className="flex items-center justify-between mb-4">
         <div className="relative w-1/3">
           <Input placeholder="Search..." className="pl-10" />
@@ -114,7 +95,9 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
           >
             <Plus className="w-4 h-4 mr-2" /> Create
           </Button>
-          <Button variant="outline">
+          <Button
+            onClick={handleClickRefresh}
+            variant="outline">
             <RefreshCw className="w-4 h-4 mr-2" /> Refresh
           </Button>
           <Button className="bg-red-500 text-white hover:bg-red-600">
@@ -138,7 +121,7 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {applicationList.map((application, index) => (
+          {applications.map((application, index) => (
             <TableRow key={index}>
               <TableCell>
                 <input type="checkbox" />
