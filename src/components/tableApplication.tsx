@@ -95,12 +95,21 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
         selectedApplications
       );
       if (response.success) {
-        setApplicationList((prevApplications) =>
-          prevApplications.filter(
-            (application) => !selectedApplications.includes(application.id)
-          )
+        const updatedApplications = applicationList.filter(
+          (application) => !selectedApplications.includes(application.id)
         );
-        setSelectedApplications([]); // Clear selection after deletion
+
+        setApplicationList(updatedApplications);
+        setSelectedApplications([]);
+
+        const newTotalPages = Math.ceil(
+          updatedApplications.length / itemsPerPage
+        );
+
+        if (currentPage > newTotalPages) {
+          setCurrentPage(newTotalPages || 1);
+        }
+
         toast.success("Selected applications deleted successfully");
       }
     } catch (error) {
@@ -185,6 +194,19 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
     try {
       deleteApplicationMutation.mutate(id, {
         onSuccess: () => {
+          const updatedApplications = applicationList.filter(
+            (application) => application.id !== id
+          );
+
+          setApplicationList(updatedApplications);
+
+          const newTotalPages = Math.ceil(
+            updatedApplications.length / itemsPerPage
+          );
+
+          if (currentPage > newTotalPages) {
+            setCurrentPage(newTotalPages || 1);
+          }
           toast.success("Application deleted successfully");
         },
       });
