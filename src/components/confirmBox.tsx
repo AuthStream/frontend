@@ -64,9 +64,9 @@ import { LucideMessageCircleWarning } from "lucide-react";
 interface DeleteConfirmProps {
     isOpen: boolean;
     onClose: () => void;
-    onConfirm: (id: string) => void;  // Nhận id trong onConfirm
-    providerId: string | null;  // ID của provider cần xóa
-    type: string;  // Loại dữ liệu cần xóa
+    onConfirm: (id: string) => void;
+    providerId: string | null;
+    type: string;
 }
 
 const DeleteConfirm = ({ isOpen, onClose, onConfirm, providerId, type }: DeleteConfirmProps) => {
@@ -102,7 +102,7 @@ const DeleteConfirm = ({ isOpen, onClose, onConfirm, providerId, type }: DeleteC
                         className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-500 transform active:scale-95"
                         onClick={() => {
                             if (providerId) {
-                                onConfirm(providerId);  // Truyền ID khi xác nhận
+                                onConfirm(providerId);
                             }
                             onClose();
                         }}

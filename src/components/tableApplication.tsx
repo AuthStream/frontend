@@ -1,20 +1,15 @@
 import { Search, Plus, RefreshCw, Trash2, Edit, Trash } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "../components/ui/table";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import CreateApplication from "./modalApplication/createApplication";
 import { useState } from "react";
 import EditApplication from "./modalApplication/editApplication";
-import { useCreateApplications, useDeleteApplications, useEditApplications, useRefreshApplications } from "../hooks/useApplicationQueries";
+import { useCreateApplications, useDeleteApplications, useEditApplications, useRefreshApplications, } from "../hooks/useApplicationQueries";
 import applicationService from "../api/service/applicationService";
 import { toast } from "react-toastify";
+import DeleteMultipleConfirm from "./confirmMultipleBox";
+import DeleteConfirm from "./confirmBox";
 
 interface Application {
   id: string;
@@ -29,25 +24,22 @@ interface TableApplicationProps {
 
 const TableApplication = ({ applications }: TableApplicationProps) => {
   const [applicationList, setApplicationList] = useState(applications);
+  const [selectedApplications, setSelectedApplications] = useState<string[]>(
+    []
+  );
 
-
-
-
+  // pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = applications.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(applications.length / itemsPerPage);
-
-  const [selectedApplications, setSelectedApplications] = useState<string[]>([]);
-  const nextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
-
-  const prevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  const currentApplications = applications.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
   };
 
   const [isOpen, setIsOpen] = useState(false);
@@ -55,11 +47,10 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
   const [applicationToEdit, setApplicationToEdit] =
     useState<Application | null>(null);
 
-
   const createApplicationMutation = useCreateApplications();
   const editApplicationMutation = useEditApplications();
   const deleteApplicationMutation = useDeleteApplications();
-  const refreshApplicationMutation = useRefreshApplications()
+  const refreshApplicationMutation = useRefreshApplications();
 
   const onClose = () => {
     setIsOpen(false);
@@ -71,85 +62,22 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
     );
   };
 
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedApplications(
-      e.target.checked ? applications.map((app) => app.id) : []
-    );
-  };
-
-  const handleDeleteSelectedApplications = async () => {
-    if (selectedApplications.length === 0) {
-      toast.warn("No applications selected for deletion.");
-      return;
-    }
-    if (
-      !window.confirm("Are you sure you want to delete selected applications?")
-    ) {
-      return;
-    }
-    try {
-      const response = await applicationService.deleteMultipleApplications(
-        selectedApplications
-      );
-      if (response.success) {
-        setApplicationList((prevApplications) =>
-          prevApplications.filter(
-            (application) => !selectedApplications.includes(application.id)
-          )
-        );
-        setSelectedApplications([]); // Clear selection after deletion
-        toast.success("Selected applications deleted successfully");
-      }
-    } catch (error) {
-      toast.error("Failed to delete selected applications");
-    }
-  };
-
-  // const validateApplication = (application: Application) => {
-  //   if (!application.name.trim()) {
-  //     toast.error("Application name is required");
-  //     return false;
-  //   }
-  //   if (!application.provider.trim()) {
-  //     toast.error("Provider is required");
-  //     return false;
-  //   }
-  //   if (!application.token.trim()) {
-  //     toast.error("Token is required");
-  //     return false;
-  //   }
-  //   return true;
-  // };
-
   const onCreate = async (newApplication: Application) => {
-
     try {
       createApplicationMutation.mutate(newApplication);
       setIsOpen(false);
-      // const response = await applicationService.createApplication(
-      //   newApplication
-      // );
-      // if (response.success) {
-      //   setApplicationList((prevApplications) => [
-      //     ...prevApplications,
-      //     newApplication,
-      //   ]);
-      //   toast.success("Application created successfully");
-      // }
     } catch (error) {
       toast.error("Failed to create application");
     }
   };
-
 
   const handleCreateApplication = () => {
     setIsOpen(true);
   };
 
   const handleClickRefresh = () => {
-    refreshApplicationMutation.refresh()
+    refreshApplicationMutation.refresh();
   };
-
 
   const handleClickEdit = (application: Application) => {
     setApplicationToEdit(application);
@@ -167,34 +95,96 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
   };
 
   const handleEditApplication = async (updatedApplication: Application) => {
-
     try {
       editApplicationMutation.mutate(updatedApplication, {
         onSuccess: () => {
           toast.success("Tokens Eit successfully");
-        }
+        },
       });
       setIsEditOpen(false);
-
-
     } catch (error) {
       toast.error("Failed to edit application");
     }
   };
+  const [isOpenConfirm, setIsOpenConfirm] = useState(false)
+  const [idDelete, setIdDelete] = useState<string>('');
 
+  const handleClickDleteApplication = (id: string) => {
+    setIdDelete(id);
+    setIsOpenConfirm(true);
+
+  }
   const handleDeleteApplication = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this application?"))
-      return;
-    try {
 
+    try {
       deleteApplicationMutation.mutate(id, {
         onSuccess: () => {
-          toast.success("Application deleted successfully");
-        }
-      });
+          const updatedApplications = applicationList.filter(
+            (application) => application.id !== id
+          );
 
+          setApplicationList(updatedApplications);
+
+          const newTotalPages = Math.ceil(
+            updatedApplications.length / itemsPerPage
+          );
+
+          if (currentPage > newTotalPages) {
+            setCurrentPage(newTotalPages || 1);
+          }
+          toast.success("Application deleted successfully");
+        },
+      });
     } catch (error) {
       toast.error("Failed to delete application");
+    }
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedApplications(
+      e.target.checked ? applications.map((app) => app.id) : []
+    );
+  };
+  const [isOpenConfirmMultiple, setIsOpenConfirmMultiple] = useState(false)
+
+  const handleDeleteSelected = () => {
+    if (selectedApplications.length === 0) {
+      toast.warn("No providers selected");
+      return;
+    }
+    setIsOpenConfirmMultiple(true);
+  };
+
+  const handleDeleteSelectedApplications = async () => {
+    if (selectedApplications.length === 0) {
+      toast.warn("No applications selected for deletion.");
+      return;
+    }
+
+    try {
+      const response = await applicationService.deleteMultipleApplications(
+        selectedApplications
+      );
+      if (response.success) {
+        const updatedApplications = applicationList.filter(
+          (application) => !selectedApplications.includes(application.id)
+        );
+
+        setApplicationList(updatedApplications);
+        setSelectedApplications([]);
+
+        const newTotalPages = Math.ceil(
+          updatedApplications.length / itemsPerPage
+        );
+
+        if (currentPage > newTotalPages) {
+          setCurrentPage(newTotalPages || 1);
+        }
+
+        toast.success("Selected applications deleted successfully");
+      }
+    } catch (error) {
+      toast.error("Failed to delete selected applications");
     }
   };
 
@@ -213,13 +203,11 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
           >
             <Plus className="w-4 h-4 mr-2" /> Create
           </Button>
-          <Button
-            onClick={handleClickRefresh}
-            variant="outline">
+          <Button onClick={handleClickRefresh} variant="outline">
             <RefreshCw className="w-4 h-4 mr-2" /> Refresh
           </Button>
           <Button
-            onClick={handleDeleteSelectedApplications}
+            onClick={handleDeleteSelected}
             className="bg-red-500 text-white hover:bg-red-600"
           >
             <Trash2 className="w-4 h-4 mr-2" /> Delete Selected
@@ -247,8 +235,7 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
         </TableHeader>
         <TableBody>
           {
-            // applications.map((application, index) => (
-            currentItems.map((application, index) => (
+            currentApplications.map((application, index) => (
               <TableRow key={index}>
                 <TableCell>
                   <input
@@ -270,7 +257,7 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
                     <Edit className="w-4 h-4" />
                   </Button>
                   <Button
-                    onClick={() => handleDeleteApplication(application.id)}
+                    onClick={() => handleClickDleteApplication(application.id)}
                     variant="destructive"
                     size="icon"
                   >
@@ -280,38 +267,57 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
               </TableRow>
             ))
           }
-        </TableBody >
-      </Table >
+        </TableBody>
+      </Table>
 
       {/* Pagination */}
-      < div className="flex justify-center mt-4 text-gray-500" >
-        <Button onClick={prevPage} disabled={currentPage === 1}>
-          Prev
+      <div className="flex justify-between items-center mt-4 text-gray-500">
+        <Button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          Previous
         </Button>
-        <span className="mx-4">
+        <span>
           Page {currentPage} of {totalPages}
         </span>
-        <Button onClick={nextPage} disabled={currentPage === totalPages}>
+        <Button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
           Next
         </Button>
-      </div >
+      </div>
 
       <CreateApplication
         isOpen={isOpen}
         onClose={onClose}
         onCreate={onCreate}
       />
-      {
-        applicationToEdit && (
-          <EditApplication
-            isOpen={isEditOpen}
-            onClose={handleCloseEditModal}
-            applicationToEdit={applicationToEdit}
-            onEdit={handleEditApplication}
-          />
-        )
-      }
-    </div >
+      {applicationToEdit && (
+        <EditApplication
+          isOpen={isEditOpen}
+          onClose={handleCloseEditModal}
+          applicationToEdit={applicationToEdit}
+          onEdit={handleEditApplication}
+        />
+      )}
+      <DeleteConfirm
+        isOpen={isOpenConfirm}
+        onClose={() => setIsOpenConfirm(false)}
+        onConfirm={handleDeleteApplication}
+        providerId={idDelete}
+        type="Application"
+      />
+
+      <DeleteMultipleConfirm
+        isOpen={isOpenConfirmMultiple}
+        onClose={() => setIsOpenConfirmMultiple(false)}
+        onConfirm={handleDeleteSelectedApplications}
+        selectedArray={selectedApplications}
+        type={'Application'}
+      />
+    </div>
   );
 };
 
