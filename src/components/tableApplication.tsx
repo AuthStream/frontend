@@ -12,7 +12,12 @@ import { Input } from "../components/ui/input";
 import CreateApplication from "./modalApplication/createApplication";
 import { useState } from "react";
 import EditApplication from "./modalApplication/editApplication";
-import { useCreateApplications, useDeleteApplications, useEditApplications, useRefreshApplications } from "../hooks/useApplicationQueries";
+import {
+  useCreateApplications,
+  useDeleteApplications,
+  useEditApplications,
+  useRefreshApplications,
+} from "../hooks/useApplicationQueries";
 import applicationService from "../api/service/applicationService";
 import { toast } from "react-toastify";
 
@@ -29,25 +34,24 @@ interface TableApplicationProps {
 
 const TableApplication = ({ applications }: TableApplicationProps) => {
   const [applicationList, setApplicationList] = useState(applications);
+  const [selectedApplications, setSelectedApplications] = useState<string[]>(
+    []
+  );
 
-
-
-
+  // pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = applications.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(applications.length / itemsPerPage);
 
-  const [selectedApplications, setSelectedApplications] = useState<string[]>([]);
-  const nextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
-
-  const prevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  const currentApplications = applications.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
   };
 
   const [isOpen, setIsOpen] = useState(false);
@@ -55,11 +59,10 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
   const [applicationToEdit, setApplicationToEdit] =
     useState<Application | null>(null);
 
-
   const createApplicationMutation = useCreateApplications();
   const editApplicationMutation = useEditApplications();
   const deleteApplicationMutation = useDeleteApplications();
-  const refreshApplicationMutation = useRefreshApplications()
+  const refreshApplicationMutation = useRefreshApplications();
 
   const onClose = () => {
     setIsOpen(false);
@@ -122,7 +125,6 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
   // };
 
   const onCreate = async (newApplication: Application) => {
-
     try {
       createApplicationMutation.mutate(newApplication);
       setIsOpen(false);
@@ -141,15 +143,13 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
     }
   };
 
-
   const handleCreateApplication = () => {
     setIsOpen(true);
   };
 
   const handleClickRefresh = () => {
-    refreshApplicationMutation.refresh()
+    refreshApplicationMutation.refresh();
   };
-
 
   const handleClickEdit = (application: Application) => {
     setApplicationToEdit(application);
@@ -167,16 +167,13 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
   };
 
   const handleEditApplication = async (updatedApplication: Application) => {
-
     try {
       editApplicationMutation.mutate(updatedApplication, {
         onSuccess: () => {
           toast.success("Tokens Eit successfully");
-        }
+        },
       });
       setIsEditOpen(false);
-
-
     } catch (error) {
       toast.error("Failed to edit application");
     }
@@ -186,13 +183,11 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
     if (!window.confirm("Are you sure you want to delete this application?"))
       return;
     try {
-
       deleteApplicationMutation.mutate(id, {
         onSuccess: () => {
           toast.success("Application deleted successfully");
-        }
+        },
       });
-
     } catch (error) {
       toast.error("Failed to delete application");
     }
@@ -213,9 +208,7 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
           >
             <Plus className="w-4 h-4 mr-2" /> Create
           </Button>
-          <Button
-            onClick={handleClickRefresh}
-            variant="outline">
+          <Button onClick={handleClickRefresh} variant="outline">
             <RefreshCw className="w-4 h-4 mr-2" /> Refresh
           </Button>
           <Button
@@ -248,7 +241,7 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
         <TableBody>
           {
             // applications.map((application, index) => (
-            currentItems.map((application, index) => (
+            currentApplications.map((application, index) => (
               <TableRow key={index}>
                 <TableCell>
                   <input
@@ -280,38 +273,42 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
               </TableRow>
             ))
           }
-        </TableBody >
-      </Table >
+        </TableBody>
+      </Table>
 
       {/* Pagination */}
-      < div className="flex justify-center mt-4 text-gray-500" >
-        <Button onClick={prevPage} disabled={currentPage === 1}>
-          Prev
+      <div className="flex justify-between items-center mt-4 text-gray-500">
+        <Button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          Previous
         </Button>
-        <span className="mx-4">
+        <span>
           Page {currentPage} of {totalPages}
         </span>
-        <Button onClick={nextPage} disabled={currentPage === totalPages}>
+        <Button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
           Next
         </Button>
-      </div >
+      </div>
 
       <CreateApplication
         isOpen={isOpen}
         onClose={onClose}
         onCreate={onCreate}
       />
-      {
-        applicationToEdit && (
-          <EditApplication
-            isOpen={isEditOpen}
-            onClose={handleCloseEditModal}
-            applicationToEdit={applicationToEdit}
-            onEdit={handleEditApplication}
-          />
-        )
-      }
-    </div >
+      {applicationToEdit && (
+        <EditApplication
+          isOpen={isEditOpen}
+          onClose={handleCloseEditModal}
+          applicationToEdit={applicationToEdit}
+          onEdit={handleEditApplication}
+        />
+      )}
+    </div>
   );
 };
 

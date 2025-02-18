@@ -1,14 +1,23 @@
-
 import { Search, Plus, Edit, Trash, Trash2, RefreshCw } from "lucide-react";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "../components/ui/table";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import CreateToken from "./modalToken/createToken";
 import { useState } from "react";
 import EditToken from "./modalToken/editToken";
-import { useCreateToken, useEditToken, useDeleteToken, useDeleteMultipleToken } from "../hooks/useTokenQueries";
+import {
+  useCreateToken,
+  useEditToken,
+  useDeleteToken,
+  useDeleteMultipleToken,
+} from "../hooks/useTokenQueries";
 import { toast } from "react-toastify";
 import { Token } from "../api/type";
 
@@ -18,8 +27,10 @@ interface TableTokenProps {
 
 const TableToken = ({ tokens }: TableTokenProps) => {
   const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isOpen, setIsOpen] = useState(false);
+
+  // pagination
   const itemsPerPage = 5;
 
   const totalPages = Math.ceil(tokens.length / itemsPerPage);
@@ -66,14 +77,13 @@ const TableToken = ({ tokens }: TableTokenProps) => {
     }
 
     try {
-      console.log(selectedTokens);
-      toast.success("alo")
+      // console.log(selectedTokens);
+      // toast.success("alo");
       deleteMultipleTokenMutation.mutate(selectedTokens, {
         onSuccess: () => {
           toast.success("Tokens deleted successfully");
-        }
-      })
-
+        },
+      });
     } catch (error) {
       toast.error("Failed to delete selected tokens");
     }
@@ -106,7 +116,7 @@ const TableToken = ({ tokens }: TableTokenProps) => {
       createTokenMutation.mutate(newToken, {
         onSuccess: () => {
           toast.success("Token created successfully");
-        }
+        },
       });
       setIsOpen(false);
     } catch (error) {
@@ -119,14 +129,11 @@ const TableToken = ({ tokens }: TableTokenProps) => {
   };
 
   const handleEditToken = async (updatedToken: Token) => {
-
-
     try {
-
       editTokenMutation.mutate(updatedToken, {
         onSuccess: () => {
           toast.success("Token updated successfully");
-        }
+        },
       });
       setIsEditOpen(false);
     } catch (error) {
@@ -139,13 +146,11 @@ const TableToken = ({ tokens }: TableTokenProps) => {
       return;
     }
     try {
-
       deleteTokenMutation.mutate(id, {
         onSuccess: () => {
           toast.success("Token deleted successfully");
-        }
+        },
       });
-
     } catch (error) {
       toast.error("Failed to delete token");
     }
@@ -160,7 +165,10 @@ const TableToken = ({ tokens }: TableTokenProps) => {
         </div>
 
         <div className="space-x-2">
-          <Button onClick={handleCreateToken} className="bg-blue-500 text-white hover:bg-blue-600">
+          <Button
+            onClick={handleCreateToken}
+            className="bg-blue-500 text-white hover:bg-blue-600"
+          >
             <Plus className="w-4 h-4 mr-2" /> Create
           </Button>
 
@@ -173,13 +181,12 @@ const TableToken = ({ tokens }: TableTokenProps) => {
           >
             <Trash2 className="w-4 h-4 mr-2" /> Delete
           </Button>
-        </div >
-      </div >
+        </div>
+      </div>
 
       <Table>
         <TableHeader>
           <TableRow>
-
             <TableHead className="w-12">
               <input
                 type="checkbox"
@@ -191,36 +198,44 @@ const TableToken = ({ tokens }: TableTokenProps) => {
             <TableHead>Name</TableHead>
             <TableHead>Expired</TableHead>
             <TableHead>Actions</TableHead>
-          </TableRow >
-        </TableHeader >
+          </TableRow>
+        </TableHeader>
         <TableBody>
-          {
-            currentTokens.map((token) => (
-              <TableRow key={token.id}>
-                <TableCell>
-                  <input
-                    type="checkbox"
-                    onChange={() => handleCheckboxChange(token.id)}
-                    checked={selectedTokens.includes(token.id)}
-                  />
-                </TableCell>
-                <TableCell>{token.id}</TableCell>
-                <TableCell>{token.name}</TableCell>
-                <TableCell>{token.expired}</TableCell>
-                <TableCell>
-                  <Button onClick={() => { setTokenToEdit(token); setIsEditOpen(true); }} variant="outline" size="icon">
-
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button onClick={() => handleDeleteToken(token.id)} variant="destructive" size="icon">
-                    <Trash className="w-4 h-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))
-          }
-        </TableBody >
-      </Table >
+          {currentTokens.map((token) => (
+            <TableRow key={token.id}>
+              <TableCell>
+                <input
+                  type="checkbox"
+                  onChange={() => handleCheckboxChange(token.id)}
+                  checked={selectedTokens.includes(token.id)}
+                />
+              </TableCell>
+              <TableCell>{token.id}</TableCell>
+              <TableCell>{token.name}</TableCell>
+              <TableCell>{token.expired}</TableCell>
+              <TableCell>
+                <Button
+                  onClick={() => {
+                    setTokenToEdit(token);
+                    setIsEditOpen(true);
+                  }}
+                  variant="outline"
+                  size="icon"
+                >
+                  <Edit className="w-4 h-4" />
+                </Button>
+                <Button
+                  onClick={() => handleDeleteToken(token.id)}
+                  variant="destructive"
+                  size="icon"
+                >
+                  <Trash className="w-4 h-4" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
 
       <div className="flex justify-between items-center mt-4 text-gray-500">
         <Button
@@ -240,9 +255,20 @@ const TableToken = ({ tokens }: TableTokenProps) => {
         </Button>
       </div>
 
-      <CreateToken isOpen={isOpen} onClose={() => setIsOpen(false)} onCreate={onCreate} />
-      {tokenToEdit && <EditToken isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} tokenToEdit={tokenToEdit} onEdit={handleEditToken} />}
-    </div >
+      <CreateToken
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        onCreate={onCreate}
+      />
+      {tokenToEdit && (
+        <EditToken
+          isOpen={isEditOpen}
+          onClose={() => setIsEditOpen(false)}
+          tokenToEdit={tokenToEdit}
+          onEdit={handleEditToken}
+        />
+      )}
+    </div>
   );
 };
 

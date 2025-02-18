@@ -4,9 +4,9 @@ import { CreateProviderResponse, EditProviderResponse, ProviderResponse, Provide
 const mockProviders = [
     { id: "ABC1", name: "truongkinhquinh", type: "LDAP", domain: "---", callBackUrl: 'fb.com', token: 'hihi' },
     { id: "ABC2", name: "tolaokien", type: "LDAP", domain: "---", callBackUrl: 'fb.com', token: 'hihi' },
-    { id: "ABC1", name: "truongkinhquinh", type: "LDAP", domain: "---", callBackUrl: 'fb.com', token: 'hihi' },
-    { id: "ABC2", name: "tolaokien", type: "LDAP", domain: "---", callBackUrl: 'fb.com', token: 'hihi' },
-    { id: "ABC2", name: "tolaokien", type: "LDAP", domain: "---", callBackUrl: 'fb.com', token: 'hihi' },
+    { id: "ABC3", name: "truongkinhquinh", type: "LDAP", domain: "---", callBackUrl: 'fb.com', token: 'hihi' },
+    { id: "ABC4", name: "tolaokien", type: "LDAP", domain: "---", callBackUrl: 'fb.com', token: 'hihi' },
+    { id: "ABC5", name: "tolaokien", type: "LDAP", domain: "---", callBackUrl: 'fb.com', token: 'hihi' },
 ];
 const providerService = {
     getAllProviders: async (): Promise<ProviderResponse> => {

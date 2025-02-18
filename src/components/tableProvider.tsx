@@ -13,31 +13,90 @@ import CreateProvider from "./modalProvider/createProvider";
 import { useState } from "react";
 import EditProvider from "./modalProvider/editProvider";
 import { ProviderType } from "../api/type";
-import { useCreateProviders, useDeleteMultipleProvider, useDeleteProviders, useEditProviders } from "../hooks/useProviderQueries";
+import {
+  useCreateProviders,
+  useDeleteMultipleProvider,
+  useDeleteProviders,
+  useEditProviders,
+} from "../hooks/useProviderQueries";
 import { toast } from "react-toastify";
-
 
 interface TableProviderProps {
   providers: ProviderType[];
 }
 
 const TableProvider = ({ providers }: TableProviderProps) => {
+  const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [providerToEdit, setProviderToEdit] = useState<ProviderType | null>(null);
-
+  const [providerToEdit, setProviderToEdit] = useState<ProviderType | null>(
+    null
+  );
 
   const createProviderMutation = useCreateProviders();
   const editProviderMutation = useEditProviders();
   const deleteProviderMutation = useDeleteProviders();
   const deleteMultipleProviderMutation = useDeleteMultipleProvider();
 
+  // pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const totalPages = Math.ceil(providers.length / itemsPerPage);
+
+  const currentProviders = providers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  //select
+  const handleCheckboxChange = (id: string) => {
+    setSelectedProviders((prev) =>
+      prev.includes(id)
+        ? prev.filter((providerId) => providerId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedProviders(e.target.checked ? providers.map((t) => t.id) : []);
+  };
+
+  const handleDeleteSelectedProviders = async () => {
+    if (selectedProviders.length === 0) {
+      toast.warn("No providers selected");
+      return;
+    }
+
+    if (
+      !window.confirm("Are you sure you want to delete the selected providers?")
+    ) {
+      return;
+    }
+
+    try {
+      deleteMultipleProviderMutation.mutate(selectedProviders, {
+        onSuccess: () => {
+          toast.success("Providers deleted successfully");
+        },
+      });
+    } catch (error) {
+      toast.error("Failed to delete selected providers");
+    }
+  };
+
   const onCreate = async (newProvider: ProviderType) => {
     try {
       createProviderMutation.mutate(newProvider, {
         onSuccess: () => {
           toast.success("Provider created successfully");
-        }
+        },
       });
       setIsOpen(false);
     } catch (error) {
@@ -48,16 +107,12 @@ const TableProvider = ({ providers }: TableProviderProps) => {
     setIsOpen(true);
   };
 
-  const handleClickEdit = (provider: ProviderType) => {
-    setProviderToEdit(provider);
-    setIsEditOpen(true);
-  };
   const handleEditProvider = async (updatedProvider: ProviderType) => {
     try {
       editProviderMutation.mutate(updatedProvider, {
         onSuccess: () => {
           toast.success("Provider updated successfully");
-        }
+        },
       });
       setIsEditOpen(false);
     } catch (error) {
@@ -65,26 +120,20 @@ const TableProvider = ({ providers }: TableProviderProps) => {
     }
   };
 
-  const handleCloseEditModal = () => {
-    setIsEditOpen(false);
-    setProviderToEdit(null);
-  };
-
   const handleDeleteProvider = (id: string) => {
-
-    if (!window.confirm("Are you sure you want to delete this token?")) {
+    if (!window.confirm("Are you sure you want to delete this provider?")) {
       return;
     }
     try {
       deleteProviderMutation.mutate(id, {
         onSuccess: () => {
-          toast.success("provider delete successfully")
-        }
-      })
+          toast.success("provider delete successfully");
+        },
+      });
     } catch (error) {
-      toast.error("something wrong with delete provider")
+      toast.error("something wrong with delete provider");
     }
-  }
+  };
 
   return (
     <div className="w-full bg-white dark:bg-background border p-5 rounded-lg shadow-md">
@@ -105,7 +154,10 @@ const TableProvider = ({ providers }: TableProviderProps) => {
           <Button variant="outline">
             <RefreshCw className="w-4 h-4 mr-2" /> Refresh
           </Button>
-          <Button className="bg-red-500 text-white hover:bg-red-600">
+          <Button
+            onClick={handleDeleteSelectedProviders}
+            className="bg-red-500 text-white hover:bg-red-600"
+          >
             <Trash2 className="w-4 h-4 mr-2" /> Delete
           </Button>
         </div>
@@ -116,7 +168,11 @@ const TableProvider = ({ providers }: TableProviderProps) => {
         <TableHeader>
           <TableRow>
             <TableHead className="w-12">
-              <input type="checkbox" />
+              <input
+                type="checkbox"
+                onChange={handleSelectAll}
+                checked={selectedProviders.length === providers.length}
+              />
             </TableHead>
             <TableHead>ID</TableHead>
             <TableHead>Name</TableHead>
@@ -128,23 +184,27 @@ const TableProvider = ({ providers }: TableProviderProps) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {providers.map((provider, index) => (
-            <TableRow key={index}>
+          {currentProviders.map((provider) => (
+            <TableRow key={provider.id}>
               <TableCell>
-                <input type="checkbox" />
+                <input
+                  type="checkbox"
+                  onChange={() => handleCheckboxChange(provider.id)}
+                  checked={selectedProviders.includes(provider.id)}
+                />
               </TableCell>
               <TableCell>{provider.id}</TableCell>
               <TableCell>{provider.name}</TableCell>
               <TableCell>{provider.type}</TableCell>
               <TableCell>{provider.domain}</TableCell>
               <TableCell>{provider.token}</TableCell>
-
               <TableCell>{provider.callBackUrl}</TableCell>
 
               <TableCell className="flex space-x-2">
                 <Button
                   onClick={() => {
-                    handleClickEdit(provider);
+                    setProviderToEdit(provider);
+                    setIsEditOpen(true);
                   }}
                   variant="outline"
                   size="icon"
@@ -153,7 +213,9 @@ const TableProvider = ({ providers }: TableProviderProps) => {
                 </Button>
                 <Button
                   onClick={() => handleDeleteProvider(provider.id)}
-                  variant="destructive" size="icon">
+                  variant="destructive"
+                  size="icon"
+                >
                   <Trash className="w-4 h-4" />
                 </Button>
               </TableCell>
@@ -163,26 +225,40 @@ const TableProvider = ({ providers }: TableProviderProps) => {
       </Table>
 
       {/* Pagination */}
-      <div className="flex justify-center mt-4 text-gray-500">
-        1 - 1 &lt; &gt;
+      <div className="flex justify-between items-center mt-4 text-gray-500">
+        <Button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </Button>
+        <span>
+          Page {currentPage} of {totalPages}
+        </span>
+        <Button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </Button>
       </div>
 
-      <CreateProvider isOpen={isOpen} onClose={() => setIsOpen(false)} onCreate={onCreate} />
+      <CreateProvider
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        onCreate={onCreate}
+      />
 
       {providerToEdit && (
         <EditProvider
           isOpen={isEditOpen}
-          onClose={handleCloseEditModal}
+          onClose={() => setIsEditOpen(false)}
           providerToEdit={providerToEdit}
           onEdit={handleEditProvider}
-
         />
       )}
-
-
     </div>
   );
 };
 
 export default TableProvider;
-
