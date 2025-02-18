@@ -45,6 +45,15 @@ const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
   };
 
   const handleCreate = () => {
+    // validate here
+
+    setNewToken({
+      id: "",
+      name: "",
+      body: "",
+      encrypt: "",
+      expired: 0,
+    })
     onCreate(newToken);
     onClose();
   };
@@ -75,7 +84,7 @@ const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
             name="body"
             value={newToken.body}
             onChange={handleChange}
-            placeholder="Code Space"
+            placeholder="Body"
           />
           <Input
             name="encrypt"

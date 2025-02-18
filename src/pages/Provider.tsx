@@ -1,14 +1,11 @@
 import { Search } from "lucide-react";
 import TableProvider from "../components/tableProvider";
 import { ToggleButton } from "../context/SidebarContext";
+import { useGetProviders } from "../hooks/useProviderQueries";
 const Provider = () => {
-    const providers = [
-        { id: "ABC1", name: "truongkinhquinh", type: "LDAP", domain: "---" },
-        { id: "ABC2", name: "tolaokien", type: "LDAP", domain: "---" },
-        { id: "ABC1", name: "truongkinhquinh", type: "LDAP", domain: "---" },
-        { id: "ABC2", name: "tolaokien", type: "LDAP", domain: "---" },
-        { id: "ABC2", name: "tolaokien", type: "LDAP", domain: "---" },
-    ];
+
+
+    const { data: providers, isLoading, error } = useGetProviders();
 
     return (
         <div className="h-full w-full flex items-center justify-center dark:bg-gray-950 p-6">
@@ -29,8 +26,19 @@ const Provider = () => {
                     </div>
 
                 </div>
-
-                <TableProvider providers={providers} />
+                {isLoading ? (
+                    <p className="text-center text-gray-600 dark:text-gray-400">
+                        Loading tokens...
+                    </p>
+                ) : error ? (
+                    <p className="text-center text-red-500">
+                        {error instanceof Error ? error.message : "An unknown error occurred"}
+                    </p>
+                ) : providers ? (
+                    <TableProvider providers={providers.contents} />
+                ) : (
+                    <p>No provider available</p>
+                )}
             </div>
         </div>
     );

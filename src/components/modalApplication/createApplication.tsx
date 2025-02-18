@@ -17,11 +17,23 @@ interface Application {
   token: string;
 }
 
+interface Provider {
+  id: string;
+  name: string;
+}
+
 interface CreateApplicationProps {
   isOpen: boolean;
   onClose: () => void;
   onCreate: (application: Application) => void;
 }
+
+const mockProviders: Provider[] = [
+  { id: "aws", name: "AWS" },
+  { id: "azure", name: "Azure" },
+  { id: "gcp", name: "Google Cloud" },
+  { id: "digitalocean", name: "DigitalOcean" },
+];
 
 const CreateApplication = ({
   isOpen,
@@ -35,7 +47,9 @@ const CreateApplication = ({
     token: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setNewApplication((prev) => ({
       ...prev,
@@ -85,12 +99,19 @@ const CreateApplication = ({
             onChange={handleChange}
             placeholder="Application Name"
           />
-          <Input
+          <select
             name="provider"
             value={newApplication.provider}
             onChange={handleChange}
-            placeholder="Application Provider"
-          />
+            className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+          >
+            <option value="">Select Provider</option>
+            {mockProviders.map((provider) => (
+              <option key={provider.id} value={provider.id}>
+                {provider.name}
+              </option>
+            ))}
+          </select>
           <Input
             name="token"
             value={newApplication.token}

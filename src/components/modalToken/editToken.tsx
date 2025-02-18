@@ -52,6 +52,9 @@ const EditToken = ({
     }
   };
   const handleEdit = () => {
+
+    // validate here
+
     if (editedToken) {
       onEdit(editedToken);
       onClose();
@@ -89,7 +92,7 @@ const EditToken = ({
             name="body"
             value={editedToken.body}
             onChange={handleChange}
-            placeholder="Code space"
+            placeholder="Body"
           />
           <Input
             name="encrypt"

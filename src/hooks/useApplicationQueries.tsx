@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import applicationService from "../api/service/applicationService";
 import { Application, ApplicationResponse, CreateApplicationResponse, EditApplicationResponse } from "../api/type";
 import useMutationAction from "../provider/queryGlobal";
@@ -29,17 +29,17 @@ export const useDeleteApplications = () => {
     return useMutationAction<{ success: boolean }, string>(["applications"], applicationService.deleteApplication, {});
 };
 
-// đây là code queri Mutation gốc, nếu a có cần
+export const useDeleteMultipleToken = () => {
+    const queryClient = useQueryClient();
+    return useMutation<{ success: boolean }, Error, string[]>({
+        mutationFn: applicationService.deleteMultipleApplications,
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ["applications"] });
 
-// export const useEditApplications = () => {
-//     const queryClient = useQueryClient();
-//     return useMutation<EditApplicationResponse, Error, Application>({
-//         mutationFn: applicationService.editApplication,
-//         onSuccess: () => {
-//             queryClient.invalidateQueries({ queryKey: ["applications"] });
-//         },
-//     });
-// };
+        },
+    });
+};
+
 
 // export const useDeleteApplications = () => {
 //     const queryClient = useQueryClient();
