@@ -9,6 +9,8 @@ import {
   DialogDescription,
 } from "../ui/dialog";
 import { Input } from "../ui/input";
+import { useGetProviders } from "../../hooks/useProviderQueries";
+import { ProviderType } from "../../api/type";
 
 interface Application {
   id: string;
@@ -17,29 +19,19 @@ interface Application {
   token: string;
 }
 
-interface Provider {
-  id: string;
-  name: string;
-}
-
 interface CreateApplicationProps {
   isOpen: boolean;
   onClose: () => void;
   onCreate: (application: Application) => void;
 }
 
-const mockProviders: Provider[] = [
-  { id: "aws", name: "AWS" },
-  { id: "azure", name: "Azure" },
-  { id: "gcp", name: "Google Cloud" },
-  { id: "digitalocean", name: "DigitalOcean" },
-];
-
 const CreateApplication = ({
   isOpen,
   onClose,
   onCreate,
 }: CreateApplicationProps) => {
+  const { data: providers = [], isLoading, error } = useGetProviders();
+  // console.log(providers);
   const [newApplication, setNewApplication] = useState<Application>({
     id: "",
     name: "",
@@ -63,8 +55,8 @@ const CreateApplication = ({
       name: "",
       provider: "",
       token: "",
-    })
-  }
+    });
+  };
 
   const handleCreate = () => {
     onCreate(newApplication);
@@ -75,7 +67,7 @@ const CreateApplication = ({
   const handleClose = () => {
     resetApplication();
     onClose();
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -99,19 +91,26 @@ const CreateApplication = ({
             onChange={handleChange}
             placeholder="Application Name"
           />
-          <select
-            name="provider"
-            value={newApplication.provider}
-            onChange={handleChange}
-            className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
-          >
-            <option value="">Select Provider</option>
-            {mockProviders.map((provider) => (
-              <option key={provider.id} value={provider.id}>
-                {provider.name}
-              </option>
-            ))}
-          </select>
+          {isLoading ? (
+            <p>Loading providers...</p>
+          ) : error ? (
+            <p className="text-red-500">Failed to load providers</p>
+          ) : (
+            <select
+              name="provider"
+              value={newApplication.provider}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+            >
+              <option value="">Select Provider</option>
+              {(Array.isArray(providers) ? providers : providers?.contents ?? []).map(
+  (provider: ProviderType) => (
+                <option key={provider.id} value={provider.id}>
+                  {provider.name}
+                </option>
+              ))}
+            </select>
+          )}
           <Input
             name="token"
             value={newApplication.token}

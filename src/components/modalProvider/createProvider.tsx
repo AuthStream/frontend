@@ -11,19 +11,14 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { ProviderType } from "../../api/type";
+import { useGetTokens } from "../../hooks/useTokenQueries";
+import { Token } from "../../api/type";
 
 const providerTypes = [
   { id: "cloud", name: "Cloud" },
   { id: "hosting", name: "Hosting" },
   { id: "api", name: "API" },
   { id: "database", name: "Database" },
-];
-
-const tokens = [
-  { id: "oauth", name: "OAuth" },
-  { id: "api_key", name: "API Key" },
-  { id: "jwt", name: "JWT" },
-  { id: "basic_auth", name: "Basic Auth" },
 ];
 
 interface CreateProviderProps {
@@ -33,13 +28,15 @@ interface CreateProviderProps {
 }
 
 const CreateProvider = ({ isOpen, onClose, onCreate }: CreateProviderProps) => {
+  const { data: tokens = [], isLoading, error } = useGetTokens();
+
   const [newProvider, setNewProvider] = useState<ProviderType>({
     id: "",
     name: "",
     type: "",
     domain: "",
     token: "",
-    callBackUrl: ""
+    callBackUrl: "",
   });
 
   const handleChange = (
@@ -55,9 +52,7 @@ const CreateProvider = ({ isOpen, onClose, onCreate }: CreateProviderProps) => {
   const handleCreate = () => {
     // validate here
 
-
-
-    onCreate(newProvider)
+    onCreate(newProvider);
     console.log(newProvider);
     setNewProvider({
       id: "",
@@ -65,9 +60,8 @@ const CreateProvider = ({ isOpen, onClose, onCreate }: CreateProviderProps) => {
       type: "",
       domain: "",
       token: "",
-      callBackUrl: ""
-
-    })
+      callBackUrl: "",
+    });
     onClose();
   };
 
@@ -112,19 +106,27 @@ const CreateProvider = ({ isOpen, onClose, onCreate }: CreateProviderProps) => {
             onChange={handleChange}
             placeholder="Provider Domain"
           />
-          <select
-            name="token"
-            value={newProvider.token}
-            onChange={handleChange}
-            className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
-          >
-            <option value="">Select Token Type</option>
-            {tokens.map((token) => (
-              <option key={token.id} value={token.id}>
-                {token.name}
-              </option>
-            ))}
-          </select>
+          {isLoading ? (
+            <p>Loading providers...</p>
+          ) : error ? (
+            <p className="text-red-500">Failed to load providers</p>
+          ) : (
+            <select
+              name="provider"
+              value={newProvider.token}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+            >
+              <option value="">Select Token</option>
+              {(Array.isArray(tokens) ? tokens : tokens?.contents ?? []).map(
+                (token: Token) => (
+                  <option key={token.id} value={token.id}>
+                    {token.name}
+                  </option>
+                )
+              )}
+            </select>
+          )}
           <Input
             name="callBackUrl"
             value={newProvider.callBackUrl}
