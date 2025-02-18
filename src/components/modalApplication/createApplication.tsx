@@ -9,6 +9,7 @@ import {
   DialogDescription,
 } from "../ui/dialog";
 import { Input } from "../ui/input";
+import { toast } from "react-toastify";
 
 interface Application {
   id: string;
@@ -66,11 +67,46 @@ const CreateApplication = ({
     })
   }
 
+
   const handleCreate = () => {
-    onCreate(newApplication);
+    const { id, name, provider, token } = newApplication;
+
+    const trimmedId = id.trim();
+    const trimmedName = name.trim();
+    const trimmedToken = token.trim();
+
+
+    if (!trimmedId || !trimmedName || !provider || !trimmedToken) {
+      toast.warning("All fields are required and cannot be empty.");
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9]+$/.test(trimmedId)) {
+      toast.warning("Application ID must only contain letters and numbers.");
+
+      return;
+    }
+
+    // Kiểm tra token có hợp lệ không (ví dụ: tối thiểu 8 ký tự)
+    if (trimmedToken.length < 8) {
+      toast.warning("Application Token must be at least 8 characters long.");
+      return;
+    }
+
+    // Gọi hàm onCreate với application đã được validate
+    onCreate({ ...newApplication, id: trimmedId, name: trimmedName, token: trimmedToken });
     resetApplication();
     onClose();
   };
+
+
+  // const handleCreate = () => {
+  //   //validate data ở đây
+
+  //   onCreate(newApplication);
+  //   resetApplication();
+  //   onClose();
+  // };
 
   const handleClose = () => {
     resetApplication();

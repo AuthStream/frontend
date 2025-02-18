@@ -15,6 +15,7 @@ import EditProvider from "./modalProvider/editProvider";
 import { ProviderType } from "../api/type";
 import { useCreateProviders, useDeleteMultipleProvider, useDeleteProviders, useEditProviders } from "../hooks/useProviderQueries";
 import { toast } from "react-toastify";
+import DeleteConfirm from "./confirmBox";
 
 
 interface TableProviderProps {
@@ -25,6 +26,7 @@ const TableProvider = ({ providers }: TableProviderProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [providerToEdit, setProviderToEdit] = useState<ProviderType | null>(null);
+  const [isOpenConfirm, setIsOpenConfirm] = useState(false)
 
 
   const createProviderMutation = useCreateProviders();
@@ -70,11 +72,16 @@ const TableProvider = ({ providers }: TableProviderProps) => {
     setProviderToEdit(null);
   };
 
+  const [idDelete, setIdDelete] = useState<string>('');
+
+  const handleClickDeleteProvider = (id: string) => {
+    setIdDelete(id);
+    setIsOpenConfirm(true);
+
+  }
+
   const handleDeleteProvider = (id: string) => {
 
-    if (!window.confirm("Are you sure you want to delete this token?")) {
-      return;
-    }
     try {
       deleteProviderMutation.mutate(id, {
         onSuccess: () => {
@@ -85,6 +92,8 @@ const TableProvider = ({ providers }: TableProviderProps) => {
       toast.error("something wrong with delete provider")
     }
   }
+
+
 
   return (
     <div className="w-full bg-white dark:bg-background border p-5 rounded-lg shadow-md">
@@ -152,7 +161,7 @@ const TableProvider = ({ providers }: TableProviderProps) => {
                   <Edit className="w-4 h-4" />
                 </Button>
                 <Button
-                  onClick={() => handleDeleteProvider(provider.id)}
+                  onClick={() => handleClickDeleteProvider(provider.id)}
                   variant="destructive" size="icon">
                   <Trash className="w-4 h-4" />
                 </Button>
@@ -179,6 +188,13 @@ const TableProvider = ({ providers }: TableProviderProps) => {
         />
       )}
 
+      <DeleteConfirm
+        isOpen={isOpenConfirm}
+        onClose={() => setIsOpenConfirm(false)}
+        onConfirm={handleDeleteProvider}
+        providerId={idDelete}
+        type="Provider"
+      />
 
     </div>
   );
