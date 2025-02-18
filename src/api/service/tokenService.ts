@@ -58,6 +58,20 @@ const mockTokens = [
           }, 500);
         });
       },
+
+    deleteMultipleTokens: async (ids: string[]): Promise<{ success: boolean }> => {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          ids.forEach((id) => {
+            const index = mockTokens.findIndex((token) => token.id === id);
+            if (index !== -1) {
+              mockTokens.splice(index, 1);
+            }
+          });
+          resolve({ success: true });
+        }, 500);
+      });
+    },
   };
   
   export default tokenService;

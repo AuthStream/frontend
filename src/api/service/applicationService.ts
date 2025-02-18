@@ -49,6 +49,19 @@ const mockApplications = [
           }, 500);
         });
       },
+      deleteMultipleApplications: async (ids: string[]): Promise<{ success: boolean }> => {
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            ids.forEach((id) => {
+              const index = mockApplications.findIndex((application) => application.id === id);
+              if (index !== -1) {
+                mockApplications.splice(index, 1);
+              }
+            });
+            resolve({ success: true });
+          }, 500);
+        });
+      },
   };
   
   export default applicationService;

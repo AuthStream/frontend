@@ -89,7 +89,7 @@ const EditToken = ({
             name="body"
             value={editedToken.body}
             onChange={handleChange}
-            placeholder="Code space"
+            placeholder="Body"
           />
           <Input
             name="encrypt"

@@ -4,6 +4,8 @@ import Sidebar from "./components/Sidebar";
 import { SidebarProvider, useSidebar } from "./context/SidebarContext";
 import Header from "./components/header";
 import QueryProvider from "./provider/QueryProvider";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Content = () => {
   const { isOpenSidebar } = useSidebar();
@@ -31,6 +33,7 @@ function App() {
             <div className="flex-1 w-full mt-8 overflow-hidden">
               <Content />
             </div>
+            <ToastContainer />
           </div>
         </div>
       </SidebarProvider>

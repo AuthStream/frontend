@@ -75,7 +75,7 @@ const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
             name="body"
             value={newToken.body}
             onChange={handleChange}
-            placeholder="Code Space"
+            placeholder="Body"
           />
           <Input
             name="encrypt"
