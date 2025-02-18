@@ -26,6 +26,7 @@ interface TableProviderProps {
 }
 
 const TableProvider = ({ providers }: TableProviderProps) => {
+  const [providerList, setProviderList] = useState(providers);
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -83,6 +84,20 @@ const TableProvider = ({ providers }: TableProviderProps) => {
     try {
       deleteMultipleProviderMutation.mutate(selectedProviders, {
         onSuccess: () => {
+          const updatedProvider = providerList.filter(
+            (provider) => !selectedProviders.includes(provider.id)
+          );
+
+          setProviderList(updatedProvider);
+          setSelectedProviders([]);
+
+          const newTotalPages = Math.ceil(
+            updatedProvider.length / itemsPerPage
+          );
+
+          if (currentPage > newTotalPages) {
+            setCurrentPage(newTotalPages || 1);
+          }
           toast.success("Providers deleted successfully");
         },
       });
@@ -127,6 +142,19 @@ const TableProvider = ({ providers }: TableProviderProps) => {
     try {
       deleteProviderMutation.mutate(id, {
         onSuccess: () => {
+          const updatedProvider = providerList.filter(
+            (provider) => provider.id !== id
+          );
+
+          setProviderList(updatedProvider);
+
+          const newTotalPages = Math.ceil(
+            updatedProvider.length / itemsPerPage
+          );
+
+          if (currentPage > newTotalPages) {
+            setCurrentPage(newTotalPages || 1);
+          }
           toast.success("provider delete successfully");
         },
       });

@@ -26,6 +26,8 @@ interface TableTokenProps {
 }
 
 const TableToken = ({ tokens }: TableTokenProps) => {
+  const [tokenList, setTokenList] = useState(tokens);
+
   const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isOpen, setIsOpen] = useState(false);
@@ -81,6 +83,18 @@ const TableToken = ({ tokens }: TableTokenProps) => {
       // toast.success("alo");
       deleteMultipleTokenMutation.mutate(selectedTokens, {
         onSuccess: () => {
+          const updatedToken = tokenList.filter(
+            (token) => !selectedTokens.includes(token.id)
+          );
+
+          setTokenList(updatedToken);
+          setSelectedTokens([]);
+
+          const newTotalPages = Math.ceil(updatedToken.length / itemsPerPage);
+
+          if (currentPage > newTotalPages) {
+            setCurrentPage(newTotalPages || 1);
+          }
           toast.success("Tokens deleted successfully");
         },
       });
@@ -148,6 +162,15 @@ const TableToken = ({ tokens }: TableTokenProps) => {
     try {
       deleteTokenMutation.mutate(id, {
         onSuccess: () => {
+          const updatedTokens = tokenList.filter((token) => token.id !== id);
+
+          setTokenList(updatedTokens);
+
+          const newTotalPages = Math.ceil(updatedTokens.length / itemsPerPage);
+
+          if (currentPage > newTotalPages) {
+            setCurrentPage(newTotalPages || 1);
+          }
           toast.success("Token deleted successfully");
         },
       });
