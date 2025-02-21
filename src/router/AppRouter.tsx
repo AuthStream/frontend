@@ -5,6 +5,7 @@ import Application from "../pages/Application";
 import Provider from "../pages/Provider";
 import Token from "../pages/Token";
 import NotFound from "../pages/not-found/index";
+import Message from "../pages/Message";
 
 const AppRouter = () => {
   return (
@@ -14,6 +15,7 @@ const AppRouter = () => {
       <Route path="/application" element={<Application />} />
       <Route path="/provider" element={<Provider />} />
       <Route path="/token" element={<Token />} />
+      <Route path="/message" element={<Message />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

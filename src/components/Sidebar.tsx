@@ -96,14 +96,14 @@ const Sidebar = () => {
             {openMenus.event && (
               <div className="ml-4 space-y-1">
                 <Link
-                  to="/logs"
+                  to="/message"
                   className={`block px-4 py-2 rounded border-b-2 border-gray-200 ${
                     isActive("/directory-services")
                       ? "font-bold text-blue-500"
                       : "text-black"
                   }`}
                 >
-                  Logs
+                  Message
                 </Link>
               </div>
             )}

@@ -63,4 +63,29 @@ export interface EditProviderResponse {
   success: boolean;
 }
 
+export interface EditTokenResponse {
+  success: boolean;
+}
+
+export interface Message {
+  id: string;
+  name: string;
+  type: string;
+  body: string;
+  created: string;
+};
+
+export interface MessageResponse {
+  contents: Message[];
+  totalElements: number;
+};
+
+export interface CreateMessageResponse {
+  success: boolean;
+}
+
+export interface EditMessageResponse {
+  success: boolean;
+}
+
 
