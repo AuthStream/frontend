@@ -59,26 +59,16 @@ const CreateApplication = ({
     });
   };
 
-
   const handleCreate = () => {
-    const { id, name, provider, token } = newApplication;
+    const { name, provider, token } = newApplication;
 
-    const trimmedId = id.trim();
     const trimmedName = name.trim();
     const trimmedToken = token.trim();
 
-
-    if (!trimmedId || !trimmedName || !provider || !trimmedToken) {
+    if (!trimmedName || !provider || !trimmedToken) {
       toast.warning("All fields are required and cannot be empty.");
       return;
     }
-
-    if (!/^[a-zA-Z0-9]+$/.test(trimmedId)) {
-      toast.warning("Application ID must only contain letters and numbers.");
-
-      return;
-    }
-
     // Kiểm tra token có hợp lệ không (ví dụ: tối thiểu 8 ký tự)
     if (trimmedToken.length < 8) {
       toast.warning("Application Token must be at least 8 characters long.");
@@ -86,11 +76,14 @@ const CreateApplication = ({
     }
 
     // Gọi hàm onCreate với application đã được validate
-    onCreate({ ...newApplication, id: trimmedId, name: trimmedName, token: trimmedToken });
+    onCreate({
+      ...newApplication,
+      name: trimmedName,
+      token: trimmedToken,
+    });
     resetApplication();
     onClose();
   };
-
 
   // const handleCreate = () => {
   //   //validate data ở đây
@@ -116,12 +109,6 @@ const CreateApplication = ({
         </DialogHeader>
         <div className="space-y-4">
           <Input
-            name="id"
-            value={newApplication.id}
-            onChange={handleChange}
-            placeholder="Application ID"
-          />
-          <Input
             name="name"
             value={newApplication.name}
             onChange={handleChange}
@@ -139,12 +126,14 @@ const CreateApplication = ({
               className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
             >
               <option value="">Select Provider</option>
-              {(Array.isArray(providers) ? providers : providers?.contents ?? []).map(
-                (provider: ProviderType) => (
-                  <option key={provider.id} value={provider.id}>
-                    {provider.name}
-                  </option>
-                ))}
+              {(Array.isArray(providers)
+                ? providers
+                : providers?.contents ?? []
+              ).map((provider: ProviderType) => (
+                <option key={provider.id} value={provider.id}>
+                  {provider.name}
+                </option>
+              ))}
             </select>
           )}
           <Input

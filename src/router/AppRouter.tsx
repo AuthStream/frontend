@@ -6,6 +6,10 @@ import Provider from "../pages/Provider";
 import Token from "../pages/Token";
 import NotFound from "../pages/not-found/index";
 import Message from "../pages/Message";
+import User from "../pages/User";
+import Role from "../pages/Role";
+import Group from "../pages/Group";
+import Permission from "../pages/Permission";
 
 const AppRouter = () => {
   return (
@@ -16,6 +20,11 @@ const AppRouter = () => {
       <Route path="/provider" element={<Provider />} />
       <Route path="/token" element={<Token />} />
       <Route path="/message" element={<Message />} />
+      <Route path="/user" element={<User />} />
+      <Route path="/role" element={<Role />} />
+      <Route path="/group" element={<Group />} />
+      <Route path="/permission" element={<Permission />} />
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -63,7 +63,6 @@ const EditApplication = ({
   };
 
   const handleEdit = () => {
-
     if (editedApplication) {
       onEdit(editedApplication);
       onClose();
@@ -84,13 +83,6 @@ const EditApplication = ({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <Input
-            name="id"
-            value={editedApplication.id}
-            onChange={handleChange}
-            placeholder="Application ID"
-            disabled
-          />
           <Input
             name="name"
             value={editedApplication.name}

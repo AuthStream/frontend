@@ -40,6 +40,88 @@ export interface EditApplicationResponse {
 }
 
 
+export interface User {
+  id: string;
+  email: string;
+  password: string;
+  created: string;
+};
+
+export interface UserResponse {
+  contents: User[];
+  totalElements: number;
+};
+
+export interface CreateUserResponse {
+  success: boolean;
+}
+
+export interface EditUserResponse {
+  success: boolean;
+}
+
+export interface Role {
+  id: string;
+  email: string;
+  password: string;
+  created: string;
+};
+
+export interface RoleResponse {
+  contents: Role[];
+  totalElements: number;
+};
+
+export interface CreateRoleResponse {
+  success: boolean;
+}
+
+export interface EditRoleResponse {
+  success: boolean;
+}
+
+export interface Group {
+  id: string;
+  email: string;
+  password: string;
+  created: string;
+};
+
+export interface GroupResponse {
+  contents: Group[];
+  totalElements: number;
+};
+
+export interface CreateGroupResponse {
+  success: boolean;
+}
+
+export interface EditGroupResponse {
+  success: boolean;
+}
+
+
+export interface Permission {
+  id: string;
+  email: string;
+  password: string;
+  created: string;
+};
+
+export interface PermissionResponse {
+  contents: Permission[];
+  totalElements: number;
+};
+
+export interface CreatePermissionResponse {
+  success: boolean;
+}
+
+export interface EditPermissionResponse {
+  success: boolean;
+}
+
+
 
 export interface ProviderType {
   id: string;
