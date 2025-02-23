@@ -13,8 +13,8 @@ import { toast } from "react-toastify";
 
 interface Role {
   id: string;
-  email: string;
-  password: string;
+  name: string;
+  application: string;
   created: string;
 }
 
@@ -27,9 +27,8 @@ interface CreateRoleProps {
 const CreateRole = ({ isOpen, onClose, onCreate }: CreateRoleProps) => {
   const [newRole, setNewRole] = useState({
     id: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
+    name: "",
+    application: "",
     created: new Date().toISOString(),
   });
 
@@ -44,35 +43,24 @@ const CreateRole = ({ isOpen, onClose, onCreate }: CreateRoleProps) => {
   const resetRole = () => {
     setNewRole({
       id: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
+      name: "",
+      application: "",
       created: new Date().toISOString(),
     });
   };
 
   const handleCreate = () => {
-    const { email, password, confirmPassword } = newRole;
+    const { name, application } = newRole;
 
-    if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
+    if (!name.trim() || !application.trim()) {
       toast.warning("All fields are required.");
-      return;
-    }
-
-    if (password.length < 8) {
-      toast.warning("Password must be at least 8 characters long.");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast.warning("Passwords do not match.");
       return;
     }
 
     onCreate({
       id: crypto.randomUUID(),
-      email: email.trim(),
-      password: password.trim(),
+      name: name.trim(),
+      application: application.trim(),
       created: newRole.created,
     });
     resetRole();
@@ -95,25 +83,16 @@ const CreateRole = ({ isOpen, onClose, onCreate }: CreateRoleProps) => {
         </DialogHeader>
         <div className="space-y-4">
           <Input
-            type="email"
-            name="email"
-            value={newRole.email}
+            name="name"
+            value={newRole.name}
             onChange={handleChange}
             placeholder="Rolename"
           />
           <Input
-            type="password"
-            name="password"
-            value={newRole.password}
+            name="application"
+            value={newRole.application}
             onChange={handleChange}
-            placeholder="Password"
-          />
-          <Input
-            type="password"
-            name="confirmPassword"
-            value={newRole.confirmPassword}
-            onChange={handleChange}
-            placeholder="Confirm Password"
+            placeholder="Application"
           />
         </div>
         <DialogFooter>

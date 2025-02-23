@@ -13,8 +13,8 @@ import { Checkbox } from "../ui/checkbox";
 
 interface Permission {
   id: string;
-  email: string;
-  password: string;
+  name: string;
+  application: string;
   created: string;
 }
 
@@ -25,8 +25,15 @@ interface EditPermissionProps {
   onEdit: (updatedPermission: Permission) => void;
 }
 
-const EditPermission = ({ isOpen, onClose, permissionToEdit, onEdit }: EditPermissionProps) => {
-  const [editedPermission, setEditedPermission] = useState<Permission | null>(null);
+const EditPermission = ({
+  isOpen,
+  onClose,
+  permissionToEdit,
+  onEdit,
+}: EditPermissionProps) => {
+  const [editedPermission, setEditedPermission] = useState<Permission | null>(
+    null
+  );
   const [changePassword, setChangePassword] = useState(false);
 
   useEffect(() => {
@@ -61,39 +68,23 @@ const EditPermission = ({ isOpen, onClose, permissionToEdit, onEdit }: EditPermi
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Permission</DialogTitle>
-          <DialogDescription>Update the details of the permission.</DialogDescription>
+          <DialogDescription>
+            Update the details of the permission.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <Input
-            type="email"
-            name="email"
-            value={editedPermission.email}
+            name="name"
+            value={editedPermission.name}
             onChange={handleChange}
             placeholder="Permissionname"
           />
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              checked={changePassword}
-              onChange={(e) => setChangePassword(e.target.checked)}
-            />
-            <label>Change Password</label>
-          </div>
-          {changePassword && (
-            <>
-              <Input
-                type="password"
-                name="oldPassword"
-                onChange={handleChange}
-                placeholder="Old Password"
-              />
-              <Input
-                type="password"
-                name="newPassword"
-                onChange={handleChange}
-                placeholder="New Password"
-              />
-            </>
-          )}
+          <Input
+            name="application"
+            value={editedPermission.application}
+            onChange={handleChange}
+            placeholder="Application"
+          />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>

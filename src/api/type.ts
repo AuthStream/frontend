@@ -62,8 +62,8 @@ export interface EditUserResponse {
 
 export interface Role {
   id: string;
-  email: string;
-  password: string;
+  name: string;
+  application:string;
   created: string;
 };
 
@@ -103,8 +103,8 @@ export interface EditGroupResponse {
 
 export interface Permission {
   id: string;
-  email: string;
-  password: string;
+  name: string;
+  application:string;
   created: string;
 };
 

@@ -10,11 +10,12 @@ import User from "../pages/User";
 import Role from "../pages/Role";
 import Group from "../pages/Group";
 import Permission from "../pages/Permission";
+import Dashboard from "../pages/Dashboard";
 
 const AppRouter = () => {
   return (
     <Routes>
-      <Route path="/home" element={<Home />} />
+      <Route path="/home" element={<Dashboard />} />
       <Route path="/about" element={<About />} />
       <Route path="/application" element={<Application />} />
       <Route path="/provider" element={<Provider />} />

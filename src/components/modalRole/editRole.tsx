@@ -13,8 +13,8 @@ import { Checkbox } from "../ui/checkbox";
 
 interface Role {
   id: string;
-  email: string;
-  password: string;
+  name: string;
+  application: string;
   created: string;
 }
 
@@ -65,35 +65,17 @@ const EditRole = ({ isOpen, onClose, roleToEdit, onEdit }: EditRoleProps) => {
         </DialogHeader>
         <div className="space-y-4">
           <Input
-            type="email"
-            name="email"
-            value={editedRole.email}
+            name="name"
+            value={editedRole.name}
             onChange={handleChange}
-            placeholder="Rolename"
+            placeholder="Email"
           />
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              checked={changePassword}
-              onChange={(e) => setChangePassword(e.target.checked)}
-            />
-            <label>Change Password</label>
-          </div>
-          {changePassword && (
-            <>
-              <Input
-                type="password"
-                name="oldPassword"
-                onChange={handleChange}
-                placeholder="Old Password"
-              />
-              <Input
-                type="password"
-                name="newPassword"
-                onChange={handleChange}
-                placeholder="New Password"
-              />
-            </>
-          )}
+          <Input
+            name="application"
+            value={editedRole.application}
+            onChange={handleChange}
+            placeholder="Application"
+          />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>

@@ -1,11 +1,11 @@
 // import axiosClient from "../axiosClient";
 import { CreateRoleResponse, EditRoleResponse, Role, RoleResponse } from "../type";
 const mockRoles = [
-  { id: "ABC1", email: "truongkinhquinh", password: "bmchien1", created: "2025-02-21T16:51:11.872Z" },
-  { id: "ABC2", email: "tolaokien", password: "bmchien2", created: "2025-02-21T16:51:11.872Z" },
-  { id: "ABC3", email: "truongkinhquinh", password: "bmchien3", created: "2025-02-21T16:51:11.872Z" },
-  { id: "ABC4", email: "tolaokien", password: "bmchien4", created: "2025-02-21T16:51:11.872Z" },
-  { id: "ABC5", email: "tolaokien", password: "bmchien5", created: "2025-02-21T16:51:11.872Z" },
+  { id: "ABC1", name: "truongkinhquinh", application: "bmchien1",created: "2025-02-21T16:51:11.872Z" },
+  { id: "ABC2", name: "tolaokien", application: "bmchien2", created: "2025-02-21T16:51:11.872Z" },
+  { id: "ABC3", name: "truongkinhquinh", application: "bmchien3", created: "2025-02-21T16:51:11.872Z" },
+  { id: "ABC4", name: "tolaokien", application: "bmchien4", created: "2025-02-21T16:51:11.872Z" },
+  { id: "ABC5", name: "tolaokien", application: "bmchien5", created: "2025-02-21T16:51:11.872Z" },
 ];
 
 const roleService = {

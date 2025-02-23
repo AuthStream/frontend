@@ -13,8 +13,8 @@ import { toast } from "react-toastify";
 
 interface Permission {
   id: string;
-  email: string;
-  password: string;
+  name: string;
+  application: string;
   created: string;
 }
 
@@ -24,12 +24,15 @@ interface CreatePermissionProps {
   onCreate: (permission: Permission) => void;
 }
 
-const CreatePermission = ({ isOpen, onClose, onCreate }: CreatePermissionProps) => {
+const CreatePermission = ({
+  isOpen,
+  onClose,
+  onCreate,
+}: CreatePermissionProps) => {
   const [newPermission, setNewPermission] = useState({
     id: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
+    name: "",
+    application: "",
     created: new Date().toISOString(),
   });
 
@@ -44,35 +47,24 @@ const CreatePermission = ({ isOpen, onClose, onCreate }: CreatePermissionProps) 
   const resetPermission = () => {
     setNewPermission({
       id: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
+      name: "",
+      application: "",
       created: new Date().toISOString(),
     });
   };
 
   const handleCreate = () => {
-    const { email, password, confirmPassword } = newPermission;
+    const { name, application } = newPermission;
 
-    if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
+    if (!name.trim() || !application.trim()) {
       toast.warning("All fields are required.");
-      return;
-    }
-
-    if (password.length < 8) {
-      toast.warning("Password must be at least 8 characters long.");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast.warning("Passwords do not match.");
       return;
     }
 
     onCreate({
       id: crypto.randomUUID(),
-      email: email.trim(),
-      password: password.trim(),
+      name: name.trim(),
+      application: application.trim(),
       created: newPermission.created,
     });
     resetPermission();
@@ -95,25 +87,16 @@ const CreatePermission = ({ isOpen, onClose, onCreate }: CreatePermissionProps) 
         </DialogHeader>
         <div className="space-y-4">
           <Input
-            type="email"
-            name="email"
-            value={newPermission.email}
+            name="name"
+            value={newPermission.name}
             onChange={handleChange}
             placeholder="Permissionname"
           />
           <Input
-            type="password"
-            name="password"
-            value={newPermission.password}
+            name="application"
+            value={newPermission.application}
             onChange={handleChange}
-            placeholder="Password"
-          />
-          <Input
-            type="password"
-            name="confirmPassword"
-            value={newPermission.confirmPassword}
-            onChange={handleChange}
-            placeholder="Confirm Password"
+            placeholder="Application"
           />
         </div>
         <DialogFooter>
