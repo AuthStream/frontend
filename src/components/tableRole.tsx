@@ -25,8 +25,8 @@ import roleService from "../api/service/roleService";
 
 interface Role {
   id: string;
-  email: string;
-  password: string;
+  name: string;
+  application: string;
   created: string;
 }
 
@@ -211,8 +211,8 @@ const TableRole = ({ roles }: TableRoleProps) => {
               />
             </TableHead>
             <TableHead>ID</TableHead>
-            <TableHead>Rolename</TableHead>
-            <TableHead>Password</TableHead>
+            <TableHead>RoleName</TableHead>
+            <TableHead>Application</TableHead>
             <TableHead>Date Created</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -228,8 +228,8 @@ const TableRole = ({ roles }: TableRoleProps) => {
                 />
               </TableCell>
               <TableCell>{role.id}</TableCell>
-              <TableCell>{role.email}</TableCell>
-              <TableCell>{role.password}</TableCell>
+              <TableCell>{role.name}</TableCell>
+              <TableCell>{role.application}</TableCell>
               <TableCell>
                 {" "}
                 {new Date(role.created).toISOString().split("T")[0]}
