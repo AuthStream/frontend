@@ -76,12 +76,6 @@ const CreateProvider = ({ isOpen, onClose, onCreate }: CreateProviderProps) => {
         </DialogHeader>
         <div className="space-y-4">
           <Input
-            name="id"
-            value={newProvider.id}
-            onChange={handleChange}
-            placeholder="Provider ID"
-          />
-          <Input
             name="name"
             value={newProvider.name}
             onChange={handleChange}

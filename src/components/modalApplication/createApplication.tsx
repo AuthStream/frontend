@@ -384,39 +384,39 @@ const CreateApplication = ({ isOpen, onClose, onCreate }: CreateApplicationProps
     setExtraFields([]);
   };
 
-  const handleNext = () => {
-    if (!newApplication.provider) {
-      toast.warning("Please select a provider.");
-      return;
-    }
-    setStep(2);
-  };
-
   const handleCreate = () => {
-    const { id, name, provider, token } = newApplication;
-    const trimmedId = id.trim();
+    const { name, provider, token } = newApplication;
+
     const trimmedName = name.trim();
     const trimmedToken = token.trim();
 
-    if (!trimmedId || !trimmedName || !provider || !trimmedToken) {
+    if (!trimmedName || !provider || !trimmedToken) {
       toast.warning("All fields are required and cannot be empty.");
       return;
     }
-
-    if (!/^[a-zA-Z0-9]+$/.test(trimmedId)) {
-      toast.warning("Application ID must only contain letters and numbers.");
-      return;
-    }
-
+    // Kiểm tra token có hợp lệ không (ví dụ: tối thiểu 8 ký tự)
     if (trimmedToken.length < 8) {
       toast.warning("Application Token must be at least 8 characters long.");
       return;
     }
 
-    onCreate({ ...newApplication, id: trimmedId, name: trimmedName, token: trimmedToken });
+    // Gọi hàm onCreate với application đã được validate
+    onCreate({
+      ...newApplication,
+      name: trimmedName,
+      token: trimmedToken,
+    });
     resetApplication();
     onClose();
   };
+
+  // const handleCreate = () => {
+  //   //validate data ở đây
+
+  //   onCreate(newApplication);
+  //   resetApplication();
+  //   onClose();
+  // };
 
   const handleClose = () => {
     resetApplication();
@@ -444,55 +444,40 @@ const CreateApplication = ({ isOpen, onClose, onCreate }: CreateApplicationProps
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          {step === 1 ? (
-            <>
-              {isLoading ? (
-                <p>Loading providers...</p>
-              ) : error ? (
-                <p className="text-red-500">Failed to load providers</p>
-              ) : providers?.contents.length === 0 ? (
-
-                <Button className="bg-red-500 text-white hover:bg-red-600 w-full" onClick={() => window.location.href = '/provider'}>
-                  No providers found. Create a new one.
-                </Button>
-              ) : (
-                <select
-                  name="provider"
-                  value={newApplication.provider}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
-                >
-                  <option value="">Select Provider</option>
-                  {(Array.isArray(providers) ? providers : providers?.contents ?? []).map(
-                    (provider: ProviderType) => (
-                      <option key={provider.id} value={provider.id}>
-                        {provider.name}
-                      </option>
-                    )
-                  )}
-                </select>
-              )}
-              <Button className="bg-blue-500 text-white hover:bg-blue-600 w-full" onClick={handleNext}>
-                Next
-              </Button>
-            </>
+          <Input
+            name="name"
+            value={newApplication.name}
+            onChange={handleChange}
+            placeholder="Application Name"
+          />
+          {isLoading ? (
+            <p>Loading providers...</p>
+          ) : error ? (
+            <p className="text-red-500">Failed to load providers</p>
           ) : (
-            <>
-              <Input name="id" value={newApplication.id} onChange={handleChange} placeholder="Application ID" />
-              <Input name="name" value={newApplication.name} onChange={handleChange} placeholder="Application Name" />
-              <Input name="token" value={newApplication.token} onChange={handleChange} placeholder="Application Token" />
-              <div className="flex space-x-2">
-                <Input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Enter field" />
-                <Button onClick={handleAddField} className="bg-green-500 text-white hover:bg-green-600">+</Button>
-              </div>
-              {extraFields.map((field, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <Input value={field} readOnly />
-                  <Button onClick={() => handleRemoveField(index)} className="bg-red-500 text-white hover:bg-red-600">X</Button>
-                </div>
+            <select
+              name="provider"
+              value={newApplication.provider}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+            >
+              <option value="">Select Provider</option>
+              {(Array.isArray(providers)
+                ? providers
+                : providers?.contents ?? []
+              ).map((provider: ProviderType) => (
+                <option key={provider.id} value={provider.id}>
+                  {provider.name}
+                </option>
               ))}
-            </>
+            </select>
           )}
+          <Input
+            name="token"
+            value={newApplication.token}
+            onChange={handleChange}
+            placeholder="Application Token"
+          />
         </div>
         <DialogFooter>
           {step === 2 && (

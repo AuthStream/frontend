@@ -53,7 +53,7 @@ const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
       body: "",
       encrypt: "",
       expired: 0,
-    })
+    });
     onCreate(newToken);
     onClose();
   };
@@ -68,12 +68,6 @@ const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <Input
-            name="id"
-            value={newToken.id}
-            onChange={handleChange}
-            placeholder="Token ID"
-          />
           <Input
             name="name"
             value={newToken.name}

@@ -144,6 +144,34 @@ const Sidebar = () => {
                 >
                   User
                 </Link>
+                <Link
+                  to="/role"
+                  className={`block px-4 py-2 rounded border-b-2 border-gray-200 ${
+                    isActive("/role") ? "font-bold text-blue-500" : "text-black"
+                  }`}
+                >
+                  Role
+                </Link>
+                <Link
+                  to="/group"
+                  className={`block px-4 py-2 rounded border-b-2 border-gray-200 ${
+                    isActive("/group")
+                      ? "font-bold text-blue-500"
+                      : "text-black"
+                  }`}
+                >
+                  Group
+                </Link>
+                <Link
+                  to="/permission"
+                  className={`block px-4 py-2 rounded border-b-2 border-gray-200 ${
+                    isActive("/permission")
+                      ? "font-bold text-blue-500"
+                      : "text-black"
+                  }`}
+                >
+                  Permission
+                </Link>
               </div>
             )}
 

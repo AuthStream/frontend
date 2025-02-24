@@ -30,16 +30,17 @@ interface EditProviderProps {
   onClose: () => void;
   providerToEdit: ProviderType | null;
   onEdit: (updatedProvider: ProviderType) => void;
-
 }
 
 const EditProvider = ({
   isOpen,
   onClose,
   providerToEdit,
-  onEdit
+  onEdit,
 }: EditProviderProps) => {
-  const [editedProvider, setEditedProvider] = useState<ProviderType | null>(null);
+  const [editedProvider, setEditedProvider] = useState<ProviderType | null>(
+    null
+  );
 
   useEffect(() => {
     if (providerToEdit) {
@@ -60,12 +61,10 @@ const EditProvider = ({
   };
 
   const handleEdit = () => {
-
     // validate here
 
-
     if (editedProvider) {
-      onEdit(editedProvider)
+      onEdit(editedProvider);
       onClose();
     }
   };
@@ -83,14 +82,7 @@ const EditProvider = ({
             Update the details of the provider.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <Input
-            name="id"
-            value={editedProvider.id}
-            onChange={handleChange}
-            placeholder="Provider ID"
-            disabled
-          />
+        <div className="space-y-4"> 
           <Input
             name="name"
             value={editedProvider.name}
