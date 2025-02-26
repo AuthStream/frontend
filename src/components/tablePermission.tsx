@@ -25,8 +25,8 @@ import permissionService from "../api/service/permissionService";
 
 interface Permission {
   id: string;
-  email: string;
-  password: string;
+  name: string;
+  application: string;
   created: string;
 }
 
@@ -225,8 +225,8 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
               />
             </TableHead>
             <TableHead>ID</TableHead>
-            <TableHead>Permissionname</TableHead>
-            <TableHead>Password</TableHead>
+            <TableHead>Permission Name</TableHead>
+            <TableHead>Application</TableHead>
             <TableHead>Date Created</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -242,8 +242,8 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
                 />
               </TableCell>
               <TableCell>{permission.id}</TableCell>
-              <TableCell>{permission.email}</TableCell>
-              <TableCell>{permission.password}</TableCell>
+              <TableCell>{permission.name}</TableCell>
+              <TableCell>{permission.application}</TableCell>
               <TableCell>
                 {" "}
                 {new Date(permission.created).toISOString().split("T")[0]}
