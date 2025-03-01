@@ -1,4 +1,4 @@
-import { Search, Plus, Edit, Trash, Trash2, RefreshCw } from "lucide-react";
+import { Search, Plus, Trash, Trash2, RefreshCw, Save } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -9,10 +9,11 @@ import {
 } from "../components/ui/table";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import ImportRoute from "./importCsv";
+import ImportRoute from "./modalRoute/importCsv";
 import { useState } from "react";
 import {
   useCreateRoute,
+  useEditRoute,
   useDeleteRoute,
   useDeleteMultipleRoute,
 } from "../hooks/useRouteQueries";
@@ -27,19 +28,29 @@ interface TableRouteProps {
 
 const TableRoute = ({ routes }: TableRouteProps) => {
   const [routeList, setRouteList] = useState(routes);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [selectedRoutes, setSelectedRoutes] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [editedRoutes, setEditedRoutes] = useState<Route[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
   const itemsPerPage = 5;
-  const totalPages = Math.ceil(routes.length / itemsPerPage);
-  const currentRoutes = routes.slice(
+  const filteredRoutes = routeList.filter(
+    (route) =>
+      route.name.toLowerCase().includes(searchQuery) ||
+      route.id.toLowerCase().includes(searchQuery)
+  );
+
+  const totalPages = Math.ceil(filteredRoutes.length / itemsPerPage);
+
+  const currentRoutes = filteredRoutes.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
   const createRouteMutation = useCreateRoute();
+  const editRouteMutation = useEditRoute();
   const deleteRouteMutation = useDeleteRoute();
   const deleteMultipleRouteMutation = useDeleteMultipleRoute();
 
@@ -58,7 +69,24 @@ const TableRoute = ({ routes }: TableRouteProps) => {
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedRoutes(e.target.checked ? routes.map((t) => t.id) : []);
+    setSelectedRoutes(e.target.checked ? filteredRoutes.map((t) => t.id) : []);
+  };
+
+  const handleSubmitChanges = () => {
+    if (editedRoutes.length === 0) {
+      toast.info("No changes to update.");
+      return;
+    }
+
+    editRouteMutation.mutate(editedRoutes, {
+      onSuccess: () => {
+        toast.success("Routes updated successfully");
+        setEditedRoutes([]);
+      },
+      onError: () => {
+        toast.error("Failed to update routes");
+      },
+    });
   };
 
   const onImport = async (newRoute: Route[]) => {
@@ -84,6 +112,39 @@ const TableRoute = ({ routes }: TableRouteProps) => {
   const handleClickDeleteRoute = (id: string) => {
     setIdDelete(id);
     setIsOpenConfirm(true);
+  };
+
+  const handleToggleProtected = (id?: string, currentStatus?: boolean) => {
+    let updatedRoutes;
+    if (id) {
+      updatedRoutes = routeList.map((route) =>
+        route.id === id ? { ...route, protected: !currentStatus } : route
+      );
+    } else {
+      const allSelected = filteredRoutes.every((route) => route.protected);
+      updatedRoutes = routeList.map((route) =>
+        filteredRoutes.some((r) => r.id === route.id)
+          ? { ...route, protected: !allSelected }
+          : route
+      );
+    }
+    setRouteList(updatedRoutes);
+
+    setEditedRoutes((prev) => {
+      const updated = new Map(prev.map((r) => [r.id, r]));
+
+      updatedRoutes.forEach((route) => {
+        if (filteredRoutes.some((r) => r.id === route.id)) {
+          updated.set(route.id, route);
+        }
+      });
+
+      return Array.from(updated.values());
+    });
+  };
+
+  const handleSelectAllProtected = () => {
+    handleToggleProtected();
   };
 
   const handleDeleteRoute = async (id: string) => {
@@ -147,7 +208,12 @@ const TableRoute = ({ routes }: TableRouteProps) => {
     <div className="w-full bg-white dark:bg-background border p-5 rounded-lg shadow-md">
       <div className="flex items-center justify-between mb-4">
         <div className="relative w-1/3">
-          <Input placeholder="Search..." className="pl-10" />
+          <Input
+            placeholder="Search..."
+            className="pl-10"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
+          />
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
         </div>
 
@@ -168,6 +234,13 @@ const TableRoute = ({ routes }: TableRouteProps) => {
           >
             <Trash2 className="w-4 h-4 mr-2" /> Delete
           </Button>
+
+          <Button
+            onClick={handleSubmitChanges}
+            className="bg-green-500 text-white hover:bg-green-600"
+          >
+            <Save className="w-4 h-4 mr-2" /> Submit Changes
+          </Button>
         </div>
       </div>
 
@@ -184,7 +257,21 @@ const TableRoute = ({ routes }: TableRouteProps) => {
             <TableHead>ID</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Created</TableHead>
-            <TableHead>Protected</TableHead>
+            <TableHead className="w-32">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  onChange={handleSelectAllProtected}
+                  checked={
+                    filteredRoutes.length > 0 &&
+                    filteredRoutes.every((route) => route.protected)
+                  }
+                />
+                <span>Protected</span>
+              </div>
+            </TableHead>
+
+            <TableHead>Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -200,6 +287,15 @@ const TableRoute = ({ routes }: TableRouteProps) => {
               <TableCell>{route.id}</TableCell>
               <TableCell>{route.name}</TableCell>
               <TableCell>{route.created}</TableCell>
+              <TableCell>
+                <input
+                  type="checkbox"
+                  checked={route.protected}
+                  onChange={() =>
+                    handleToggleProtected(route.id, route.protected)
+                  }
+                />
+              </TableCell>
               <TableCell>
                 <Button
                   onClick={() => handleClickDeleteRoute(route.id)}

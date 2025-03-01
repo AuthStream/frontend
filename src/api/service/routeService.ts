@@ -36,18 +36,20 @@ const tokenService = {
   },
   
 
-  editRoute: async (updatedRoute: Route): Promise<EditRouteResponse> => {
+  editRoute: async (updatedRoutes: Route[]): Promise<EditRouteResponse> => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        const index = mockRoutes.findIndex((token) => token.id === updatedRoute.id);
-        if (index !== -1) {
-          mockRoutes[index] = updatedRoute;
-        }
+        updatedRoutes.forEach((updatedRoute) => {
+          const index = mockRoutes.findIndex((route) => route.id === updatedRoute.id);
+          if (index !== -1) {
+            mockRoutes[index] = updatedRoute;
+          }
+        });
         resolve({ success: true });
       }, 500);
     });
   },
-
+  
   deleteRoute: async (id: string): Promise<{ success: boolean }> => {
     return new Promise((resolve) => {
       setTimeout(() => {
