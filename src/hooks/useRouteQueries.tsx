@@ -24,7 +24,7 @@ export const useCreateRoute = () => {
 };
 
 export const useEditRoute = () => {
-  return useMutationAction<EditRouteResponse, Route>(
+  return useMutationAction<EditRouteResponse, Route[]>(
     ["routes"],
     routeService.editRoute,
     {}
