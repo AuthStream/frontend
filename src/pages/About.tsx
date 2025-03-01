@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { useEffect, useState } from "react";
-import UploadFile from "../components/importCsv";
+// import TableRoute from "../components/tableRoute";
 
 function About() {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ function About() {
         Click me to go to Home
       </Button>
       <h1 className="text-2xl font-bold mt-4">About Page</h1> */}
-      <UploadFile />
+      {/* <TableRoute /> */}
     </div>
   );
 }
