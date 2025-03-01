@@ -127,9 +127,10 @@ export interface ProviderType {
   id: string;
   name: string;
   type: string;
-  domain: string;
-  token: string;
-  callBackUrl: string;
+  applicationId: string;
+  methodId: string;
+  createdAt: string;
+  updateAt:string;
 };
 
 export interface ProviderResponse {
@@ -171,3 +172,22 @@ export interface EditMessageResponse {
 }
 
 
+export interface Route {
+  id:string;
+  name: string;
+  created: string;
+  protected:boolean;
+};
+
+export interface RouteResponse {
+  contents: Route[];
+  totalElements: number;
+};
+
+export interface CreateRouteResponse {
+  success: boolean;
+}
+
+export interface EditRouteResponse {
+  success: boolean;
+}
