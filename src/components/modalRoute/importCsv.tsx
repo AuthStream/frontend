@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, FormEvent, DragEvent } from "react";
+import { useState, ChangeEvent, DragEvent } from "react";
 import {
   Dialog,
   DialogContent,
@@ -133,6 +133,7 @@ const ImportCSV = ({ isOpen, onClose, onImport }: ImportCSVProps) => {
             </table>
             <Button
               onClick={() => {
+                setPreviewData([]);
                 onImport(previewData);
                 onClose();
               }}
