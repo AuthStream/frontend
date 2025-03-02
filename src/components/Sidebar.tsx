@@ -172,6 +172,16 @@ const Sidebar = () => {
                 >
                   Permission
                 </Link>
+                <Link
+                  to="/route"
+                  className={`block px-4 py-2 rounded border-b-2 border-gray-200 ${
+                    isActive("/group")
+                      ? "font-bold text-blue-500"
+                      : "text-black"
+                  }`}
+                >
+                  Route
+                </Link>
               </div>
             )}
 

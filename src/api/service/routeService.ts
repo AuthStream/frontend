@@ -40,9 +40,9 @@ const tokenService = {
     return new Promise((resolve) => {
       setTimeout(() => {
         updatedRoutes.forEach((updatedRoute) => {
-          const index = mockRoutes.findIndex((route) => route.id === updatedRoute.id);
+          const index = mockRoutes.findIndex((route) => route.name === updatedRoute.name);
           if (index !== -1) {
-            mockRoutes[index] = updatedRoute;
+            mockRoutes[index].protected = updatedRoute.protected;
           }
         });
         resolve({ success: true });

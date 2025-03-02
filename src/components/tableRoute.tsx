@@ -21,6 +21,7 @@ import { toast } from "react-toastify";
 import { Route } from "../api/type";
 import DeleteConfirm from "./confirmBox";
 import DeleteMultipleConfirm from "./confirmMultipleBox";
+import DuplicateRoute from "./modalRoute/duplicateRoute";
 
 interface TableRouteProps {
   routes: Route[];
@@ -31,15 +32,16 @@ const TableRoute = ({ routes }: TableRouteProps) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [selectedRoutes, setSelectedRoutes] = useState<string[]>([]);
+  const [duplicateRoutes, setDuplicateRoutes] = useState<Route[]>([]);
+  const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [editedRoutes, setEditedRoutes] = useState<Route[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
   const itemsPerPage = 5;
-  const filteredRoutes = routeList.filter(
-    (route) =>
-      route.name.toLowerCase().includes(searchQuery) ||
-      route.id.toLowerCase().includes(searchQuery)
+  const filteredRoutes = routeList.filter((route) =>
+    route.name.toLowerCase().includes(searchQuery)
   );
 
   const totalPages = Math.ceil(filteredRoutes.length / itemsPerPage);
@@ -89,16 +91,40 @@ const TableRoute = ({ routes }: TableRouteProps) => {
     });
   };
 
+  const handleReplaceRoutes = (duplicates: Route[]) => {
+    console.log(duplicates);
+    editRouteMutation.mutate(duplicates, {
+      onSuccess: () => {
+        toast.success("Duplicate routes replaced successfully");
+        setDuplicateRoutes([]);
+        setIsDuplicateModalOpen(false);
+      },
+    });
+  };
+
   const onImport = async (newRoute: Route[]) => {
-    try {
-      createRouteMutation.mutate(newRoute, {
+    const existingNames = new Set(routeList.map((route) => route.name));
+    const duplicates = newRoute.filter((route) =>
+      existingNames.has(route.name)
+    );
+    const uniqueRoutes = newRoute.filter(
+      (route) => !existingNames.has(route.name)
+    );
+
+    if (duplicates.length > 0) {
+      setDuplicateRoutes(duplicates);
+      setIsDuplicateModalOpen(true);
+    } else {
+      setDuplicateRoutes([]);
+      setIsDuplicateModalOpen(false);
+    }
+
+    if (uniqueRoutes.length > 0) {
+      createRouteMutation.mutate(uniqueRoutes, {
         onSuccess: () => {
-          toast.success("Route created successfully");
+          toast.success("Routes imported successfully");
         },
       });
-      setIsOpen(false);
-    } catch (error) {
-      toast.error("Failed to create route");
     }
   };
 
@@ -266,6 +292,7 @@ const TableRoute = ({ routes }: TableRouteProps) => {
                     filteredRoutes.length > 0 &&
                     filteredRoutes.every((route) => route.protected)
                   }
+                  disabled={filteredRoutes.length === routeList.length}
                 />
                 <span>Protected</span>
               </div>
@@ -347,6 +374,12 @@ const TableRoute = ({ routes }: TableRouteProps) => {
         onConfirm={handleDeleteSelectedRoutes}
         selectedArray={selectedRoutes}
         type={"route"}
+      />
+      <DuplicateRoute
+        isOpen={isDuplicateModalOpen}
+        onClose={() => setIsDuplicateModalOpen(false)}
+        duplicates={duplicateRoutes}
+        onReplace={handleReplaceRoutes}
       />
     </div>
   );
