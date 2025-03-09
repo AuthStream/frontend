@@ -1,35 +1,73 @@
-import { Routes, Route } from "react-router-dom";
-import About from "../pages/About";
-import Application from "../pages/Application";
-import Provider from "../pages/Provider";
-import Token from "../pages/Token";
+import { Navigate, useRoutes } from "react-router-dom";
 import NotFound from "../pages/not-found/index";
-import Message from "../pages/Message";
-import User from "../pages/User";
-import Role from "../pages/Role";
-import Group from "../pages/Group";
-import Permission from "../pages/Permission";
-import Dashboard from "../pages/Dashboard";
-import ProtectedRoute from "../pages/Route";
+import { FC } from "react";
+import PrivateLayout from "../layouts/PrivateLayout";
+import PublicLayout from "../layouts/PublicLayout";
+import PrivateRoute from "./PrivateRoute";
+import PublicRoute from "./PublicRoute";
+import { JWT_LOCAL_STORAGE_KEY } from "../constants/data";
 
-const AppRouter = () => {
-  return (
-    <Routes>
-      <Route path="/home" element={<Dashboard />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/route" element={<ProtectedRoute />} />
-      <Route path="/application" element={<Application />} />
-      <Route path="/provider" element={<Provider />} />
-      <Route path="/token" element={<Token />} />
-      <Route path="/message" element={<Message />} />
-      <Route path="/user" element={<User />} />
-      <Route path="/role" element={<Role />} />
-      <Route path="/group" element={<Group />} />
-      <Route path="/permission" element={<Permission />} />
+const SignedRoute: FC<{
+  element: JSX.Element;
+  requiredLogin: boolean;
+}> = ({ element, requiredLogin }) => {
+  const isAuthenticated = localStorage.getItem(JWT_LOCAL_STORAGE_KEY);
 
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
+  if (!isAuthenticated && requiredLogin) {
+    return <Navigate to="/signin" />;
+  }
+
+  if (isAuthenticated && !requiredLogin) {
+    return <Navigate to="/" />;
+  }
+
+  return element;
+};
+
+const routes = [
+  {
+    element: <PrivateLayout />,
+    children: [
+      ...Object.values(PrivateRoute).map(({ path, component: Component }) => ({
+        path,
+        element: <SignedRoute element={<Component />} requiredLogin={true} />,
+      })),
+    ],
+  },
+  {
+    element: <PublicLayout />,
+    children: [
+      ...Object.values(PublicRoute).map(({ path, component: Component }) => ({
+        path,
+        element: <SignedRoute element={<Component />} requiredLogin={false} />,
+      })),
+    ],
+  },
+  {
+    path: "*",
+    element: <NotFound />,
+  },
+];
+
+const AppRouter: FC = () => {
+  // console.log(useRoutes(routes));
+  return useRoutes(routes);
+  // return (
+  //   <Routes>
+  //     <Route path="/home" element={<Dashboard />} />
+  //     <Route path="/about" element={<About />} />
+  //     <Route path="/route" element={<ProtectedRoute />} />
+  //     <Route path="/application" element={<Application />} />
+  //     <Route path="/provider" element={<Provider />} />
+  //     <Route path="/token" element={<Token />} />
+  //     <Route path="/message" element={<Message />} />
+  //     <Route path="/user" element={<User />} />
+  //     <Route path="/role" element={<Role />} />
+  //     <Route path="/group" element={<Group />} />
+  //     <Route path="/permission" element={<Permission />} />
+  //     <Route path="*" element={<NotFound />} />
+  //   </Routes>
+  // );
 };
 
 export default AppRouter;

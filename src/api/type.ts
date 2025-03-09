@@ -171,6 +171,30 @@ export interface EditMessageResponse {
   success: boolean;
 }
 
+export interface Log {
+  id: string;
+  ip: string;
+  user: string;
+  event: string;
+  created: string;
+  context: object;
+  rawEvent: object;
+};
+
+export interface LogResponse {
+  contents: Log[];
+  totalElements: number;
+};
+
+export interface CreateLogResponse {
+  success: boolean;
+}
+
+export interface EditLogResponse {
+  success: boolean;
+}
+
+
 
 export interface Route {
   id:string;

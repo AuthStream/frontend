@@ -29,9 +29,9 @@ const Sidebar = () => {
           </h2>
           <nav className="space-y-2">
             <Link
-              to="/home"
+              to="/"
               className={`block px-4 py-2 dark:text-white rounded border-b-2 border-gray-200 ${
-                isActive("/home") ? "font-bold text-blue-500" : "text-black"
+                isActive("/") ? "font-bold text-blue-500" : "text-black"
               }`}
             >
               Dashboard
@@ -98,12 +98,30 @@ const Sidebar = () => {
                 <Link
                   to="/message"
                   className={`block px-4 py-2 rounded border-b-2 border-gray-200 ${
-                    isActive("/directory-services")
+                    isActive("/message")
                       ? "font-bold text-blue-500"
                       : "text-black"
                   }`}
                 >
                   Message
+                </Link>
+                <Link
+                  to="/log"
+                  className={`block px-4 py-2 rounded border-b-2 border-gray-200 ${
+                    isActive("/log") ? "font-bold text-blue-500" : "text-black"
+                  }`}
+                >
+                  Log
+                </Link>
+                <Link
+                  to="/notification"
+                  className={`block px-4 py-2 rounded border-b-2 border-gray-200 ${
+                    isActive("/notification")
+                      ? "font-bold text-blue-500"
+                      : "text-black"
+                  }`}
+                >
+                  Notification
                 </Link>
               </div>
             )}
