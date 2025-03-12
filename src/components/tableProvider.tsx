@@ -32,9 +32,10 @@ const TableProvider = ({ providers }: TableProviderProps) => {
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [providerToEdit, setProviderToEdit] = useState<ProviderType | null>(null);
-  const [isOpenConfirm, setIsOpenConfirm] = useState(false)
-
+  const [providerToEdit, setProviderToEdit] = useState<ProviderType | null>(
+    null
+  );
+  const [isOpenConfirm, setIsOpenConfirm] = useState(false);
 
   const createProviderMutation = useCreateProviders();
   const editProviderMutation = useEditProviders();
@@ -71,8 +72,9 @@ const TableProvider = ({ providers }: TableProviderProps) => {
     setSelectedProviders(e.target.checked ? providers.map((t) => t.id) : []);
   };
 
-
-  const onCreate = async (newProvider: ProviderType) => {
+  const onCreate = async (
+    newProvider: Omit<ProviderType, "id" | "createdAt" | "updateAt">
+  ) => {
     try {
       createProviderMutation.mutate(newProvider, {
         onSuccess: () => {
@@ -101,17 +103,14 @@ const TableProvider = ({ providers }: TableProviderProps) => {
     }
   };
 
-  const [idDelete, setIdDelete] = useState<string>('');
+  const [idDelete, setIdDelete] = useState<string>("");
 
   const handleClickDeleteProvider = (id: string) => {
     setIdDelete(id);
     setIsOpenConfirm(true);
-
-  }
+  };
 
   const handleDeleteProvider = (id: string) => {
-
-
     try {
       deleteProviderMutation.mutate(id, {
         onSuccess: () => {
@@ -136,7 +135,7 @@ const TableProvider = ({ providers }: TableProviderProps) => {
     }
   };
 
-  const [isOpenConfirmMultiple, setIsOpenConfirmMultiple] = useState(false)
+  const [isOpenConfirmMultiple, setIsOpenConfirmMultiple] = useState(false);
 
   const handleDeleteSelected = () => {
     if (selectedProviders.length === 0) {
@@ -175,7 +174,6 @@ const TableProvider = ({ providers }: TableProviderProps) => {
       toast.error("Failed to delete selected providers");
     }
   };
-
 
   return (
     <div className="w-full bg-white dark:bg-background border p-5 rounded-lg shadow-md">
@@ -220,8 +218,9 @@ const TableProvider = ({ providers }: TableProviderProps) => {
             <TableHead>Name</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Domain</TableHead>
-            <TableHead>Token</TableHead>
+            <TableHead>Application</TableHead>
             <TableHead>CallBack Url</TableHead>
+            <TableHead>Created</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -239,9 +238,9 @@ const TableProvider = ({ providers }: TableProviderProps) => {
               <TableCell>{provider.name}</TableCell>
               <TableCell>{provider.type}</TableCell>
               <TableCell>{provider.domain}</TableCell>
-              <TableCell>{provider.token}</TableCell>
-              <TableCell>{provider.callBackUrl}</TableCell>
-
+              <TableCell>{provider.applicationId}</TableCell>
+              <TableCell>{provider.callbackURL}</TableCell>
+              <TableCell>{provider.createdAt}</TableCell>
               <TableCell className="flex space-x-2">
                 <Button
                   onClick={() => {
@@ -255,8 +254,9 @@ const TableProvider = ({ providers }: TableProviderProps) => {
                 </Button>
                 <Button
                   onClick={() => handleClickDeleteProvider(provider.id)}
-                  variant="destructive" size="icon">
-
+                  variant="destructive"
+                  size="icon"
+                >
                   <Trash className="w-4 h-4" />
                 </Button>
               </TableCell>
@@ -311,9 +311,9 @@ const TableProvider = ({ providers }: TableProviderProps) => {
         onClose={() => setIsOpenConfirmMultiple(false)}
         onConfirm={handleDeleteSelectedProviders}
         selectedArray={selectedProviders}
-        type={'Provider'}
+        type={"Provider"}
       />
-    </div >
+    </div>
   );
 };
 

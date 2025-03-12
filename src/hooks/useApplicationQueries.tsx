@@ -1,45 +1,59 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import applicationService from "../api/service/applicationService";
-import { Application, ApplicationResponse, CreateApplicationResponse, EditApplicationResponse } from "../api/type";
+import {
+  Application,
+  ApplicationResponse,
+  CreateApplicationResponse,
+  EditApplicationResponse,
+} from "../api/type";
 import useMutationAction from "../provider/queryGlobal";
 
 export const useGetApplications = () => {
-    return useQuery<ApplicationResponse>({
-        queryKey: ["applications"],
-        queryFn: applicationService.getAllApplications,
-    });
+  return useQuery<ApplicationResponse>({
+    queryKey: ["applications"],
+    queryFn: applicationService.getAllApplications,
+  });
 };
 
 export const useCreateApplications = () => {
-    return useMutationAction<CreateApplicationResponse, Application>(["applications"], applicationService.createApplication);
+  return useMutationAction<
+    CreateApplicationResponse,
+    Omit<Application, "id" | "createdAt" | "updateAt">
+  >(["applications"], applicationService.createApplication);
 };
 
 export const useRefreshApplications = () => {
-    const queryClient = useQueryClient();
-    const refresh = () => {
-        queryClient.invalidateQueries({ queryKey: ["applications"] });
-    };
+  const queryClient = useQueryClient();
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["applications"] });
+  };
 
-    return { refresh };
+  return { refresh };
 };
 export const useEditApplications = () => {
-    return useMutationAction<EditApplicationResponse, Application>(["applications"], applicationService.editApplication, {});
+  return useMutationAction<EditApplicationResponse, Application>(
+    ["applications"],
+    applicationService.editApplication,
+    {}
+  );
 };
 export const useDeleteApplications = () => {
-    return useMutationAction<{ success: boolean }, string>(["applications"], applicationService.deleteApplication, {});
+  return useMutationAction<{ success: boolean }, string>(
+    ["applications"],
+    applicationService.deleteApplication,
+    {}
+  );
 };
 
 export const useDeleteMultipleToken = () => {
-    const queryClient = useQueryClient();
-    return useMutation<{ success: boolean }, Error, string[]>({
-        mutationFn: applicationService.deleteMultipleApplications,
-        onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ["applications"] });
-
-        },
-    });
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, string[]>({
+    mutationFn: applicationService.deleteMultipleApplications,
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+    },
+  });
 };
-
 
 // export const useDeleteApplications = () => {
 //     const queryClient = useQueryClient();

@@ -1,13 +1,10 @@
-// import axiosClient from "../axiosClient";
 import { CreateProviderResponse, EditProviderResponse, ProviderResponse, ProviderType } from "../type";
 
-const mockProviders = [
-    { id: "ABC1", name: "truongkinhquinh", type: "LDAP", domain: "---", callBackUrl: 'fb.com', token: 'hihi' },
-    { id: "ABC2", name: "tolaokien", type: "LDAP", domain: "---", callBackUrl: 'fb.com', token: 'hihi' },
-    { id: "ABC3", name: "truongkinhquinh", type: "LDAP", domain: "---", callBackUrl: 'fb.com', token: 'hihi' },
-    { id: "ABC4", name: "tolaokien", type: "LDAP", domain: "---", callBackUrl: 'fb.com', token: 'hihi' },
-    { id: "ABC5", name: "tolaokien", type: "LDAP", domain: "---", callBackUrl: 'fb.com', token: 'hihi' },
+const mockProviders: ProviderType[] = [
+    { id: "ABC1", name: "truongkinhquinh", type: "SAML", applicationId: "App1", methodId: "Method1", proxy_host_ip: "192.168.1.1", domain: "---", callbackURL: 'fb.com', createdAt: new Date().toISOString(), updateAt: new Date().toISOString() },
+    { id: "ABC2", name: "tolaokien", type: "SAML", applicationId: "App2", methodId: "Method2", proxy_host_ip: "192.168.1.2", domain: "---", callbackURL: 'fb.com', createdAt: new Date().toISOString(), updateAt: new Date().toISOString() },
 ];
+
 const providerService = {
     getAllProviders: async (): Promise<ProviderResponse> => {
         return new Promise((resolve) => {
@@ -17,10 +14,16 @@ const providerService = {
         });
     },
 
-    createProvider: async (newProvider: ProviderType): Promise<CreateProviderResponse> => {
+    createProvider: async (newProvider: Omit<ProviderType, 'id' | 'createdAt' | 'updateAt'>): Promise<CreateProviderResponse> => {
         return new Promise((resolve) => {
             setTimeout(() => {
-                mockProviders.push({ ...newProvider, id: `ABC${mockProviders.length + 1}` });
+                const providerWithId: ProviderType = {
+                    ...newProvider,
+                    id: `ABC${mockProviders.length + 1}`,
+                    createdAt: new Date().toISOString(),
+                    updateAt: new Date().toISOString()
+                };
+                mockProviders.push(providerWithId);
                 resolve({ success: true });
             }, 500);
         });
@@ -31,9 +34,11 @@ const providerService = {
             setTimeout(() => {
                 const index = mockProviders.findIndex((provider) => provider.id === updatedProvider.id);
                 if (index !== -1) {
-                    mockProviders[index] = updatedProvider;
+                    mockProviders[index] = { ...updatedProvider, updateAt: new Date().toISOString() };
+                    resolve({ success: true });
+                } else {
+                    resolve({ success: false });
                 }
-                resolve({ success: true });
             }, 500);
         });
     },
@@ -49,6 +54,7 @@ const providerService = {
             }, 500);
         });
     },
+
     deleteMultipleProviders: async (ids: string[]): Promise<{ success: boolean }> => {
         return new Promise((resolve) => {
             setTimeout(() => {

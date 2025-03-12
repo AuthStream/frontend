@@ -10,19 +10,13 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { ProviderType } from "../../api/type";
+import { useGetApplications } from "../../hooks/useApplicationQueries";
 
 const providerTypes = [
   { id: "cloud", name: "Cloud" },
   { id: "hosting", name: "Hosting" },
   { id: "api", name: "API" },
   { id: "database", name: "Database" },
-];
-
-const tokens = [
-  { id: "oauth", name: "OAuth" },
-  { id: "api_key", name: "API Key" },
-  { id: "jwt", name: "JWT" },
-  { id: "basic_auth", name: "Basic Auth" },
 ];
 
 interface EditProviderProps {
@@ -41,6 +35,7 @@ const EditProvider = ({
   const [editedProvider, setEditedProvider] = useState<ProviderType | null>(
     null
   );
+  const { data: applications, isLoading } = useGetApplications();
 
   useEffect(() => {
     if (providerToEdit) {
@@ -61,12 +56,18 @@ const EditProvider = ({
   };
 
   const handleEdit = () => {
-    // validate here
-
-    if (editedProvider) {
-      onEdit(editedProvider);
-      onClose();
+    if (!editedProvider) return;
+    if (
+      !editedProvider.name ||
+      !editedProvider.type ||
+      !editedProvider.applicationId
+    ) {
+      alert("Please fill in all required fields.");
+      return;
     }
+
+    onEdit(editedProvider);
+    onClose();
   };
 
   if (!editedProvider) {
@@ -82,7 +83,7 @@ const EditProvider = ({
             Update the details of the provider.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4"> 
+        <div className="space-y-4">
           <Input
             name="name"
             value={editedProvider.name}
@@ -93,7 +94,7 @@ const EditProvider = ({
             name="type"
             value={editedProvider.type}
             onChange={handleChange}
-            className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+            className="w-full p-2 border rounded-md"
           >
             <option value="">Select Provider Type</option>
             {providerTypes.map((type) => (
@@ -102,30 +103,50 @@ const EditProvider = ({
               </option>
             ))}
           </select>
+          {isLoading ? (
+            <p>Loading applications...</p>
+          ) : applications?.contents.length ? (
+            <select
+              name="applicationId"
+              value={editedProvider.applicationId}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+            >
+              <option value="">Select Application</option>
+              {applications.contents.map((app) => (
+                <option key={app.id} value={app.id}>
+                  {app.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <Button className="w-full bg-red-500 text-white hover:bg-red-600">
+              No Applications Found - Create One
+            </Button>
+          )}
+          <Input
+            name="methodName"
+            value={editedProvider.methodId}
+            onChange={handleChange}
+            placeholder="Method Name"
+          />
+          <Input
+            name="proxy_host_ip"
+            value={editedProvider.proxy_host_ip}
+            onChange={handleChange}
+            placeholder="Proxy Host IP"
+          />
           <Input
             name="domain"
             value={editedProvider.domain}
             onChange={handleChange}
-            placeholder="Provider Domain"
+            placeholder="Domain"
           />
-          <select
-            name="token"
-            value={editedProvider.token}
-            onChange={handleChange}
-            className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
-          >
-            <option value="">Select Token Type</option>
-            {tokens.map((token) => (
-              <option key={token.id} value={token.id}>
-                {token.name}
-              </option>
-            ))}
-          </select>
           <Input
-            name="callBackUrl"
-            value={editedProvider.callBackUrl}
+            name="callbackURL"
+            value={editedProvider.callbackURL}
             onChange={handleChange}
-            placeholder="Provider callback Url"
+            placeholder="Callback URL"
           />
         </div>
         <DialogFooter>
