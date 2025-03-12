@@ -24,6 +24,8 @@ export interface Application {
   name: string;
   provider: string;
   token: string;
+  createdAt: string;
+  updateAt:string;
 };
 
 export interface ApplicationResponse {
@@ -121,14 +123,15 @@ export interface EditPermissionResponse {
   success: boolean;
 }
 
-
-
 export interface ProviderType {
   id: string;
   name: string;
   type: string;
   applicationId: string;
   methodId: string;
+  proxy_host_ip:string;
+  domain:string;
+  callbackURL:string;
   createdAt: string;
   updateAt:string;
 };

@@ -1,11 +1,11 @@
 // import axiosClient from "../axiosClient";
 import { CreateApplicationResponse, EditApplicationResponse, Application, ApplicationResponse } from "../type";
 const mockApplications = [
-  { id: "ABC1", name: "truongkinhquinh", provider: "bmchien1", token: "---" },
-  { id: "ABC2", name: "tolaokien", provider: "bmchien2", token: "---" },
-  { id: "ABC3", name: "truongkinhquinh", provider: "bmchien3", token: "---" },
-  { id: "ABC4", name: "tolaokien", provider: "bmchien4", token: "---" },
-  { id: "ABC5", name: "tolaokien", provider: "bmchien5", token: "---" },
+  { id: "ABC1", name: "truongkinhquinh", provider: "bmchien1", token: "---", createdAt: new Date().toISOString(), updateAt: new Date().toISOString()  },
+  { id: "ABC2", name: "tolaokien", provider: "bmchien2", token: "---", createdAt: new Date().toISOString(), updateAt: new Date().toISOString()  },
+  { id: "ABC3", name: "truongkinhquinh", provider: "bmchien3", token: "---", createdAt: new Date().toISOString(), updateAt: new Date().toISOString()  },
+  { id: "ABC4", name: "tolaokien", provider: "bmchien4", token: "---", createdAt: new Date().toISOString(), updateAt: new Date().toISOString()  },
+  { id: "ABC5", name: "tolaokien", provider: "bmchien5", token: "---", createdAt: new Date().toISOString(), updateAt: new Date().toISOString()  },
 ];
 
 const applicationService = {
@@ -17,10 +17,12 @@ const applicationService = {
     });
   },
 
-  createApplication: async (newApplication: Application): Promise<CreateApplicationResponse> => {
+  createApplication: async (newApplication: Omit<Application,  'id' | 'createdAt' | 'updateAt'>): Promise<CreateApplicationResponse> => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        mockApplications.push({ ...newApplication, id: `ABC${mockApplications.length + 1}` });
+        const applicationWithId: Application={...newApplication, id: `ABC${mockApplications.length + 1}`,createdAt: new Date().toISOString(),
+        updateAt: new Date().toISOString()};
+        mockApplications.push(applicationWithId);
         resolve({ success: true });
       }, 500);
     });

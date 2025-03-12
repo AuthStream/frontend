@@ -1,4 +1,3 @@
-// components/CreateProvider.tsx
 import { useState } from "react";
 import { Button } from "../ui/button";
 import {
@@ -11,32 +10,34 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { ProviderType } from "../../api/type";
-import { useGetTokens } from "../../hooks/useTokenQueries";
-import { Token } from "../../api/type";
+import { useGetApplications } from "../../hooks/useApplicationQueries";
 
 const providerTypes = [
-  { id: "cloud", name: "Cloud" },
-  { id: "hosting", name: "Hosting" },
-  { id: "api", name: "API" },
-  { id: "database", name: "Database" },
+  { id: "SAML", name: "SAML" },
+  { id: "FORWARD", name: "FORWARD" },
 ];
 
 interface CreateProviderProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (provider: ProviderType) => void;
+  onCreate: (
+    provider: Omit<ProviderType, "id" | "createdAt" | "updateAt">
+  ) => void;
 }
 
 const CreateProvider = ({ isOpen, onClose, onCreate }: CreateProviderProps) => {
-  const { data: tokens = [], isLoading, error } = useGetTokens();
+  const { data: applications, isLoading } = useGetApplications();
 
-  const [newProvider, setNewProvider] = useState<ProviderType>({
-    id: "",
+  const [newProvider, setNewProvider] = useState<
+    Omit<ProviderType, "id" | "createdAt" | "updateAt">
+  >({
     name: "",
     type: "",
+    applicationId: "",
+    methodId: "",
+    proxy_host_ip: "",
     domain: "",
-    token: "",
-    callBackUrl: "",
+    callbackURL: "",
   });
 
   const handleChange = (
@@ -50,17 +51,20 @@ const CreateProvider = ({ isOpen, onClose, onCreate }: CreateProviderProps) => {
   };
 
   const handleCreate = () => {
-    // validate here
+    if (!newProvider.name || !newProvider.type) {
+      alert("Please fill in all required fields.");
+      return;
+    }
 
     onCreate(newProvider);
-    console.log(newProvider);
     setNewProvider({
-      id: "",
       name: "",
       type: "",
+      applicationId: "",
+      methodId: "",
+      proxy_host_ip: "",
       domain: "",
-      token: "",
-      callBackUrl: "",
+      callbackURL: "",
     });
     onClose();
   };
@@ -94,38 +98,51 @@ const CreateProvider = ({ isOpen, onClose, onCreate }: CreateProviderProps) => {
               </option>
             ))}
           </select>
+          {isLoading ? (
+            <p>Loading applications...</p>
+          ) : applications?.contents.length ? (
+            <select
+              name="applicationId"
+              value={newProvider.applicationId}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+            >
+              <option value="">Select Application</option>
+              {applications.contents.map((app) => (
+                <option key={app.id} value={app.id}>
+                  {app.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <Button className="w-full bg-red-500 text-white hover:bg-red-600">
+              No Applications Found - Create One
+            </Button>
+          )}
+
+          <Input
+            name="methodId"
+            value={newProvider.methodId}
+            onChange={handleChange}
+            placeholder="Method"
+          />
+          <Input
+            name="proxy_host_ip"
+            value={newProvider.proxy_host_ip}
+            onChange={handleChange}
+            placeholder="Proxy Host IP"
+          />
           <Input
             name="domain"
             value={newProvider.domain}
             onChange={handleChange}
-            placeholder="Provider Domain"
+            placeholder="Domain"
           />
-          {isLoading ? (
-            <p>Loading providers...</p>
-          ) : error ? (
-            <p className="text-red-500">Failed to load providers</p>
-          ) : (
-            <select
-              name="provider"
-              value={newProvider.token}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
-            >
-              <option value="">Select Token</option>
-              {(Array.isArray(tokens) ? tokens : tokens?.contents ?? []).map(
-                (token: Token) => (
-                  <option key={token.id} value={token.id}>
-                    {token.name}
-                  </option>
-                )
-              )}
-            </select>
-          )}
           <Input
-            name="callBackUrl"
-            value={newProvider.callBackUrl}
+            name="callbackURL"
+            value={newProvider.callbackURL}
             onChange={handleChange}
-            placeholder="Provider Call Back Url"
+            placeholder="Callback URL"
           />
         </div>
         <DialogFooter>
