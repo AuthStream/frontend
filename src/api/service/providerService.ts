@@ -1,32 +1,31 @@
 import { CreateProviderResponse, EditProviderResponse, ProviderResponse, ProviderType } from "../type";
+import axiosClient from "../axiosClient.ts";
 
 const mockProviders: ProviderType[] = [
-    { id: "ABC1", name: "truongkinhquinh", type: "SAML", applicationId: "App1", methodId: "Method1", proxy_host_ip: "192.168.1.1", domain: "---", callbackURL: 'fb.com', createdAt: new Date().toISOString(), updateAt: new Date().toISOString() },
-    { id: "ABC2", name: "tolaokien", type: "SAML", applicationId: "App2", methodId: "Method2", proxy_host_ip: "192.168.1.2", domain: "---", callbackURL: 'fb.com', createdAt: new Date().toISOString(), updateAt: new Date().toISOString() },
+    { id: "ABC1", name: "truongkinhquinh", type: "SAML", applicationId: "App1", methodId: "Method1", methodName:"nnnn",proxyHostIp: "192.168.1.1", domainName: "---", callbackUrl: 'fb.com', createdAt: new Date().toISOString(), updateAt: new Date().toISOString() },
+    { id: "ABC2", name: "tolaokien", type: "SAML", applicationId: "App2", methodId: "Method2",methodName:"nnnn", proxyHostIp: "192.168.1.2", domainName: "---", callbackUrl: 'fb.com', createdAt: new Date().toISOString(), updateAt: new Date().toISOString() },
 ];
 
 const providerService = {
-    getAllProviders: async (): Promise<ProviderResponse> => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve({ contents: mockProviders, totalElements: mockProviders.length });
-            }, 500);
-        });
+    
+    getAllProviders: async (): Promise<{ contents: ProviderType[] }> => {
+        try {
+            const response = await axiosClient.get("/providers");
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
     },
 
-    createProvider: async (newProvider: Omit<ProviderType, 'id' | 'createdAt' | 'updateAt'>): Promise<CreateProviderResponse> => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const providerWithId: ProviderType = {
-                    ...newProvider,
-                    id: `ABC${mockProviders.length + 1}`,
-                    createdAt: new Date().toISOString(),
-                    updateAt: new Date().toISOString()
-                };
-                mockProviders.push(providerWithId);
-                resolve({ success: true });
-            }, 500);
-        });
+    createProvider: async (
+        newProvider: ProviderType
+      ): Promise<ProviderType> => {
+        try {
+            const response = await axiosClient.post("/providers", newProvider);
+            return response.data;
+          } catch (error) {
+            throw error;
+          }
     },
 
     editProvider: async (updatedProvider: ProviderType): Promise<EditProviderResponse> => {

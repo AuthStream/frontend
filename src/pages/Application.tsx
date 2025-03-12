@@ -13,7 +13,6 @@ interface Application {
 const Application = () => {
   const { data: applications, isLoading, error } = useGetApplications();
 
-
   return (
     <div className="h-full w-full flex items-center justify-center dark:bg-gray-950 p-6">
       <div className="w-full h-full bg-gray-200 dark:bg-gray-900 p-6 rounded-lg shadow-md">
@@ -39,14 +38,15 @@ const Application = () => {
           </p>
         ) : error ? (
           <p className="text-center text-red-500">
-            {error instanceof Error ? error.message : "An unknown error occurred"}
+            {error instanceof Error
+              ? error.message
+              : "An unknown error occurred"}
           </p>
-        ) : applications ? (
-          <TableApplication applications={applications.contents} />
+        ) : applications && Array.isArray(applications) ? (
+          <TableApplication applications={applications} />
         ) : (
           <p>No tokens available</p>
         )}
-
       </div>
     </div>
   );

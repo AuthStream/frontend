@@ -1,28 +1,35 @@
 import { Search, Plus, RefreshCw, Trash2, Edit, Trash } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "../components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import CreateApplication from "./modalApplication/createApplication";
 import { useState } from "react";
 import EditApplication from "./modalApplication/editApplication";
-import { useCreateApplications, useDeleteApplications, useEditApplications, useRefreshApplications, } from "../hooks/useApplicationQueries";
+import {
+  useCreateApplications,
+  useDeleteApplications,
+  useEditApplications,
+  useRefreshApplications,
+} from "../hooks/useApplicationQueries";
 import applicationService from "../api/service/applicationService";
 import { toast } from "react-toastify";
 import DeleteMultipleConfirm from "./confirmMultipleBox";
 import DeleteConfirm from "./confirmBox";
-
-interface Application {
-  id: string;
-  name: string;
-  provider: string;
-  token: string;
-}
+import { Application } from "../api/type";
 
 interface TableApplicationProps {
   applications: Application[];
 }
 
 const TableApplication = ({ applications }: TableApplicationProps) => {
+  // console.log(applications);
   const [applicationList, setApplicationList] = useState(applications);
   const [selectedApplications, setSelectedApplications] = useState<string[]>(
     []
@@ -89,8 +96,11 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
     setApplicationToEdit({
       id: "",
       name: "",
-      provider: "",
-      token: "",
+      providerId: "",
+      tokenId: "",
+      adminId: "",
+      createdAt: "",
+      updateAt: "",
     });
   };
 
@@ -106,16 +116,14 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
       toast.error("Failed to edit application");
     }
   };
-  const [isOpenConfirm, setIsOpenConfirm] = useState(false)
-  const [idDelete, setIdDelete] = useState<string>('');
+  const [isOpenConfirm, setIsOpenConfirm] = useState(false);
+  const [idDelete, setIdDelete] = useState<string>("");
 
   const handleClickDleteApplication = (id: string) => {
     setIdDelete(id);
     setIsOpenConfirm(true);
-
-  }
+  };
   const handleDeleteApplication = async (id: string) => {
-
     try {
       deleteApplicationMutation.mutate(id, {
         onSuccess: () => {
@@ -145,7 +153,7 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
       e.target.checked ? applications.map((app) => app.id) : []
     );
   };
-  const [isOpenConfirmMultiple, setIsOpenConfirmMultiple] = useState(false)
+  const [isOpenConfirmMultiple, setIsOpenConfirmMultiple] = useState(false);
 
   const handleDeleteSelected = () => {
     if (selectedApplications.length === 0) {
@@ -234,39 +242,37 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {
-            currentApplications.map((application, index) => (
-              <TableRow key={index}>
-                <TableCell>
-                  <input
-                    type="checkbox"
-                    onChange={() => handleCheckboxChange(application.id)}
-                    checked={selectedApplications.includes(application.id)}
-                  />
-                </TableCell>
-                <TableCell>{application.id}</TableCell>
-                <TableCell>{application.name}</TableCell>
-                <TableCell>{application.provider}</TableCell>
-                <TableCell>{application.token}</TableCell>
-                <TableCell className="flex space-x-2">
-                  <Button
-                    onClick={() => handleClickEdit(application)}
-                    variant="outline"
-                    size="icon"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    onClick={() => handleClickDleteApplication(application.id)}
-                    variant="destructive"
-                    size="icon"
-                  >
-                    <Trash className="w-4 h-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))
-          }
+          {currentApplications.map((application, index) => (
+            <TableRow key={index}>
+              <TableCell>
+                <input
+                  type="checkbox"
+                  onChange={() => handleCheckboxChange(application.id)}
+                  checked={selectedApplications.includes(application.id)}
+                />
+              </TableCell>
+              <TableCell>{application.id}</TableCell>
+              <TableCell>{application.name}</TableCell>
+              <TableCell>{application.providerId}</TableCell>
+              <TableCell>{application.tokenId}</TableCell>
+              <TableCell className="flex space-x-2">
+                <Button
+                  onClick={() => handleClickEdit(application)}
+                  variant="outline"
+                  size="icon"
+                >
+                  <Edit className="w-4 h-4" />
+                </Button>
+                <Button
+                  onClick={() => handleClickDleteApplication(application.id)}
+                  variant="destructive"
+                  size="icon"
+                >
+                  <Trash className="w-4 h-4" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
 
@@ -315,7 +321,7 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
         onClose={() => setIsOpenConfirmMultiple(false)}
         onConfirm={handleDeleteSelectedApplications}
         selectedArray={selectedApplications}
-        type={'Application'}
+        type={"Application"}
       />
     </div>
   );

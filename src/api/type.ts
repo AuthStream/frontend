@@ -22,8 +22,9 @@ export interface EditTokenResponse {
 export interface Application {
   id: string;
   name: string;
-  provider: string;
-  token: string;
+  providerId: string;
+  adminId:string;
+  tokenId: string;
   createdAt: string;
   updateAt:string;
 };
@@ -129,9 +130,10 @@ export interface ProviderType {
   type: string;
   applicationId: string;
   methodId: string;
-  proxy_host_ip:string;
-  domain:string;
-  callbackURL:string;
+  methodName:string;
+  proxyHostIp:string;
+  domainName:string;
+  callbackUrl:string;
   createdAt: string;
   updateAt:string;
 };
