@@ -20,24 +20,24 @@ const providerTypes = [
 interface CreateProviderProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (
-    provider: Omit<ProviderType, "id" | "createdAt" | "updateAt">
-  ) => void;
+  onCreate: (provider: ProviderType) => void;
 }
 
 const CreateProvider = ({ isOpen, onClose, onCreate }: CreateProviderProps) => {
   const { data: applications, isLoading } = useGetApplications();
 
-  const [newProvider, setNewProvider] = useState<
-    Omit<ProviderType, "id" | "createdAt" | "updateAt">
-  >({
+  const [newProvider, setNewProvider] = useState<ProviderType>({
+    id: "",
     name: "",
     type: "",
     applicationId: "",
     methodId: "",
-    proxy_host_ip: "",
-    domain: "",
-    callbackURL: "",
+    methodName: "",
+    proxyHostIp: "",
+    domainName: "",
+    callbackUrl: "",
+    createdAt: "",
+    updateAt: "",
   });
 
   const handleChange = (
@@ -58,13 +58,17 @@ const CreateProvider = ({ isOpen, onClose, onCreate }: CreateProviderProps) => {
 
     onCreate(newProvider);
     setNewProvider({
+      id: "",
       name: "",
       type: "",
       applicationId: "",
       methodId: "",
-      proxy_host_ip: "",
-      domain: "",
-      callbackURL: "",
+      methodName: "",
+      proxyHostIp: "",
+      domainName: "",
+      callbackUrl: "",
+      createdAt: "",
+      updateAt: "",
     });
     onClose();
   };
@@ -100,7 +104,7 @@ const CreateProvider = ({ isOpen, onClose, onCreate }: CreateProviderProps) => {
           </select>
           {isLoading ? (
             <p>Loading applications...</p>
-          ) : applications?.contents.length ? (
+          ) : applications && Array.isArray(applications) ? (
             <select
               name="applicationId"
               value={newProvider.applicationId}
@@ -108,7 +112,7 @@ const CreateProvider = ({ isOpen, onClose, onCreate }: CreateProviderProps) => {
               className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
             >
               <option value="">Select Application</option>
-              {applications.contents.map((app) => (
+              {applications.map((app) => (
                 <option key={app.id} value={app.id}>
                   {app.name}
                 </option>
@@ -119,28 +123,27 @@ const CreateProvider = ({ isOpen, onClose, onCreate }: CreateProviderProps) => {
               No Applications Found - Create One
             </Button>
           )}
-
           <Input
-            name="methodId"
-            value={newProvider.methodId}
+            name="methodName"
+            value={newProvider.methodName}
             onChange={handleChange}
             placeholder="Method"
           />
           <Input
-            name="proxy_host_ip"
-            value={newProvider.proxy_host_ip}
+            name="proxyHostIp"
+            value={newProvider.proxyHostIp}
             onChange={handleChange}
             placeholder="Proxy Host IP"
           />
           <Input
-            name="domain"
-            value={newProvider.domain}
+            name="domainName"
+            value={newProvider.domainName}
             onChange={handleChange}
             placeholder="Domain"
           />
           <Input
-            name="callbackURL"
-            value={newProvider.callbackURL}
+            name="callbackUrl"
+            value={newProvider.callbackUrl}
             onChange={handleChange}
             placeholder="Callback URL"
           />

@@ -28,6 +28,7 @@ interface TableProviderProps {
 }
 
 const TableProvider = ({ providers }: TableProviderProps) => {
+  // console.log(providers);
   const [providerList, setProviderList] = useState(providers);
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -72,9 +73,7 @@ const TableProvider = ({ providers }: TableProviderProps) => {
     setSelectedProviders(e.target.checked ? providers.map((t) => t.id) : []);
   };
 
-  const onCreate = async (
-    newProvider: Omit<ProviderType, "id" | "createdAt" | "updateAt">
-  ) => {
+  const onCreate = async (newProvider: ProviderType) => {
     try {
       createProviderMutation.mutate(newProvider, {
         onSuccess: () => {
@@ -237,9 +236,9 @@ const TableProvider = ({ providers }: TableProviderProps) => {
               <TableCell>{provider.id}</TableCell>
               <TableCell>{provider.name}</TableCell>
               <TableCell>{provider.type}</TableCell>
-              <TableCell>{provider.domain}</TableCell>
+              <TableCell>{provider.domainName}</TableCell>
               <TableCell>{provider.applicationId}</TableCell>
-              <TableCell>{provider.callbackURL}</TableCell>
+              <TableCell>{provider.callbackUrl}</TableCell>
               <TableCell>{provider.createdAt}</TableCell>
               <TableCell className="flex space-x-2">
                 <Button

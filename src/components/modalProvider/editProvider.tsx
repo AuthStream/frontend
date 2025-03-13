@@ -132,19 +132,19 @@ const EditProvider = ({
           />
           <Input
             name="proxy_host_ip"
-            value={editedProvider.proxy_host_ip}
+            value={editedProvider.proxyHostIp}
             onChange={handleChange}
             placeholder="Proxy Host IP"
           />
           <Input
             name="domain"
-            value={editedProvider.domain}
+            value={editedProvider.domainName}
             onChange={handleChange}
             placeholder="Domain"
           />
           <Input
             name="callbackURL"
-            value={editedProvider.callbackURL}
+            value={editedProvider.callbackUrl}
             onChange={handleChange}
             placeholder="Callback URL"
           />

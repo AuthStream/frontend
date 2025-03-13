@@ -4,7 +4,7 @@ import { ToggleButton } from "../context/SidebarContext";
 import { useGetProviders } from "../hooks/useProviderQueries";
 const Provider = () => {
   const { data: providers, isLoading, error } = useGetProviders();
-
+  // console.log(providers);
   return (
     <div className="h-full w-full flex items-center justify-center dark:bg-gray-950 p-6">
       <div className="w-full h-full bg-gray-200 dark:bg-gray-900 p-6 rounded-lg shadow-md">
@@ -33,8 +33,8 @@ const Provider = () => {
               ? error.message
               : "An unknown error occurred"}
           </p>
-        ) : providers ? (
-          <TableProvider providers={providers.contents} />
+        ) : providers && Array.isArray(providers) ? (
+          <TableProvider providers={providers} />
         ) : (
           <p>No provider available</p>
         )}

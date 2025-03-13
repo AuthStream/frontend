@@ -1,4 +1,4 @@
-// import axiosClient from "../axiosClient";
+import axiosClient from "../axiosClient";
 import { CreateApplicationResponse, EditApplicationResponse, Application, ApplicationResponse } from "../type";
 const mockApplications = [
   { id: "ABC1", name: "truongkinhquinh", provider: "bmchien1", token: "---", createdAt: new Date().toISOString(), updateAt: new Date().toISOString()  },
@@ -9,23 +9,23 @@ const mockApplications = [
 ];
 
 const applicationService = {
-  getAllApplications: async (): Promise<ApplicationResponse> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ contents: mockApplications, totalElements: mockApplications.length });
-      }, 500);
-    });
+  getAllApplications: async (): Promise<Application[]> => {
+    try {
+      const response = await axiosClient.get("/applications");
+      return response.data;
+  } catch (error) {
+      throw error;
+  }
   },
 
-  createApplication: async (newApplication: Omit<Application,  'id' | 'createdAt' | 'updateAt'>): Promise<CreateApplicationResponse> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const applicationWithId: Application={...newApplication, id: `ABC${mockApplications.length + 1}`,createdAt: new Date().toISOString(),
-        updateAt: new Date().toISOString()};
-        mockApplications.push(applicationWithId);
-        resolve({ success: true });
-      }, 500);
-    });
+  createApplication: async (newApplication: Application): Promise<Application> => {
+    try {
+      console.log(newApplication);
+      const response = await axiosClient.post("/applications", newApplication);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 
   editApplication: async (updatedApplication: Application): Promise<EditApplicationResponse> => {
