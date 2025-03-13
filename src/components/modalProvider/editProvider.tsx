@@ -13,16 +13,14 @@ import { ProviderType } from "../../api/type";
 import { useGetApplications } from "../../hooks/useApplicationQueries";
 
 const providerTypes = [
-  { id: "cloud", name: "Cloud" },
-  { id: "hosting", name: "Hosting" },
-  { id: "api", name: "API" },
-  { id: "database", name: "Database" },
+  { id: "SAML", name: "SAML" },
+  { id: "FORWARD", name: "FORWARD" },
 ];
 
 interface EditProviderProps {
   isOpen: boolean;
   onClose: () => void;
-  providerToEdit: ProviderType | null;
+  providerToEdit: ProviderType;
   onEdit: (updatedProvider: ProviderType) => void;
 }
 
@@ -94,7 +92,7 @@ const EditProvider = ({
             name="type"
             value={editedProvider.type}
             onChange={handleChange}
-            className="w-full p-2 border rounded-md"
+            className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
           >
             <option value="">Select Provider Type</option>
             {providerTypes.map((type) => (
@@ -105,7 +103,7 @@ const EditProvider = ({
           </select>
           {isLoading ? (
             <p>Loading applications...</p>
-          ) : applications?.contents.length ? (
+          ) : applications && Array.isArray(applications) ? (
             <select
               name="applicationId"
               value={editedProvider.applicationId}
@@ -113,7 +111,7 @@ const EditProvider = ({
               className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
             >
               <option value="">Select Application</option>
-              {applications.contents.map((app) => (
+              {applications.map((app) => (
                 <option key={app.id} value={app.id}>
                   {app.name}
                 </option>
@@ -125,25 +123,25 @@ const EditProvider = ({
             </Button>
           )}
           <Input
-            name="methodName"
+            name="methodId"
             value={editedProvider.methodId}
             onChange={handleChange}
             placeholder="Method Name"
           />
           <Input
-            name="proxy_host_ip"
+            name="proxyHostIp"
             value={editedProvider.proxyHostIp}
             onChange={handleChange}
             placeholder="Proxy Host IP"
           />
           <Input
-            name="domain"
+            name="domainName"
             value={editedProvider.domainName}
             onChange={handleChange}
             placeholder="Domain"
           />
           <Input
-            name="callbackURL"
+            name="callbackUrl"
             value={editedProvider.callbackUrl}
             onChange={handleChange}
             placeholder="Callback URL"
