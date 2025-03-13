@@ -9,24 +9,9 @@ import {
   DialogDescription,
 } from "../ui/dialog";
 import { Input } from "../ui/input";
-
-interface Application {
-  id: string;
-  name: string;
-  provider: string;
-  token: string;
-}
-interface Provider {
-  id: string;
-  name: string;
-}
-
-const mockProviders: Provider[] = [
-  { id: "aws", name: "AWS" },
-  { id: "azure", name: "Azure" },
-  { id: "gcp", name: "Google Cloud" },
-  { id: "digitalocean", name: "DigitalOcean" },
-];
+import { Application } from "../../api/type";
+import { ProviderType } from "../../api/type";
+import { useGetProviders } from "../../hooks/useProviderQueries";
 
 interface EditApplicationProps {
   isOpen: boolean;
@@ -41,6 +26,8 @@ const EditApplication = ({
   applicationToEdit,
   onEdit,
 }: EditApplicationProps) => {
+  const { data: providers, isLoading, error } = useGetProviders();
+
   const [editedApplication, setEditedApplication] =
     useState<Application | null>(null);
 
@@ -89,22 +76,30 @@ const EditApplication = ({
             onChange={handleChange}
             placeholder="Application Name"
           />
-          <select
-            name="provider"
-            value={editedApplication.provider}
-            onChange={handleChange}
-            className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
-          >
-            <option value="">Select Provider</option>
-            {mockProviders.map((provider) => (
-              <option key={provider.id} value={provider.id}>
-                {provider.name}
-              </option>
-            ))}
-          </select>
+          {isLoading ? (
+            <p>Loading providers...</p>
+          ) : providers && Array.isArray(providers) ? (
+            <select
+              name="providerId"
+              value={editedApplication.providerId}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+            >
+              <option value="">Select Provider</option>
+              {providers.map((provider) => (
+                <option key={provider.id} value={provider.id}>
+                  {provider.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <Button className="w-full bg-red-500 text-white hover:bg-red-600">
+              No Applications Found - Create One
+            </Button>
+          )}
           <Input
-            name="token"
-            value={editedApplication.token}
+            name="tokenId"
+            value={editedApplication.tokenId}
             onChange={handleChange}
             placeholder="Application Token"
           />
