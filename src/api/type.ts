@@ -126,7 +126,10 @@ export interface EditPermissionResponse {
 export interface ProviderType {
   id: string;
   name: string;
+  domain: string;
   type: string;
+  callBackUrl:string;
+  token:string;
   applicationId: string;
   methodId: string;
   createdAt: string;

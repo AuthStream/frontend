@@ -15,10 +15,8 @@ import { useGetTokens } from "../../hooks/useTokenQueries";
 import { Token } from "../../api/type";
 
 const providerTypes = [
-  { id: "cloud", name: "Cloud" },
-  { id: "hosting", name: "Hosting" },
-  { id: "api", name: "API" },
-  { id: "database", name: "Database" },
+  { id: "saml", name: "SAML" },
+  { id: "forward", name: "FORWARD" },
 ];
 
 interface CreateProviderProps {
@@ -37,6 +35,10 @@ const CreateProvider = ({ isOpen, onClose, onCreate }: CreateProviderProps) => {
     domain: "",
     token: "",
     callBackUrl: "",
+    applicationId: "",
+    methodId:"",
+    createdAt: "",
+    updateAt:""
   });
 
   const handleChange = (
@@ -61,6 +63,10 @@ const CreateProvider = ({ isOpen, onClose, onCreate }: CreateProviderProps) => {
       domain: "",
       token: "",
       callBackUrl: "",
+      applicationId: "",
+      methodId:"",
+      createdAt: "",
+      updateAt:""
     });
     onClose();
   };
