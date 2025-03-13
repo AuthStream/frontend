@@ -220,3 +220,13 @@ export interface CreateRouteResponse {
 export interface EditRouteResponse {
   success: boolean;
 }
+
+export   interface SignInResponse {
+  success: boolean;
+  user?: {
+    id: string;
+    email: string;
+    created: string;
+  };
+  message?: string;
+}
