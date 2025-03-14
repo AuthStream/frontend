@@ -1,12 +1,25 @@
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import ThemeSwitcher from "./themeMode";
+import { Button } from "./ui/button";
+import { JWT_LOCAL_STORAGE_KEY } from "../constants/data";
+import { useNavigate } from "react-router-dom";
 
 const Header = () => {
   const [isNotificationOpen, setNotificationOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleClickAvatar = () => {
     console.log("click avatar");
+  };
+
+  const handleLogout = () => {
+    try {
+      localStorage.removeItem(JWT_LOCAL_STORAGE_KEY);
+      navigate("/signin");
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   return (
@@ -69,6 +82,7 @@ const Header = () => {
           )}
         </button>
         {/* <div className="bg-gray-200 border-2 border-dashed rounded-full w-10 h-10"></div> */}
+        <Button onClick={handleLogout}>Logout</Button>
         <Avatar onClick={handleClickAvatar}>
           <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
           <AvatarFallback>CN</AvatarFallback>

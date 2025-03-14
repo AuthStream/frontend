@@ -9,17 +9,17 @@ import {
 import useMutationAction from "../provider/queryGlobal";
 
 export const useGetApplications = () => {
-  return useQuery<ApplicationResponse>({
+  return useQuery<Application[]>({
     queryKey: ["applications"],
     queryFn: applicationService.getAllApplications,
   });
 };
 
 export const useCreateApplications = () => {
-  return useMutationAction<
-    CreateApplicationResponse,
-    Omit<Application, "id" | "createdAt" | "updateAt">
-  >(["applications"], applicationService.createApplication);
+  return useMutationAction<Application, Application>(
+    ["applications"],
+    applicationService.createApplication
+  );
 };
 
 export const useRefreshApplications = () => {
@@ -31,7 +31,7 @@ export const useRefreshApplications = () => {
   return { refresh };
 };
 export const useEditApplications = () => {
-  return useMutationAction<EditApplicationResponse, Application>(
+  return useMutationAction<Application, Application>(
     ["applications"],
     applicationService.editApplication,
     {}

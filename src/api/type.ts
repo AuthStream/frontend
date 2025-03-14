@@ -1,3 +1,5 @@
+import { StringToBoolean } from "class-variance-authority/types";
+
 export interface Token {
   id: string;
   name: string;
@@ -219,4 +221,35 @@ export interface CreateRouteResponse {
 
 export interface EditRouteResponse {
   success: boolean;
+}
+
+export   interface SignInResponse {
+  success: boolean;
+  user?: {
+    id: string;
+    email: string;
+    created: string;
+  };
+  message?: string;
+}
+
+export interface SigninData{
+  email: string;
+  password:string;
+}
+
+export interface RegisterData {
+  email: string;
+  password: string;
+  key: string;
+}
+
+export   interface RegisterResponse {
+  success: boolean;
+  user?: {
+    id: string;
+    email: string;
+    created: string;
+  };
+  message?: string;
 }

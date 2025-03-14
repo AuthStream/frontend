@@ -12,7 +12,7 @@ const SignedRoute: FC<{
   requiredLogin: boolean;
 }> = ({ element, requiredLogin }) => {
   const isAuthenticated = localStorage.getItem(JWT_LOCAL_STORAGE_KEY);
-
+  console.log(isAuthenticated);
   if (!isAuthenticated && requiredLogin) {
     return <Navigate to="/signin" />;
   }

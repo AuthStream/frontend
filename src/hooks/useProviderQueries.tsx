@@ -9,17 +9,17 @@ import {
 } from "../api/type";
 
 export const useGetProviders = () => {
-  return useQuery<ProviderResponse>({
+  return useQuery<{ contents: ProviderType[] }>({
     queryKey: ["providers"],
     queryFn: providerService.getAllProviders,
   });
 };
 
 export const useCreateProviders = () => {
-  return useMutationAction<
-    CreateProviderResponse,
-    Omit<ProviderType, "id" | "createdAt" | "updateAt">
-  >(["providers"], providerService.createProvider);
+  return useMutationAction<ProviderType, ProviderType>(
+    ["providers"],
+    providerService.createProvider
+  );
 };
 
 export const useRefreshProviders = () => {
@@ -31,7 +31,7 @@ export const useRefreshProviders = () => {
   return { refresh };
 };
 export const useEditProviders = () => {
-  return useMutationAction<EditProviderResponse, ProviderType>(
+  return useMutationAction<ProviderType, ProviderType>(
     ["providers"],
     providerService.editProvider,
     {}
