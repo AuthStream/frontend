@@ -12,7 +12,7 @@ import { toast } from "react-toastify";
 
 interface RegisterModalProps {
   onRegister: (registerData: {
-    email: string;
+    username: string;
     password: string;
     key: string;
   }) => void;
@@ -21,14 +21,14 @@ interface RegisterModalProps {
 
 const RegisterModal = ({ onRegister, onClose }: RegisterModalProps) => {
   const [registerData, setRegisterData] = useState({
-    email: "",
+    username: "",
     password: "",
     key: "",
   });
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  const validateEmail = (username: string) => {
+    const usernameRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return usernameRegex.test(username);
   };
 
   const validatePassword = (password: string) => {
@@ -38,15 +38,15 @@ const RegisterModal = ({ onRegister, onClose }: RegisterModalProps) => {
   };
 
   const handleRegister = () => {
-    const { email, password, key } = registerData;
+    const { username, password, key } = registerData;
 
-    if (!email || !password || !key) {
+    if (!username || !password || !key) {
       toast.warning("All fields are required.");
       return;
     }
 
-    if (!validateEmail(email)) {
-      toast.warning("Invalid email format.");
+    if (!validateEmail(username)) {
+      toast.warning("Invalid username format.");
       return;
     }
 
@@ -73,8 +73,8 @@ const RegisterModal = ({ onRegister, onClose }: RegisterModalProps) => {
         </DialogHeader>
         <div className="space-y-4">
           <Input
-            name="email"
-            value={registerData.email}
+            name="username"
+            value={registerData.username}
             onChange={handleChange}
             placeholder="Email"
           />

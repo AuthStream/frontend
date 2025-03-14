@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Button } from "../components/ui/button";
@@ -11,7 +11,7 @@ import ConfigDBModal from "../components/modalSignin/configDbModal";
 import { RegisterData, SigninData } from "../api/type";
 
 const SignIn = () => {
-  const [email, setEmail] = useState("");
+  const [username, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isRegisterModalOpen, setRegisterModalOpen] = useState(false);
@@ -21,9 +21,9 @@ const SignIn = () => {
   const loginMutation = useLogin();
   const registerMutation = useRegister();
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  const validateEmail = (username: string) => {
+    const usernameRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return usernameRegex.test(username);
   };
 
   const validatePassword = (password: string) => {
@@ -33,7 +33,7 @@ const SignIn = () => {
   };
 
   const handleLoginClick = () => {
-    if (!validateEmail(email)) {
+    if (!validateEmail(username)) {
       toast.error("Email không hợp lệ!");
       return;
     }
@@ -43,65 +43,66 @@ const SignIn = () => {
       );
       return;
     }
-    handleSignIn({ email, password });
+    handleSignIn({ username, password });
   };
   const handleSignIn = async (signinData: SigninData) => {
     try {
       loginMutation.mutate(signinData, {
-        onSuccess: (data) => {
-          if (data.success) {
-            if (signinData.email === "admin@example.authstream") {
-              setRegisterModalOpen(true);
-            } else {
-              toast.success("Sign-in successful!");
-              localStorage.setItem(JWT_LOCAL_STORAGE_KEY, "token");
-              navigate("/");
-            }
+        onSuccess: (response) => {
+          if (signinData.username === "admin@example.authstream") {
+            setRegisterModalOpen(true);
           } else {
-            toast.error("Invalid credentials");
+            toast.success("Sign-in successful!");
+            localStorage.setItem(JWT_LOCAL_STORAGE_KEY, response.id);
+            navigate("/");
           }
+        },
+        onError: () => {
+          toast.error("Failed to Sign in");
         },
       });
     } catch (error) {
-      toast.error("Something went wrong");
+      toast.error("Failed to Signin");
     }
   };
 
   const handleSignInAfterRegister = async (signinData: SigninData) => {
     try {
       loginMutation.mutate(signinData, {
-        onSuccess: (data) => {
-          if (data.success) {
-            if (signinData.email === "admin@example.authstream") {
-              setRegisterModalOpen(true);
-            } else {
-              toast.success("Sign-in successful!");
-              localStorage.setItem(JWT_LOCAL_STORAGE_KEY, "token");
-              navigate("/");
-            }
+        onSuccess: (response) => {
+          if (signinData.username === "admin@example.authstream") {
+            setRegisterModalOpen(true);
           } else {
-            toast.error("Invalid credentials");
+            toast.success("Sign-in successful!");
+            localStorage.setItem(JWT_LOCAL_STORAGE_KEY, response.id);
+            navigate("/");
           }
+        },
+        onError: () => {
+          toast.error("Failed to Sign in");
         },
       });
     } catch (error) {
-      toast.error("Something went wrong");
+      toast.error("Failed to Signin");
     }
   };
 
   const handleRegister = async (registerData: RegisterData) => {
-    registerMutation.mutate(registerData, {
-      onSuccess: (data) => {
-        if (data.success) {
+    try {
+      registerMutation.mutate(registerData, {
+        onSuccess: () => {
           toast.success("Registration successful, logging in...");
           setRegisterModalOpen(false);
           setConfigModalOpen(true);
           localStorage.setItem("pendingSignIn", JSON.stringify(registerData));
-        } else {
-          toast.error(data.message || "Registration failed");
-        }
-      },
-    });
+        },
+        onError: () => {
+          toast.error("Failed to Register");
+        },
+      });
+    } catch (error) {
+      toast.error("Failed to register");
+    }
   };
 
   const handleConfigCreate = () => {
@@ -126,8 +127,8 @@ const SignIn = () => {
           <Input
             type="text"
             className="w-full p-2 border rounded border-black shadow-sm"
-            value={email}
-            placeholder="Email or Username"
+            value={username}
+            placeholder="Username"
             onChange={(e) => setEmail(e.target.value)}
             required
           />
