@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+// import { useMutation } from "@tanstack/react-query";
 import signinService from "../api/service/signinService";
 import useMutationAction from "../provider/queryGlobal";
 import {
@@ -8,20 +8,9 @@ import {
   SignInResponse,
 } from "../api/type";
 
-interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-interface AuthResponse {
-  success: boolean;
-  user?: any;
-  message?: string;
-}
-
-interface ResendKeyRequest {
-  email: string;
-}
+// interface ResendKeyRequest {
+//   email: string;
+// }
 
 export const useLogin = () => {
   return useMutationAction<SignInResponse, SigninData>(
@@ -37,17 +26,17 @@ export const useRegister = () => {
   );
 };
 
-export const useResendKey = () => {
-  return useMutation<
-    { success: boolean; message?: string },
-    Error,
-    ResendKeyRequest
-  >({
-    mutationFn: async ({ email }) => {
-      return (await signinService.resendKey(email)) as {
-        success: boolean;
-        message?: string;
-      };
-    },
-  });
-};
+// export const useResendKey = () => {
+//   return useMutation<
+//     { success: boolean; message?: string },
+//     Error,
+//     ResendKeyRequest
+//   >({
+//     mutationFn: async ({ email }) => {
+//       return (await signinService.resendKey(email)) as {
+//         success: boolean;
+//         message?: string;
+//       };
+//     },
+//   });
+// };
