@@ -1,5 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
 import signinService from "../api/service/signinService";
+import useMutationAction from "../provider/queryGlobal";
+import {
+  RegisterData,
+  RegisterResponse,
+  SigninData,
+  SignInResponse,
+} from "../api/type";
 
 interface LoginRequest {
   email: string;
@@ -17,19 +24,17 @@ interface ResendKeyRequest {
 }
 
 export const useLogin = () => {
-  return useMutation<AuthResponse, Error, LoginRequest>({
-    mutationFn: async ({ email, password }) => {
-      return (await signinService.login(email, password)) as AuthResponse;
-    },
-  });
+  return useMutationAction<SignInResponse, SigninData>(
+    ["signin"],
+    signinService.login
+  );
 };
 
 export const useRegister = () => {
-  return useMutation<AuthResponse, Error, LoginRequest>({
-    mutationFn: async ({ email, password }) => {
-      return (await signinService.register(email, password)) as AuthResponse;
-    },
-  });
+  return useMutationAction<RegisterResponse, RegisterData>(
+    ["signin"],
+    signinService.register
+  );
 };
 
 export const useResendKey = () => {

@@ -26,8 +26,15 @@ const RegisterModal = ({ onRegister, onClose }: RegisterModalProps) => {
     key: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRegisterData({ ...registerData, [e.target.name]: e.target.value });
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password: string) => {
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return passwordRegex.test(password);
   };
 
   const handleRegister = () => {
@@ -38,13 +45,24 @@ const RegisterModal = ({ onRegister, onClose }: RegisterModalProps) => {
       return;
     }
 
-    if (password.length < 8) {
-      toast.warning("Password must be at least 8 characters long.");
+    if (!validateEmail(email)) {
+      toast.warning("Invalid email format.");
+      return;
+    }
+
+    if (!validatePassword(password)) {
+      toast.warning(
+        "Password must have at least 8 characters, including uppercase, lowercase, number, and special character."
+      );
       return;
     }
 
     onRegister(registerData);
     onClose();
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRegisterData({ ...registerData, [e.target.name]: e.target.value });
   };
 
   return (

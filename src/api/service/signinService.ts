@@ -1,15 +1,14 @@
 import axiosClient from "../axiosClient";
-import { SignInResponse } from "../type";
+import { RegisterData, RegisterResponse, SigninData, SignInResponse } from "../type";
 const mockUsers = [
-    { id: "ABC1", email: "truongkinhquinh", password: "bmchien1", created: "2025-02-21T16:51:11.872Z" },
-    { id: "ABC2", email: "tolaokien", password: "bmchien2", created: "2025-02-21T16:51:11.872Z" },
+    { id: "ABC1", email: "admin@example.authstream", password: "Password123@", created: "2025-02-21T16:51:11.872Z" },
   ];
   
   const signinService = {
-    login: async (email: string, password: string):Promise<SignInResponse> => {
+    login: async (data:SigninData):Promise<SignInResponse> => {
       return new Promise((resolve) => {
         setTimeout(() => {
-          const user = mockUsers.find((user) => user.email === email && user.password === password);
+          const user = mockUsers.find((user) => user.email === data.email && user.password === data.password);
           if (user) {
             resolve({ success: true, user });
           } else {
@@ -19,14 +18,14 @@ const mockUsers = [
       });
     },
   
-    register: async (email: string, password: string) => {
+    register: async (data:RegisterData):Promise<RegisterResponse> => {
       return new Promise((resolve) => {
         setTimeout(() => {
-          const exists = mockUsers.some((user) => user.email === email);
+          const exists = mockUsers.some((user) => user.email === data.email);
           if (exists) {
             resolve({ success: false, message: "Email already registered" });
           } else {
-            const user = { email:email, password:password, id: `ABC${mockUsers.length + 1}`, created: new Date().toISOString() };
+            const user = { email:data.email,password:data.password, id: `ABC${mockUsers.length + 1}`, created: new Date().toISOString() };
             mockUsers.push(user);
             resolve({ success: true, user });
           }

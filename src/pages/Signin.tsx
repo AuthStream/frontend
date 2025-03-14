@@ -8,8 +8,7 @@ import { JWT_LOCAL_STORAGE_KEY } from "../constants/data";
 import { useLogin, useRegister } from "../hooks/useSigninQueries";
 import RegisterModal from "../components/modalSignin/registerModal";
 import ConfigDBModal from "../components/modalSignin/configDbModal";
-import signinService from "../api/service/signinService";
-import { SignInResponse } from "../api/type";
+import { RegisterData, SigninData } from "../api/type";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -22,60 +21,80 @@ const SignIn = () => {
   const loginMutation = useLogin();
   const registerMutation = useRegister();
 
-  const handleSignIn = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password: string) => {
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return passwordRegex.test(password);
+  };
+
+  const handleLoginClick = () => {
+    if (!validateEmail(email)) {
+      toast.error("Email không hợp lệ!");
+      return;
+    }
+    if (!validatePassword(password)) {
+      toast.error(
+        "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt!"
+      );
+      return;
+    }
+    handleSignIn({ email, password });
+  };
+  const handleSignIn = async (signinData: SigninData) => {
     try {
-      loginMutation.mutate(
-        { email, password },
-        {
-          onSuccess: (data) => {
-            if (data.success) {
-              localStorage.setItem(JWT_LOCAL_STORAGE_KEY, "token");
-              toast.success("Sign-in successful!");
-              navigate("/");
-            } else if (email === "admin@example.authstream") {
+      loginMutation.mutate(signinData, {
+        onSuccess: (data) => {
+          if (data.success) {
+            if (signinData.email === "admin@example.authstream") {
               setRegisterModalOpen(true);
             } else {
-              toast.error("Invalid credentials");
+              toast.success("Sign-in successful!");
+              localStorage.setItem(JWT_LOCAL_STORAGE_KEY, "token");
+              navigate("/");
             }
-          },
-        }
-      );
+          } else {
+            toast.error("Invalid credentials");
+          }
+        },
+      });
     } catch (error) {
       toast.error("Something went wrong");
     }
   };
 
-  const handleSignInAfterRegister = async (email: string, password: string) => {
+  const handleSignInAfterRegister = async (signinData: SigninData) => {
     try {
-      const response: SignInResponse = await signinService.login(
-        email,
-        password
-      );
-      if (response.success) {
-        localStorage.setItem(JWT_LOCAL_STORAGE_KEY, "token");
-        toast.success("Sign-in successful!");
-        navigate("/");
-      } else {
-        toast.error("Invalid credentials");
-      }
+      loginMutation.mutate(signinData, {
+        onSuccess: (data) => {
+          if (data.success) {
+            if (signinData.email === "admin@example.authstream") {
+              setRegisterModalOpen(true);
+            } else {
+              toast.success("Sign-in successful!");
+              localStorage.setItem(JWT_LOCAL_STORAGE_KEY, "token");
+              navigate("/");
+            }
+          } else {
+            toast.error("Invalid credentials");
+          }
+        },
+      });
     } catch (error) {
       toast.error("Something went wrong");
     }
   };
 
-  interface RegisterData {
-    email: string;
-    password: string;
-    key: string;
-  }
   const handleRegister = async (registerData: RegisterData) => {
     registerMutation.mutate(registerData, {
       onSuccess: (data) => {
         if (data.success) {
           toast.success("Registration successful, logging in...");
           setRegisterModalOpen(false);
-          // handleSignInAfterRegister(registerData.email, registerData.password);
           setConfigModalOpen(true);
           localStorage.setItem("pendingSignIn", JSON.stringify(registerData));
         } else {
@@ -90,8 +109,8 @@ const SignIn = () => {
     setConfigModalOpen(false);
     const pendingSignIn = localStorage.getItem("pendingSignIn");
     if (pendingSignIn) {
-      const { email, password } = JSON.parse(pendingSignIn);
-      handleSignInAfterRegister(email, password);
+      const registerData = JSON.parse(pendingSignIn);
+      handleSignInAfterRegister(registerData);
       localStorage.removeItem("pendingSignIn");
     }
   };
@@ -103,41 +122,39 @@ const SignIn = () => {
         <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
           Welcome, AuthStream
         </p>
-        <form onSubmit={handleSignIn}>
-          <div className="mb-4">
-            <Input
-              type="text"
-              className="w-full p-2 border rounded border-black shadow-sm"
-              value={email}
-              placeholder="Email or Username"
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="mb-4 relative">
-            <Input
-              type={showPassword ? "text" : "password"}
-              className="w-full p-2 border rounded border-black shadow-sm"
-              value={password}
-              placeholder="Password"
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <button
-              type="button"
-              className="absolute right-2 top-2 text-gray-500 p-0"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          </div>
-          <Button
-            type="submit"
-            className="w-full bg-blue-500 text-black py-2 hover:bg-blue-600 border-2"
+        <div className="mb-4">
+          <Input
+            type="text"
+            className="w-full p-2 border rounded border-black shadow-sm"
+            value={email}
+            placeholder="Email or Username"
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div className="mb-4 relative">
+          <Input
+            type={showPassword ? "text" : "password"}
+            className="w-full p-2 border rounded border-black shadow-sm"
+            value={password}
+            placeholder="Password"
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <button
+            type="button"
+            className="absolute right-2 top-2 text-gray-500 p-0"
+            onClick={() => setShowPassword(!showPassword)}
           >
-            Log in
-          </Button>
-        </form>
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        </div>
+        <Button
+          onClick={handleLoginClick}
+          className="w-full bg-blue-500 text-black py-2 hover:bg-blue-600 border-2"
+        >
+          Log in
+        </Button>
       </div>
       {isRegisterModalOpen && (
         <RegisterModal
