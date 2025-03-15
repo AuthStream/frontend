@@ -9,6 +9,14 @@ const QuickAccess = () => {
       <ul className="space-y-2 flex-grow">
         <li>
           <Link
+            to="/forward"
+            className="text-blue-500 hover:underline cursor-pointer"
+          >
+            Create new Forward Flow
+          </Link>
+        </li>
+        <li>
+          <Link
             to="/application"
             className="text-blue-500 hover:underline cursor-pointer"
           >

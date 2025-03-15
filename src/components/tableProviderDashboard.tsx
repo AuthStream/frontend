@@ -50,7 +50,7 @@ const TableProviderDashboard = ({ providers }: TableProviderDashboardProps) => {
             <TableHead>Name</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Domain</TableHead>
-            <TableHead>Token</TableHead>
+            <TableHead>Proxy Host Ip</TableHead>
             <TableHead>CallBack Url</TableHead>
           </TableRow>
         </TableHeader>
@@ -60,9 +60,9 @@ const TableProviderDashboard = ({ providers }: TableProviderDashboardProps) => {
               <TableCell>{provider.id}</TableCell>
               <TableCell>{provider.name}</TableCell>
               <TableCell>{provider.type}</TableCell>
-              <TableCell>{provider.domain}</TableCell>
-              <TableCell>{provider.token}</TableCell>
-              <TableCell>{provider.callBackUrl}</TableCell>
+              <TableCell>{provider.domainName}</TableCell>
+              <TableCell>{provider.proxyHostIp}</TableCell>
+              <TableCell>{provider.callbackUrl}</TableCell>
             </TableRow>
           ))}
         </TableBody>
