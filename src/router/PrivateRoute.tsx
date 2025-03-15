@@ -11,6 +11,7 @@ import Dashboard from "../pages/Dashboard";
 import Log from "../pages/Log";
 import Notification from "../pages/Dashboard";
 import ProtectedRoute from "../pages/Route";
+import Forward from "../pages/Forward";
 
 const PrivateRoute = {
   home: {
@@ -24,6 +25,10 @@ const PrivateRoute = {
   route: {
     path: "/route",
     component: ProtectedRoute,
+  },
+  forward: {
+    path: "/forward",
+    component: Forward,
   },
   application: {
     path: "/application",
