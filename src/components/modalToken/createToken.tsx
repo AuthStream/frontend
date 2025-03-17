@@ -10,14 +10,7 @@ import {
   DialogDescription,
 } from "../ui/dialog";
 import { Input } from "../ui/input";
-
-interface Token {
-  id: string;
-  name: string;
-  body: string;
-  encrypt: string;
-  expired: number;
-}
+import { Token } from "../../api/type";
 
 interface CreateTokenProps {
   isOpen: boolean;
@@ -28,10 +21,9 @@ interface CreateTokenProps {
 const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
   const [newToken, setNewToken] = useState<Token>({
     id: "",
-    name: "",
     body: "",
-    encrypt: "",
-    expired: 0,
+    encryptToken: "",
+    expiredDuration: 0,
   });
 
   const handleChange = (
@@ -49,10 +41,9 @@ const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
 
     setNewToken({
       id: "",
-      name: "",
       body: "",
-      encrypt: "",
-      expired: 0,
+      encryptToken: "",
+      expiredDuration: 0,
     });
     onCreate(newToken);
     onClose();
@@ -68,12 +59,6 @@ const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <Input
-            name="name"
-            value={newToken.name}
-            onChange={handleChange}
-            placeholder="Token Name"
-          />
           <Textarea
             name="body"
             value={newToken.body}
@@ -82,14 +67,14 @@ const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
           />
           <Input
             name="encrypt"
-            value={newToken.encrypt}
+            value={newToken.encryptToken}
             onChange={handleChange}
             placeholder="Token Encrypt"
           />
           <Input
             type="number"
             name="expired"
-            value={newToken.expired}
+            value={newToken.expiredDuration}
             onChange={handleChange}
           />
         </div>

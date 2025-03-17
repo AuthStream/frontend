@@ -5,21 +5,42 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
 import { JWT_LOCAL_STORAGE_KEY } from "../constants/data";
-import { useLogin, useRegister } from "../hooks/useSigninQueries";
+import {
+  useCheckConnection,
+  useGetSchema,
+  useLogin,
+  useRegister,
+} from "../hooks/useSigninQueries";
 import RegisterModal from "../components/modalSignin/registerModal";
 import ConfigDBModal from "../components/modalSignin/configDbModal";
-import { RegisterData, SigninData } from "../api/type";
+import ViewSchemaModal from "../components/modalSignin/viewSchemaModal";
+
+import { DbConfig, dbSchema, RegisterData, SigninData } from "../api/type";
 
 const SignIn = () => {
   const [username, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [userData, setUserData] = useState({
+    id: "",
+    username: "",
+    password: "",
+  });
+  const [schema, setSchema] = useState<dbSchema>({
+    databaseName: "",
+    databaseSchema: [],
+  });
+
   const [showPassword, setShowPassword] = useState(false);
   const [isRegisterModalOpen, setRegisterModalOpen] = useState(false);
   const [isConfigModalOpen, setConfigModalOpen] = useState(false);
+  const [isSchemaModalOpen, setSchemaModalOpen] = useState(false);
+  const [isConnectionChecked, setIsConnectionChecked] = useState(false);
   const navigate = useNavigate();
 
   const loginMutation = useLogin();
   const registerMutation = useRegister();
+  const checkConnectionMutation = useCheckConnection();
+  const getSchemaMutation = useGetSchema();
 
   const validateEmail = (username: string) => {
     const usernameRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -33,16 +54,16 @@ const SignIn = () => {
   };
 
   const handleLoginClick = () => {
-    if (!validateEmail(username)) {
-      toast.error("Email không hợp lệ!");
-      return;
-    }
-    if (!validatePassword(password)) {
-      toast.error(
-        "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt!"
-      );
-      return;
-    }
+    // if (!validateEmail(username)) {
+    //   toast.error("Email không hợp lệ!");
+    //   return;
+    // }
+    // if (!validatePassword(password)) {
+    //   toast.error(
+    //     "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt!"
+    //   );
+    //   return;
+    // }
     handleSignIn({ username, password });
   };
   const handleSignIn = async (signinData: SigninData) => {
@@ -90,8 +111,13 @@ const SignIn = () => {
   const handleRegister = async (registerData: RegisterData) => {
     try {
       registerMutation.mutate(registerData, {
-        onSuccess: () => {
+        onSuccess: (response) => {
           toast.success("Registration successful, logging in...");
+          setUserData({
+            username: registerData.username,
+            password: registerData.password,
+            id: response.id,
+          });
           setRegisterModalOpen(false);
           setConfigModalOpen(true);
           localStorage.setItem("pendingSignIn", JSON.stringify(registerData));
@@ -105,14 +131,59 @@ const SignIn = () => {
     }
   };
 
-  const handleConfigCreate = () => {
-    toast.success("Database configured successfully!");
-    setConfigModalOpen(false);
-    const pendingSignIn = localStorage.getItem("pendingSignIn");
-    if (pendingSignIn) {
-      const registerData = JSON.parse(pendingSignIn);
-      handleSignInAfterRegister(registerData);
-      localStorage.removeItem("pendingSignIn");
+  const handleGetSchema = async (dbConfig: DbConfig) => {
+    try {
+      getSchemaMutation.mutate(
+        {
+          ...dbConfig,
+          username: userData.username,
+          password: userData.password,
+        },
+        {
+          onSuccess: (response) => {
+            toast.success("Saved Config");
+            setSchema(response);
+            setSchemaModalOpen(true);
+            setConfigModalOpen(false);
+            // const pendingSignIn = localStorage.getItem("pendingSignIn");
+            // if (pendingSignIn) {
+            //   const registerData = JSON.parse(pendingSignIn);
+            //   handleSignInAfterRegister(registerData);
+            //   localStorage.removeItem("pendingSignIn");
+            // }
+          },
+          onError: () => {
+            toast.success("Cannot Save");
+          },
+        }
+      );
+    } catch (error) {
+      toast.error("error");
+    }
+  };
+
+  const handleCheckConnection = async (dbConfig: DbConfig) => {
+    try {
+      checkConnectionMutation.mutate(
+        {
+          ...dbConfig,
+          username: userData.username,
+          password: userData.password,
+        },
+        {
+          onSuccess: (response) => {
+            toast.success(response);
+            setIsConnectionChecked(true);
+          },
+          onError: (error) => {
+            toast.error(error.toString());
+            setIsConnectionChecked(false);
+          },
+        }
+      );
+    } catch (error) {
+      toast.error("error");
+      setIsConnectionChecked(false);
     }
   };
 
@@ -165,8 +236,21 @@ const SignIn = () => {
       )}
       {isConfigModalOpen && (
         <ConfigDBModal
-          onCreate={handleConfigCreate}
-          onClose={() => setConfigModalOpen(false)}
+          onCreate={handleGetSchema}
+          onCheck={handleCheckConnection}
+          onClose={() => {
+            setConfigModalOpen(false);
+            setIsConnectionChecked(false);
+          }}
+          isConnectionChecked={isConnectionChecked}
+        />
+      )}
+      {isSchemaModalOpen && (
+        <ViewSchemaModal
+          schema={schema}
+          onClose={() => {
+            setSchemaModalOpen(false);
+          }}
         />
       )}
     </div>

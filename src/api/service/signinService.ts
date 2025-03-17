@@ -1,5 +1,5 @@
 import axiosClient from "../axiosClient";
-import { RegisterData, RegisterResponse, SigninData, SignInResponse } from "../type";
+import { DbConfig, RegisterData, RegisterResponse, SigninData, SignInResponse } from "../type";
 
   const signinService = {
     login: async (data:SigninData):Promise<SignInResponse> => {
@@ -21,6 +21,31 @@ import { RegisterData, RegisterResponse, SigninData, SignInResponse } from "../t
         throw error;
       }
     },
+
+    checkConnection: async (data: DbConfig): Promise<any> =>
+    {
+      try{
+        const response = await axiosClient.post("/admins/config/checkconnection",data);
+        return response.data;
+      }
+      catch(error){
+        return error;
+      }
+    },
+
+    getSchema: async (data: DbConfig): Promise<any>=>
+      {
+        try{
+          const response = await axiosClient.post("/admins/config/viewschema",data);
+          console.log(response.data);
+          return response.data;
+        }
+        catch(error){
+          throw error;
+        }
+      }
+
+
   
     // resendKey: async (email: string) => {
     //   return new Promise((resolve) => {

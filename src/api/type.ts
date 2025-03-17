@@ -1,10 +1,9 @@
 
 export interface Token {
   id: string;
-  name: string;
-  expired: number;
+  expiredDuration: number;
   body: string;
-  encrypt: string;
+  encryptToken: string;
 };
 
 export interface TokenResponse {
@@ -245,4 +244,41 @@ export   interface RegisterResponse {
   username: string;
   created: string;
   password: string;
+}
+
+
+export interface Column{
+  name: string,
+  type: string,
+  constraints:string[],
+  referenceTo: {
+    tableName: string,
+    columnName: string
+  }
+}
+export interface tableSchema{
+  tableName: string,
+  columns: Column[],
+}
+
+export interface dbSchema{
+  databaseName: string,
+  databaseSchema:tableSchema[],
+}
+export   interface DbConfig {
+  id: string,
+  username: string,
+  password: string,
+  uri: string,
+  databaseUsername: string,
+  databasePassword: string,
+  databaseType: string,
+  sslMode: string,
+  port: number,
+  connectionString: string,
+  tableIncludeList: tableSchema[],
+  schemaIncludeList: tableSchema[],
+  collectionIncludeList:tableSchema[],
+  createdAt: string,
+  updatedAt: string
 }
