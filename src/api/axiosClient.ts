@@ -25,8 +25,8 @@
 		console.log("Full Response:", response);
 		return  response;
 	}, (error) => {
-		console.error("Axios Error:", error);
-		throw error;
+		console.log("Axios Error:", error);
+		return error.response;
 	});
 	
 

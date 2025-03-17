@@ -1,4 +1,4 @@
-// import axiosClient from "../axiosClient";
+import axiosClient from "../axiosClient";
 import { CreateTokenResponse, EditTokenResponse, Token, TokenResponse } from "../type";
 const mockTokens = [
   {
@@ -18,33 +18,35 @@ const mockTokens = [
 ];
 
 const tokenService = {
-  getAllTokens: async (): Promise<TokenResponse> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ contents: mockTokens, totalElements: mockTokens.length });
-      }, 500);
-    });
+  getAllTokens: async (): Promise<{contents: Token[]}> => {
+    try{
+      const response = await axiosClient.get("/tokens");
+      return response.data;
+    }
+    catch(error){
+      throw error;
+    }
   },
 
-  createToken: async (newToken: Token): Promise<CreateTokenResponse> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        mockTokens.push({ ...newToken, id: `ABC${mockTokens.length + 1}` });
-        resolve({ success: true });
-      }, 500);
-    });
+  createToken: async (newToken: Token): Promise<Token> => {
+    try{
+      const response=await axiosClient.post("/tokens",newToken);
+      return response.data;
+    }catch(error)
+    {
+      throw error;
+    }
   },
 
-  editToken: async (updatedToken: Token): Promise<EditTokenResponse> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const index = mockTokens.findIndex((token) => token.id === updatedToken.id);
-        if (index !== -1) {
-          mockTokens[index] = updatedToken;
-        }
-        resolve({ success: true });
-      }, 500);
-    });
+  editToken: async (updatedToken: Token): Promise<Token> => {
+    try{
+      const response=await axiosClient.put("/tokens",updatedToken);
+      return response.data;
+    }
+    catch(error)
+    {
+      throw error;
+    }
   },
 
   deleteToken: async (id: string): Promise<{ success: boolean }> => {

@@ -45,17 +45,17 @@ const RegisterModal = ({ onRegister, onClose }: RegisterModalProps) => {
       return;
     }
 
-    if (!validateEmail(username)) {
-      toast.warning("Invalid username format.");
-      return;
-    }
+    // if (!validateEmail(username)) {
+    //   toast.warning("Invalid username format.");
+    //   return;
+    // }
 
-    if (!validatePassword(password)) {
-      toast.warning(
-        "Password must have at least 8 characters, including uppercase, lowercase, number, and special character."
-      );
-      return;
-    }
+    // if (!validatePassword(password)) {
+    //   toast.warning(
+    //     "Password must have at least 8 characters, including uppercase, lowercase, number, and special character."
+    //   );
+    //   return;
+    // }
 
     onRegister(registerData);
     onClose();
