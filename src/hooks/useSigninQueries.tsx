@@ -3,6 +3,7 @@ import signinService from "../api/service/signinService";
 import useMutationAction from "../provider/queryGlobal";
 import {
   DbConfig,
+  DbPreviewRequest,
   RegisterData,
   RegisterResponse,
   SigninData,
@@ -36,6 +37,20 @@ export const useCheckConnection = () => {
 
 export const useGetSchema = () => {
   return useMutationAction<any, DbConfig>(["signin"], signinService.getSchema);
+};
+
+export const usePreviewData = () => {
+  return useMutationAction<any, DbPreviewRequest>(
+    ["signin"],
+    signinService.previewData
+  );
+};
+
+export const useSubmitConfig = () => {
+  return useMutationAction<any, DbConfig>(
+    ["signin"],
+    signinService.submitConfig
+  );
 };
 
 // export const useResendKey = () => {

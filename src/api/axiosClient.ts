@@ -3,7 +3,7 @@
 	import { JWT_LOCAL_STORAGE_KEY } from "../constants/data.ts";
 
 	const axiosClient = axios.create({
-		baseURL: "http://localhost:8080",
+		baseURL: "http://localhost:8082",
 		headers: {
 			"Content-Type": "application/json",
 		},

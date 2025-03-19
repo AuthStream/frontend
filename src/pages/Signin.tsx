@@ -9,13 +9,23 @@ import {
   useCheckConnection,
   useGetSchema,
   useLogin,
+  usePreviewData,
   useRegister,
+  useSubmitConfig,
 } from "../hooks/useSigninQueries";
 import RegisterModal from "../components/modalSignin/registerModal";
 import ConfigDBModal from "../components/modalSignin/configDbModal";
 import ViewSchemaModal from "../components/modalSignin/viewSchemaModal";
 
-import { DbConfig, dbSchema, RegisterData, SigninData } from "../api/type";
+import {
+  DbConfig,
+  dbSchema,
+  RegisterData,
+  SigninData,
+  TableData,
+  tableSchema,
+} from "../api/type";
+import PreviewDataModal from "../components/modalSignin/previewDataModal";
 
 const SignIn = () => {
   const [username, setEmail] = useState("");
@@ -29,41 +39,43 @@ const SignIn = () => {
     databaseName: "",
     databaseSchema: [],
   });
+  const [previewData, setPreviewData] = useState<TableData[]>([]);
+
+  const [config, setConfig] = useState<DbConfig>({
+    id: "",
+    username: "",
+    password: "",
+    uri: "",
+    databaseUsername: "",
+    databasePassword: "",
+    databaseType: "",
+    sslMode: "",
+    port: 0,
+    connectionString: "",
+    tableIncludeList: [],
+    schemaIncludeList: [],
+    collectionIncludeList: [],
+    createdAt: "",
+    updatedAt: "",
+  });
 
   const [showPassword, setShowPassword] = useState(false);
   const [isRegisterModalOpen, setRegisterModalOpen] = useState(false);
   const [isConfigModalOpen, setConfigModalOpen] = useState(false);
   const [isSchemaModalOpen, setSchemaModalOpen] = useState(false);
   const [isConnectionChecked, setIsConnectionChecked] = useState(false);
+  const [isPreviewDataModalOpen, setPreviewDataModalOpen] = useState(false);
+
   const navigate = useNavigate();
 
   const loginMutation = useLogin();
   const registerMutation = useRegister();
   const checkConnectionMutation = useCheckConnection();
   const getSchemaMutation = useGetSchema();
-
-  const validateEmail = (username: string) => {
-    const usernameRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return usernameRegex.test(username);
-  };
-
-  const validatePassword = (password: string) => {
-    const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    return passwordRegex.test(password);
-  };
+  const previewDataMutation = usePreviewData();
+  const submitConfigMutation = useSubmitConfig();
 
   const handleLoginClick = () => {
-    // if (!validateEmail(username)) {
-    //   toast.error("Email không hợp lệ!");
-    //   return;
-    // }
-    // if (!validatePassword(password)) {
-    //   toast.error(
-    //     "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt!"
-    //   );
-    //   return;
-    // }
     handleSignIn({ username, password });
   };
   const handleSignIn = async (signinData: SigninData) => {
@@ -120,7 +132,6 @@ const SignIn = () => {
           });
           setRegisterModalOpen(false);
           setConfigModalOpen(true);
-          localStorage.setItem("pendingSignIn", JSON.stringify(registerData));
         },
         onError: () => {
           toast.error("Failed to Register");
@@ -145,6 +156,11 @@ const SignIn = () => {
             setSchema(response);
             setSchemaModalOpen(true);
             setConfigModalOpen(false);
+            setConfig({
+              ...dbConfig,
+              username: userData.username,
+              password: userData.password,
+            });
             // const pendingSignIn = localStorage.getItem("pendingSignIn");
             // if (pendingSignIn) {
             //   const registerData = JSON.parse(pendingSignIn);
@@ -184,6 +200,43 @@ const SignIn = () => {
     } catch (error) {
       toast.error("error");
       setIsConnectionChecked(false);
+    }
+  };
+
+  const handlePreviewTable = async (data: tableSchema[]) => {
+    try {
+      previewDataMutation.mutate(
+        { tables: data, connectionString: config.connectionString },
+        {
+          onSuccess: (response) => {
+            setConfig({
+              ...config,
+              tableIncludeList: data,
+            });
+            setPreviewData(response);
+            setPreviewDataModalOpen(true);
+            setSchemaModalOpen(false);
+            // console.log(response);
+          },
+        }
+      );
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const handleSubmitConfig = async () => {
+    try {
+      submitConfigMutation.mutate(config, {
+        onSuccess: () => {
+          handleSignInAfterRegister({
+            username: userData.username,
+            password: userData.password,
+          });
+        },
+      });
+    } catch (error) {
+      throw error;
     }
   };
 
@@ -248,8 +301,18 @@ const SignIn = () => {
       {isSchemaModalOpen && (
         <ViewSchemaModal
           schema={schema}
+          onSubmit={handlePreviewTable}
           onClose={() => {
             setSchemaModalOpen(false);
+          }}
+        />
+      )}
+      {isPreviewDataModalOpen && (
+        <PreviewDataModal
+          previewData={previewData}
+          onSubmit={handleSubmitConfig}
+          onClose={() => {
+            setPreviewDataModalOpen(false);
           }}
         />
       )}
