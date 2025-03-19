@@ -1,5 +1,5 @@
 import axiosClient from "../axiosClient";
-import { DbConfig, RegisterData, RegisterResponse, SigninData, SignInResponse } from "../type";
+import { DbConfig, DbPreviewRequest, RegisterData, RegisterResponse, SigninData, SignInResponse } from "../type";
 
   const signinService = {
     login: async (data:SigninData):Promise<SignInResponse> => {
@@ -37,6 +37,31 @@ import { DbConfig, RegisterData, RegisterResponse, SigninData, SignInResponse } 
       {
         try{
           const response = await axiosClient.post("/admins/config/viewschema",data);
+          return response.data;
+        }
+        catch(error){
+          throw error;
+        }
+      },
+
+    previewData: async (data: DbPreviewRequest ): Promise<any>=>
+    {
+      try{
+        // console.log(data);
+        const response = await axiosClient.post("/admins/config/preview-data",data);
+        // console.log(response.data);
+        return response.data;
+      }
+      catch(error){
+        throw error;
+      }
+    },
+
+    submitConfig: async (data: DbConfig ): Promise<any>=>
+      {
+        try{
+          console.log(data);
+          const response = await axiosClient.post("/admins/config",data);
           console.log(response.data);
           return response.data;
         }

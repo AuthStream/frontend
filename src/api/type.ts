@@ -282,3 +282,18 @@ export   interface DbConfig {
   createdAt: string,
   updatedAt: string
 }
+
+export interface DbPreviewRequest{
+  connectionString:string,
+  tables: tableSchema[]
+}
+
+
+export interface Row {
+  [key: string]: string | number;
+}
+
+export interface TableData {
+  tableName: string;
+  rows: Row[];
+}

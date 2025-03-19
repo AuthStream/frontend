@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import ReactFlow, {
   addEdge,
   MiniMap,
@@ -11,16 +11,22 @@ import ReactFlow, {
   Connection,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { dbSchema } from "../../api/type";
-import { Dialog, DialogContent } from "../ui/dialog";
+import { dbSchema, tableSchema } from "../../api/type";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Button } from "../ui/button";
 
 const viewSchemaModal: React.FC<{
   schema: dbSchema;
   onClose: () => void;
-}> = ({ schema, onClose }) => {
+  onSubmit: (replicateTable: tableSchema[]) => void;
+}> = ({ schema, onClose, onSubmit }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [open, setOpen] = useState(true);
+  const [open] = useState(true);
+  const [selectedTable, setSelectedTable] = useState<string | null>(null);
+  const [selectedFields, setSelectedFields] = useState<
+    Record<string, string[]>
+  >({});
 
   const initializeDiagram = useCallback(() => {
     const newNodes: Node[] = [];
@@ -43,7 +49,7 @@ const viewSchemaModal: React.FC<{
               >
                 <span style={{ marginRight: "4px" }}>📋</span>
                 <strong>{table.tableName}</strong>
-              </div>{" "}
+              </div>
               {table.columns.map((col) => (
                 <div
                   key={col.name}
@@ -96,7 +102,7 @@ const viewSchemaModal: React.FC<{
     setEdges(newEdges);
   }, [schema, setNodes, setEdges]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
       initializeDiagram();
     }
@@ -107,23 +113,157 @@ const viewSchemaModal: React.FC<{
     [setEdges]
   );
 
+  const handleFieldToggle = (
+    tableName: string,
+    fieldName: string,
+    event: React.MouseEvent
+  ) => {
+    event.stopPropagation();
+    setSelectedFields((prev) => {
+      const tableFields = prev[tableName] || [];
+      if (tableFields.includes(fieldName)) {
+        return {
+          ...prev,
+          [tableName]: tableFields.filter((f) => f !== fieldName),
+        };
+      }
+      return {
+        ...prev,
+        [tableName]: [...tableFields, fieldName],
+      };
+    });
+  };
+
+  const handleTableToggle = (tableName: string) => {
+    setSelectedTable(selectedTable === tableName ? null : tableName);
+  };
+
+  const handleSubmit = () => {
+    const replicateTables: tableSchema[] = Object.keys(selectedFields)
+      .map((tableName) => {
+        const table = schema.databaseSchema.find(
+          (t) => t.tableName === tableName
+        );
+        if (!table) return null;
+
+        const selectedColumns = table.columns.filter((col) =>
+          selectedFields[tableName].includes(col.name)
+        );
+
+        if (selectedColumns.length === 0) return null;
+
+        return {
+          tableName: table.tableName,
+          columns: selectedColumns,
+        };
+      })
+      .filter((table): table is tableSchema => table !== null);
+
+    onSubmit(replicateTables);
+    // onClose();
+  };
+
+  const handleCancel = () => {
+    setSelectedFields({});
+    setSelectedTable(null);
+    onClose();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
-        <h2>Relational Diagram - {schema.databaseName}</h2>
-        <div style={{ height: "600px", width: "100%" }}>
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            fitView
+      <DialogContent className="max-w-7xl">
+        <DialogHeader>
+          <DialogTitle>{schema.databaseName}</DialogTitle>
+        </DialogHeader>
+        <div className="flex" style={{ height: "600px" }}>
+          <div style={{ width: "60%", height: "100%" }}>
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              fitView
+            >
+              <MiniMap />
+              <Controls />
+              <Background />
+            </ReactFlow>
+          </div>
+
+          <div
+            style={{
+              width: "40%",
+              padding: "16px",
+              borderLeft: "1px solid #ccc",
+              display: "flex",
+              flexDirection: "column",
+            }}
           >
-            <MiniMap />
-            <Controls />
-            <Background />
-          </ReactFlow>
+            <div className="flex-1 overflow-y-auto mb-4">
+              <h3 className="text-lg font-semibold mb-2">
+                Choose the replicate tables and fields
+              </h3>
+              <div className="space-y-2">
+                {schema.databaseSchema.map((table) => (
+                  <div
+                    key={table.tableName}
+                    className={`p-3 border rounded cursor-pointer hover:bg-gray-100 ${
+                      selectedTable === table.tableName
+                        ? "bg-gray-200 border-gray-400"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    <div
+                      className="flex items-center mb-2"
+                      onClick={() => handleTableToggle(table.tableName)} // Toggle only when clicking the header
+                    >
+                      <span className="mr-2">📋</span>
+                      <strong>{table.tableName}</strong>
+                    </div>
+                    {selectedTable === table.tableName && (
+                      <div className="space-y-1">
+                        {table.columns.map((col) => (
+                          <div
+                            key={col.name}
+                            className="flex items-center"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={(
+                                selectedFields[table.tableName] || []
+                              ).includes(col.name)}
+                              onClick={(e) =>
+                                handleFieldToggle(table.tableName, col.name, e)
+                              }
+                              className="mr-2"
+                            />
+                            <span className="flex-1">
+                              {col.constraints.includes("PRIMARY KEY") && (
+                                <span className="mr-1">🔑</span>
+                              )}
+                              {col.name}
+                            </span>
+                            <span className="text-gray-500 text-sm">
+                              ({col.type})
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={handleCancel}>
+                Cancel
+              </Button>
+              <Button onClick={handleSubmit}>Submit</Button>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
