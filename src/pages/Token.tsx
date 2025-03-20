@@ -31,12 +31,14 @@ const Token = () => {
           </p>
         ) : error ? (
           <p className="text-center text-red-500">
-            {error instanceof Error ? error.message : "An unknown error occurred"}
+            {error instanceof Error
+              ? error.message
+              : "An unknown error occurred"}
           </p>
-        ) : tokens ? (
-          <TableToken tokens={tokens.contents} />
+        ) : tokens && Array.isArray(tokens) ? (
+          <TableToken tokens={tokens} />
         ) : (
-          <p>No tokens available</p>
+          <p>No provider available</p>
         )}
       </div>
     </div>

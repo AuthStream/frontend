@@ -25,7 +25,7 @@ import { DbConfig, DbPreviewRequest, RegisterData, RegisterResponse, SigninData,
     checkConnection: async (data: DbConfig): Promise<any> =>
     {
       try{
-        const response = await axiosClient.post("/admins/config/checkconnection",data);
+        const response = await axiosClient.post("/previews/checkconnection",data);
         return response.data;
       }
       catch(error){
@@ -36,7 +36,7 @@ import { DbConfig, DbPreviewRequest, RegisterData, RegisterResponse, SigninData,
     getSchema: async (data: DbConfig): Promise<any>=>
       {
         try{
-          const response = await axiosClient.post("/admins/config/viewschema",data);
+          const response = await axiosClient.post("/previews/viewschema",data);
           return response.data;
         }
         catch(error){
@@ -48,7 +48,7 @@ import { DbConfig, DbPreviewRequest, RegisterData, RegisterResponse, SigninData,
     {
       try{
         // console.log(data);
-        const response = await axiosClient.post("/admins/config/preview-data",data);
+        const response = await axiosClient.post("/previews/preview-data",data);
         // console.log(response.data);
         return response.data;
       }
