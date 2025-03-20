@@ -2,8 +2,9 @@
 export interface Token {
   id: string;
   expiredDuration: number;
-  body: string;
+  body: object;
   encryptToken: string;
+  applicationId:string;
 };
 
 export interface TokenResponse {

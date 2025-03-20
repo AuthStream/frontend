@@ -21,31 +21,54 @@ interface CreateTokenProps {
 const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
   const [newToken, setNewToken] = useState<Token>({
     id: "",
-    body: "",
+    body: {},
     encryptToken: "",
     expiredDuration: 0,
+    applicationId: "",
   });
+
+  const [bodyInput, setBodyInput] = useState<string>(
+    JSON.stringify(newToken.body, null, 2)
+  );
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setNewToken((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+
+    if (name === "body") {
+      setBodyInput(value);
+      try {
+        const parsedBody = JSON.parse(value);
+        setNewToken((prev) => ({
+          ...prev,
+          [name]: parsedBody,
+        }));
+      } catch (error) {
+        console.error("Invalid JSON in body:", error);
+      }
+    } else {
+      setNewToken((prev) => ({
+        ...prev,
+        [name]: name === "expiredDuration" ? Number(value) : value,
+      }));
+    }
   };
 
   const handleCreate = () => {
-    // validate here
-
+    if (typeof newToken.body === "string" || !isValidJSON(bodyInput)) {
+      console.error("Body must be valid JSON before creating token");
+      return;
+    }
+    onCreate(newToken);
     setNewToken({
       id: "",
-      body: "",
+      body: {},
       encryptToken: "",
       expiredDuration: 0,
+      applicationId: "",
     });
-    onCreate(newToken);
+    setBodyInput("{}");
     onClose();
   };
 
@@ -61,21 +84,22 @@ const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
         <div className="space-y-4">
           <Textarea
             name="body"
-            value={newToken.body}
+            value={bodyInput}
             onChange={handleChange}
-            placeholder="Body"
+            placeholder='Body (JSON format, e.g. {"key": "value"})'
           />
           <Input
-            name="encrypt"
+            name="encryptToken"
             value={newToken.encryptToken}
             onChange={handleChange}
             placeholder="Token Encrypt"
           />
           <Input
             type="number"
-            name="expired"
+            name="expiredDuration"
             value={newToken.expiredDuration}
             onChange={handleChange}
+            placeholder="Token Expired Duration"
           />
         </div>
         <DialogFooter>
@@ -85,6 +109,7 @@ const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
           <Button
             className="bg-blue-500 text-white hover:bg-blue-600"
             onClick={handleCreate}
+            disabled={!isValidJSON(bodyInput)}
           >
             Create
           </Button>
@@ -92,6 +117,15 @@ const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
       </DialogContent>
     </Dialog>
   );
+};
+
+const isValidJSON = (str: string) => {
+  try {
+    JSON.parse(str);
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 export default CreateToken;

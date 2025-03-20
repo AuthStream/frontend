@@ -10,14 +10,7 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import Textarea from "../ui/textarea";
-
-interface Token {
-  id: string;
-  name: string;
-  body: string;
-  encrypt: string;
-  expired: number;
-}
+import { Token } from "../../api/type";
 
 interface EditTokenProps {
   isOpen: boolean;
@@ -26,6 +19,15 @@ interface EditTokenProps {
   onEdit: (updatedToken: Token) => void;
 }
 
+const isValidJSON = (str: string) => {
+  try {
+    JSON.parse(str);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const EditToken = ({
   isOpen,
   onClose,
@@ -33,10 +35,12 @@ const EditToken = ({
   onEdit,
 }: EditTokenProps) => {
   const [editedToken, setEditedToken] = useState<Token | null>(null);
+  const [bodyInput, setBodyInput] = useState<string>("");
 
   useEffect(() => {
     if (tokenToEdit) {
       setEditedToken(tokenToEdit);
+      setBodyInput(JSON.stringify(tokenToEdit.body, null, 2));
     }
   }, [tokenToEdit]);
 
@@ -45,19 +49,32 @@ const EditToken = ({
   ) => {
     const { name, value } = e.target;
     if (editedToken) {
-      setEditedToken((prev) => ({
-        ...prev!,
-        [name]: value,
-      }));
+      if (name === "body") {
+        setBodyInput(value);
+        try {
+          const parsedBody = JSON.parse(value);
+          setEditedToken((prev) => ({
+            ...prev!,
+            [name]: parsedBody,
+          }));
+        } catch (error) {
+          console.error("Invalid JSON in body:", error);
+        }
+      } else {
+        setEditedToken((prev) => ({
+          ...prev!,
+          [name]: name === "expiredDuration" ? Number(value) : value,
+        }));
+      }
     }
   };
+
   const handleEdit = () => {
-
-    // validate here
-
-    if (editedToken) {
+    if (editedToken && isValidJSON(bodyInput)) {
       onEdit(editedToken);
       onClose();
+    } else {
+      console.error("Cannot save: Body must be valid JSON");
     }
   };
 
@@ -83,27 +100,21 @@ const EditToken = ({
             disabled
           />
           <Input
-            name="name"
-            value={editedToken.name}
-            onChange={handleChange}
-            placeholder="Token Name"
-          />
-          <Textarea
-            name="body"
-            value={editedToken.body}
-            onChange={handleChange}
-            placeholder="Body"
-          />
-          <Input
-            name="encrypt"
-            value={editedToken.encrypt}
+            name="encryptToken"
+            value={editedToken.encryptToken}
             onChange={handleChange}
             placeholder="Token Encrypt"
           />
+          <Textarea
+            name="body"
+            value={bodyInput}
+            onChange={handleChange}
+            placeholder='Body (JSON format, e.g. {"key": "value"})'
+          />
           <Input
-            name="expired"
+            name="expiredDuration"
             type="number"
-            value={editedToken.expired}
+            value={editedToken.expiredDuration}
             onChange={handleChange}
             placeholder="Token Expired"
           />
@@ -115,6 +126,7 @@ const EditToken = ({
           <Button
             className="bg-blue-500 text-white hover:bg-blue-600"
             onClick={handleEdit}
+            disabled={!isValidJSON(bodyInput)}
           >
             Save Changes
           </Button>

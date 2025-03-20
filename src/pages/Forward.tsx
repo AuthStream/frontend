@@ -1,17 +1,25 @@
 import { useState } from "react";
-import { ChevronRight } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { useCreateApplications } from "../hooks/useApplicationQueries";
 import { useCreateProviders } from "../hooks/useProviderQueries";
 import { useCreateToken } from "../hooks/useTokenQueries";
-import { Application, ProviderType } from "../api/type";
+import Textarea from "../components/ui/textarea";
 
 const steps = ["Application", "Provider", "Token"];
 const providerTypes = [
   { id: "SAML", name: "SAML" },
   { id: "FORWARD", name: "FORWARD" },
 ];
+
+const isValidJSON = (str: string) => {
+  try {
+    JSON.parse(str);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 const Forward = () => {
   const [step, setStep] = useState(0);
@@ -40,7 +48,17 @@ const Forward = () => {
     updateAt: "",
   });
 
-  const [tokenData, setTokenData] = useState({ value: "" });
+  const [tokenData, setTokenData] = useState({
+    id: "",
+    body: {},
+    encryptToken: "",
+    expiredDuration: 0,
+    applicationId: "",
+  });
+
+  const [bodyInput, setBodyInput] = useState<string>(
+    JSON.stringify(tokenData.body, null, 2)
+  );
 
   const createApplication = useCreateApplications();
   const createProvider = useCreateProviders();
@@ -60,6 +78,8 @@ const Forward = () => {
         await createProvider.mutateAsync({ ...providerData, applicationId });
       } else if (step === 2) {
         if (!applicationId) throw new Error("Application ID is missing.");
+        if (!isValidJSON(bodyInput))
+          throw new Error("Body must be valid JSON.");
         await createToken.mutateAsync({ ...tokenData, applicationId });
       }
       setStep(step + 1);
@@ -69,11 +89,29 @@ const Forward = () => {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
     setData: React.Dispatch<React.SetStateAction<any>>
   ) => {
     const { name, value } = e.target;
-    setData((prev: any) => ({ ...prev, [name]: value }));
+    if (name === "body") {
+      setBodyInput(value);
+      try {
+        const parsedBody = JSON.parse(value);
+        setTokenData((prev) => ({
+          ...prev,
+          [name]: parsedBody,
+        }));
+      } catch (error) {
+        console.error("Invalid JSON in body:", error);
+      }
+    } else {
+      setData((prev: any) => ({
+        ...prev,
+        [name]: name === "expiredDuration" ? Number(value) : value,
+      }));
+    }
   };
 
   return (
@@ -133,7 +171,6 @@ const Forward = () => {
                   </option>
                 ))}
               </select>
-
               <Input
                 name="methodName"
                 value={providerData.methodName}
@@ -164,11 +201,24 @@ const Forward = () => {
           {step === 2 && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold mb-4">Generate Token</h2>
-              <Input
-                name="value"
-                value={tokenData.value}
+              <Textarea
+                name="body"
+                value={bodyInput}
                 onChange={(e) => handleChange(e, setTokenData)}
-                placeholder="Token Value"
+                placeholder='Body (JSON format, e.g. {"key": "value"})'
+              />
+              <Input
+                name="encryptToken"
+                value={tokenData.encryptToken}
+                onChange={(e) => handleChange(e, setTokenData)}
+                placeholder="Token Encrypt"
+              />
+              <Input
+                type="number"
+                name="expiredDuration"
+                value={tokenData.expiredDuration}
+                onChange={(e) => handleChange(e, setTokenData)}
+                placeholder="Token Expired Duration"
               />
             </div>
           )}
@@ -179,7 +229,12 @@ const Forward = () => {
               </Button>
             )}
             {step < steps.length - 1 && (
-              <Button onClick={handleNext}>Next</Button>
+              <Button
+                onClick={handleNext}
+                disabled={step === 2 && !isValidJSON(bodyInput)}
+              >
+                Next
+              </Button>
             )}
           </div>
         </div>

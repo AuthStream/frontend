@@ -1,11 +1,23 @@
 import { Search, Plus, Edit, Trash, Trash2, RefreshCw } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "../components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import CreateToken from "./modalToken/createToken";
 import { useState } from "react";
 import EditToken from "./modalToken/editToken";
-import { useCreateToken, useEditToken, useDeleteToken, useDeleteMultipleToken, } from "../hooks/useTokenQueries";
+import {
+  useCreateToken,
+  useEditToken,
+  useDeleteToken,
+  useDeleteMultipleToken,
+} from "../hooks/useTokenQueries";
 import { toast } from "react-toastify";
 import { Token } from "../api/type";
 import DeleteConfirm from "./confirmBox";
@@ -85,14 +97,13 @@ const TableToken = ({ tokens }: TableTokenProps) => {
     }
   };
 
-  const [isOpenConfirm, setIsOpenConfirm] = useState(false)
-  const [idDelete, setIdDelete] = useState<string>('');
+  const [isOpenConfirm, setIsOpenConfirm] = useState(false);
+  const [idDelete, setIdDelete] = useState<string>("");
 
   const handleClickDeleteToken = (id: string) => {
     setIdDelete(id);
     setIsOpenConfirm(true);
-
-  }
+  };
 
   const handleDeleteToken = async (id: string) => {
     try {
@@ -115,7 +126,7 @@ const TableToken = ({ tokens }: TableTokenProps) => {
     }
   };
 
-  const [isOpenConfirmMultiple, setIsOpenConfirmMultiple] = useState(false)
+  const [isOpenConfirmMultiple, setIsOpenConfirmMultiple] = useState(false);
 
   const handleDeleteSelected = () => {
     if (selectedTokens.length === 0) {
@@ -125,14 +136,12 @@ const TableToken = ({ tokens }: TableTokenProps) => {
     setIsOpenConfirmMultiple(true);
   };
 
-
   const handleDeleteSelectedTokens = () => {
     if (selectedTokens.length === 0) {
       toast.warn("No tokens selected");
       return;
     }
     try {
-
       deleteMultipleTokenMutation.mutate(selectedTokens, {
         onSuccess: () => {
           const updatedToken = tokenList.filter(
@@ -192,7 +201,7 @@ const TableToken = ({ tokens }: TableTokenProps) => {
               />
             </TableHead>
             <TableHead>ID</TableHead>
-            <TableHead>Name</TableHead>
+            <TableHead>Encrypt Token</TableHead>
             <TableHead>Expired</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -208,8 +217,8 @@ const TableToken = ({ tokens }: TableTokenProps) => {
                 />
               </TableCell>
               <TableCell>{token.id}</TableCell>
-              <TableCell>{token.name}</TableCell>
-              <TableCell>{token.expired}</TableCell>
+              <TableCell>{token.encryptToken}</TableCell>
+              <TableCell>{token.expiredDuration}</TableCell>
               <TableCell>
                 <Button
                   onClick={() => {
@@ -266,7 +275,6 @@ const TableToken = ({ tokens }: TableTokenProps) => {
         />
       )}
 
-
       <DeleteConfirm
         isOpen={isOpenConfirm}
         onClose={() => setIsOpenConfirm(false)}
@@ -279,7 +287,7 @@ const TableToken = ({ tokens }: TableTokenProps) => {
         onClose={() => setIsOpenConfirmMultiple(false)}
         onConfirm={handleDeleteSelectedTokens}
         selectedArray={selectedTokens}
-        type={'token'}
+        type={"token"}
       />
     </div>
   );
