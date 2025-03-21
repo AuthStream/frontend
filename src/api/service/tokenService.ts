@@ -18,9 +18,10 @@ const mockTokens = [
 ];
 
 const tokenService = {
-  getAllTokens: async (): Promise<{contents: Token[]}> => {
+  getAllTokens: async (): Promise<Token[]> => {
     try{
       const response = await axiosClient.get("/tokens");
+      // console.log(response.data);
       return response.data;
     }
     catch(error){

@@ -3,27 +3,22 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { useCreateApplications } from "../hooks/useApplicationQueries";
 import { useCreateProviders } from "../hooks/useProviderQueries";
-import { useCreateToken } from "../hooks/useTokenQueries";
+import { useCreateToken, useGetTokens } from "../hooks/useTokenQueries";
 import Textarea from "../components/ui/textarea";
+import { useNavigate } from "react-router-dom";
 
-const steps = ["Application", "Provider", "Token"];
+const steps = ["Application", "Provider"];
 const providerTypes = [
   { id: "SAML", name: "SAML" },
   { id: "FORWARD", name: "FORWARD" },
 ];
 
-const isValidJSON = (str: string) => {
-  try {
-    JSON.parse(str);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
 const Forward = () => {
   const [step, setStep] = useState(0);
   const [applicationId, setApplicationId] = useState("");
+  const [selectedTokenId, setSelectedTokenId] = useState("");
+  const [showTokenForm, setShowTokenForm] = useState(false);
+
   const [applicationData, setApplicationData] = useState({
     id: "",
     name: "",
@@ -63,26 +58,45 @@ const Forward = () => {
   const createApplication = useCreateApplications();
   const createProvider = useCreateProviders();
   const createToken = useCreateToken();
+  const { data: tokens, isLoading: tokensLoading } = useGetTokens();
+  const navigate = useNavigate();
 
   const handleNext = async () => {
     try {
       if (step === 0) {
+        let tokenIdToUse = selectedTokenId;
+
+        if (
+          !tokenIdToUse &&
+          (!tokens || tokens.length === 0 || showTokenForm)
+        ) {
+          const tokenResponse = await createToken.mutateAsync({
+            ...tokenData,
+            applicationId: "",
+          });
+          tokenIdToUse = tokenResponse.id;
+          setShowTokenForm(false);
+          setSelectedTokenId(tokenIdToUse);
+        }
+
+        if (!tokenIdToUse) throw new Error("Please select or create a token");
+
         const response = await createApplication.mutateAsync({
           ...applicationData,
+          tokenId: tokenIdToUse,
           adminId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
         });
         setApplicationId(response.id);
         setApplicationData((prev) => ({ ...prev, id: response.id }));
+        setStep(1);
       } else if (step === 1) {
         if (!applicationId) throw new Error("Application ID is missing.");
-        await createProvider.mutateAsync({ ...providerData, applicationId });
-      } else if (step === 2) {
-        if (!applicationId) throw new Error("Application ID is missing.");
-        if (!isValidJSON(bodyInput))
-          throw new Error("Body must be valid JSON.");
-        await createToken.mutateAsync({ ...tokenData, applicationId });
+        await createProvider.mutateAsync({
+          ...providerData,
+          applicationId: applicationId,
+        });
+        navigate("/");
       }
-      setStep(step + 1);
     } catch (error) {
       console.error("Error during step transition:", error);
     }
@@ -114,6 +128,17 @@ const Forward = () => {
     }
   };
 
+  const handleTokenSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value === "create") {
+      setShowTokenForm(true);
+      setSelectedTokenId("");
+    } else {
+      setShowTokenForm(false);
+      setSelectedTokenId(value);
+    }
+  };
+
   return (
     <div className="w-full h-full flex items-center justify-center dark:bg-gray-950 p-6">
       <div className="w-full h-full bg-gray-200 dark:bg-gray-900 p-6 rounded-lg shadow-md flex">
@@ -140,12 +165,48 @@ const Forward = () => {
                 onChange={(e) => handleChange(e, setApplicationData)}
                 placeholder="Application Name"
               />
-              <Input
-                name="tokenId"
-                value={applicationData.tokenId}
-                onChange={(e) => handleChange(e, setApplicationData)}
-                placeholder="Application Token"
-              />
+              {tokensLoading ? (
+                <p>Loading tokens...</p>
+              ) : (
+                <select
+                  name="tokenId"
+                  value={selectedTokenId}
+                  onChange={handleTokenSelect}
+                  className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+                >
+                  <option value="">Select a Token</option>
+                  <option value="create">Create New Token</option>
+                  {tokens?.map((token: any) => (
+                    <option key={token.id} value={token.id}>
+                      {token.id}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {showTokenForm && (
+                <div className="space-y-4 mt-4">
+                  <h3 className="text-lg font-semibold">Create New Token</h3>
+                  <Textarea
+                    name="body"
+                    value={bodyInput}
+                    onChange={(e) => handleChange(e, setTokenData)}
+                    placeholder='Body (JSON format, e.g. {"key": "value"})'
+                  />
+                  <Input
+                    name="encryptToken"
+                    value={tokenData.encryptToken}
+                    onChange={(e) => handleChange(e, setTokenData)}
+                    placeholder="Token Encrypt"
+                  />
+                  <Input
+                    type="number"
+                    name="expiredDuration"
+                    value={tokenData.expiredDuration}
+                    onChange={(e) => handleChange(e, setTokenData)}
+                    placeholder="Token Expired Duration"
+                  />
+                </div>
+              )}
             </div>
           )}
 
@@ -198,44 +259,14 @@ const Forward = () => {
             </div>
           )}
 
-          {step === 2 && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold mb-4">Generate Token</h2>
-              <Textarea
-                name="body"
-                value={bodyInput}
-                onChange={(e) => handleChange(e, setTokenData)}
-                placeholder='Body (JSON format, e.g. {"key": "value"})'
-              />
-              <Input
-                name="encryptToken"
-                value={tokenData.encryptToken}
-                onChange={(e) => handleChange(e, setTokenData)}
-                placeholder="Token Encrypt"
-              />
-              <Input
-                type="number"
-                name="expiredDuration"
-                value={tokenData.expiredDuration}
-                onChange={(e) => handleChange(e, setTokenData)}
-                placeholder="Token Expired Duration"
-              />
-            </div>
-          )}
           <div className="flex justify-between mt-6">
             {step > 0 && (
               <Button onClick={() => setStep(step - 1)} variant="outline">
                 Back
               </Button>
             )}
-            {step < steps.length - 1 && (
-              <Button
-                onClick={handleNext}
-                disabled={step === 2 && !isValidJSON(bodyInput)}
-              >
-                Next
-              </Button>
-            )}
+            {step === 0 && <Button onClick={handleNext}>Next</Button>}
+            {step === 1 && <Button onClick={handleNext}>Submit</Button>}
           </div>
         </div>
       </div>
