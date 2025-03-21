@@ -38,7 +38,7 @@ const Token = () => {
         ) : tokens && Array.isArray(tokens) ? (
           <TableToken tokens={tokens} />
         ) : (
-          <p>No provider available</p>
+          <p>No tokens available</p>
         )}
       </div>
     </div>
