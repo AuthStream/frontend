@@ -85,6 +85,8 @@ const SignIn = () => {
           if (signinData.username === "admin@example.authstream") {
             setRegisterModalOpen(true);
           } else {
+            console.log("check login success", response.id);
+
             toast.success("Sign-in successful!");
             localStorage.setItem(JWT_LOCAL_STORAGE_KEY, response.id);
             navigate("/");
