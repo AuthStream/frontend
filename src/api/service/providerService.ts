@@ -24,7 +24,6 @@ const providerService = {
     },
 
     editProvider: async (updatedProvider: ProviderType): Promise<ProviderType> => {
-        // console.log(updatedProvider);
         try {
             const response = await axiosClient.put("/providers", updatedProvider);
             return response.data;

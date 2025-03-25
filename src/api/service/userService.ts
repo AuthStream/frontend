@@ -1,4 +1,5 @@
 // import axiosClient from "../axiosClient";
+import axiosClient from "../axiosClient";
 import { CreateUserResponse, EditUserResponse, User, UserResponse } from "../type";
 const mockUsers = [
   { id: "ABC1", email: "truongkinhquinh", password: "bmchien1", created: "2025-02-21T16:51:11.872Z" },
@@ -9,58 +10,48 @@ const mockUsers = [
 ];
 
 const userService = {
-  getAllUsers: async (): Promise<UserResponse> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ contents: mockUsers, totalElements: mockUsers.length });
-      }, 500);
-    });
+  getAllUsers: async (): Promise<User> => {
+    try {
+      const response = await axiosClient.get("/users");
+      return response.data;
+    } catch (error) {
+        throw error;
+    }
   },
 
-  createUser: async (newUser: User): Promise<CreateUserResponse> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        mockUsers.push({ ...newUser, id: `ABC${mockUsers.length + 1}` });
-        resolve({ success: true });
-      }, 500);
-    });
+  createUser: async (newUser: User): Promise<User> => {
+    try {
+      const response = await axiosClient.post("/users", newUser);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  editUser: async (updatedUser: User): Promise<EditUserResponse> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const index = mockUsers.findIndex((user) => user.id === updatedUser.id);
-        if (index !== -1) {
-          mockUsers[index] = updatedUser;
-        }
-        resolve({ success: true });
-      }, 500);
-    });
+  editUser: async (updatedUser: User): Promise<User> => {
+    try {
+      const response = await axiosClient.put("/users", updatedUser);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 
   deleteUser: async (id: string): Promise<{ success: boolean }> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const index = mockUsers.findIndex((user) => user.id === id);
-        if (index !== -1) {
-          mockUsers.splice(index, 1);
-        }
-        resolve({ success: true });
-      }, 500);
-    });
+    try {
+      await axiosClient.delete(`/users/${id}`);
+      return { success: true };
+    } catch (error) {
+      throw error;
+    }
   },
   deleteMultipleUsers: async (ids: string[]): Promise<{ success: boolean }> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        ids.forEach((id) => {
-          const index = mockUsers.findIndex((user) => user.id === id);
-          if (index !== -1) {
-            mockUsers.splice(index, 1);
-          }
-        });
-        resolve({ success: true });
-      }, 500);
-    });
+    try {
+      await Promise.all(ids.map((id) => axiosClient.delete(`/users/${id}`)));
+      return { success: true };
+    } catch (error) {
+      throw error;
+    }
   },
 };
 

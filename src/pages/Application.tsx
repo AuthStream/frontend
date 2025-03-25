@@ -34,7 +34,7 @@ const Application = () => {
         </div>
         {isLoading ? (
           <p className="text-center text-gray-600 dark:text-gray-400">
-            Loading tokens...
+            Loading applications...
           </p>
         ) : error ? (
           <p className="text-center text-red-500">

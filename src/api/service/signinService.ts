@@ -1,10 +1,13 @@
 import axiosClient from "../axiosClient";
-import { DbConfig, DbPreviewRequest, RegisterData, RegisterResponse, SigninData, SignInResponse } from "../type";
+import { DbConfig, DbPreviewRequest, TableConfig, RegisterData, RegisterResponse, SigninData, SignInResponse } from "../type";
 
   const signinService = {
     login: async (data:SigninData):Promise<SignInResponse> => {
       try{
+        console.log(data);
         const response=await axiosClient.post("/auth/login",data);
+        console.log(response.data);
+
         return response.data;
       }
       catch(error){
@@ -29,7 +32,7 @@ import { DbConfig, DbPreviewRequest, RegisterData, RegisterResponse, SigninData,
         return response.data;
       }
       catch(error){
-        return error;
+        throw error;
       }
     },
 
@@ -47,9 +50,7 @@ import { DbConfig, DbPreviewRequest, RegisterData, RegisterResponse, SigninData,
     previewData: async (data: DbPreviewRequest ): Promise<any>=>
     {
       try{
-        // console.log(data);
         const response = await axiosClient.post("/previews/preview-data",data);
-        // console.log(response.data);
         return response.data;
       }
       catch(error){
@@ -60,15 +61,26 @@ import { DbConfig, DbPreviewRequest, RegisterData, RegisterResponse, SigninData,
     submitConfig: async (data: DbConfig ): Promise<any>=>
       {
         try{
-          console.log(data);
+          // console.log(data);
           const response = await axiosClient.post("/admins/config",data);
-          console.log(response.data);
           return response.data;
         }
         catch(error){
           throw error;
         }
-      }
+      },
+
+      submitTableConfig: async (data: TableConfig ): Promise<any>=>
+        {
+          try{
+            console.log(data);
+            const response = await axiosClient.post("/auth-table-configs",data);
+            return response.data;
+          }
+          catch(error){
+            throw error;
+          }
+        }
 
 
   

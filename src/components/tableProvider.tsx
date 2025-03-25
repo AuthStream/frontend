@@ -28,7 +28,6 @@ interface TableProviderProps {
 }
 
 const TableProvider = ({ providers }: TableProviderProps) => {
-  // console.log(providers);
   const [providerList, setProviderList] = useState(providers);
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);

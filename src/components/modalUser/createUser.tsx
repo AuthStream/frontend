@@ -10,13 +10,7 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { toast } from "react-toastify";
-
-interface User {
-  id: string;
-  email: string;
-  password: string;
-  created: string;
-}
+import { User } from "../../api/type";
 
 interface CreateUserProps {
   isOpen: boolean;
@@ -27,10 +21,10 @@ interface CreateUserProps {
 const CreateUser = ({ isOpen, onClose, onCreate }: CreateUserProps) => {
   const [newUser, setNewUser] = useState({
     id: "",
-    email: "",
+    username: "",
     password: "",
-    confirmPassword: "",
-    created: new Date().toISOString(),
+    createdAt: "",
+    updatedAt: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,20 +35,10 @@ const CreateUser = ({ isOpen, onClose, onCreate }: CreateUserProps) => {
     }));
   };
 
-  const resetUser = () => {
-    setNewUser({
-      id: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      created: new Date().toISOString(),
-    });
-  };
-
   const handleCreate = () => {
-    const { email, password, confirmPassword } = newUser;
+    const { username, password } = newUser;
 
-    if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
+    if (!username.trim() || !password.trim()) {
       toast.warning("All fields are required.");
       return;
     }
@@ -64,23 +48,18 @@ const CreateUser = ({ isOpen, onClose, onCreate }: CreateUserProps) => {
       return;
     }
 
-    if (password !== confirmPassword) {
-      toast.warning("Passwords do not match.");
-      return;
-    }
-
-    onCreate({
-      id: crypto.randomUUID(),
-      email: email.trim(),
-      password: password.trim(),
-      created: newUser.created,
+    onCreate(newUser);
+    setNewUser({
+      id: "",
+      username: "",
+      password: "",
+      createdAt: "",
+      updatedAt: "",
     });
-    resetUser();
     onClose();
   };
 
   const handleClose = () => {
-    resetUser();
     onClose();
   };
 
@@ -95,9 +74,9 @@ const CreateUser = ({ isOpen, onClose, onCreate }: CreateUserProps) => {
         </DialogHeader>
         <div className="space-y-4">
           <Input
-            type="email"
-            name="email"
-            value={newUser.email}
+            type="username"
+            name="username"
+            value={newUser.username}
             onChange={handleChange}
             placeholder="Username"
           />
@@ -107,13 +86,6 @@ const CreateUser = ({ isOpen, onClose, onCreate }: CreateUserProps) => {
             value={newUser.password}
             onChange={handleChange}
             placeholder="Password"
-          />
-          <Input
-            type="password"
-            name="confirmPassword"
-            value={newUser.confirmPassword}
-            onChange={handleChange}
-            placeholder="Confirm Password"
           />
         </div>
         <DialogFooter>

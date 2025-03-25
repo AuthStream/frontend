@@ -14,7 +14,6 @@ const applicationService = {
 
   createApplication: async (newApplication: Application): Promise<Application> => {
     try {
-      console.log(newApplication);
       const response = await axiosClient.post("/applications", newApplication);
       return response.data;
     } catch (error) {

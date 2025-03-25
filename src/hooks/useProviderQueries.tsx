@@ -1,12 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import useMutationAction from "../provider/queryGlobal";
 import providerService from "../api/service/providerService";
-import {
-  CreateProviderResponse,
-  EditProviderResponse,
-  ProviderResponse,
-  ProviderType,
-} from "../api/type";
+import { ProviderType } from "../api/type";
 
 export const useGetProviders = () => {
   return useQuery<{ contents: ProviderType[] }>({

@@ -11,19 +11,19 @@ import { Input } from "../ui/input";
 import { toast } from "react-toastify";
 
 interface RegisterModalProps {
-  onRegister: (registerData: {
-    username: string;
-    password: string;
-    key: string;
-  }) => void;
+  onRegister: (registerData: { username: string; password: string }) => void;
   onClose: () => void;
+  loading: boolean;
 }
 
-const RegisterModal = ({ onRegister, onClose }: RegisterModalProps) => {
+const RegisterModal = ({
+  onRegister,
+  onClose,
+  loading,
+}: RegisterModalProps) => {
   const [registerData, setRegisterData] = useState({
     username: "",
     password: "",
-    key: "",
   });
 
   const validateUsername = (username: string): string | null => {
@@ -41,9 +41,9 @@ const RegisterModal = ({ onRegister, onClose }: RegisterModalProps) => {
   };
 
   const handleRegister = () => {
-    const { username, password, key } = registerData;
+    const { username, password } = registerData;
 
-    if (!username || !password || !key) {
+    if (!username || !password) {
       toast.warning("All fields are required.");
       return;
     }
@@ -90,12 +90,6 @@ const RegisterModal = ({ onRegister, onClose }: RegisterModalProps) => {
             onChange={handleChange}
             placeholder="Password"
           />
-          <Input
-            name="key"
-            value={registerData.key}
-            onChange={handleChange}
-            placeholder="Registration Key"
-          />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
@@ -108,6 +102,7 @@ const RegisterModal = ({ onRegister, onClose }: RegisterModalProps) => {
             Register
           </Button>
         </DialogFooter>
+        {loading && <div className="circle-loader"></div>}
       </DialogContent>
     </Dialog>
   );

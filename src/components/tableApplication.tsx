@@ -29,7 +29,6 @@ interface TableApplicationProps {
 }
 
 const TableApplication = ({ applications }: TableApplicationProps) => {
-  // console.log(applications);
   const [applicationList, setApplicationList] = useState(applications);
   const [selectedApplications, setSelectedApplications] = useState<string[]>(
     []

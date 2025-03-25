@@ -1,66 +1,147 @@
-import { useState, useEffect } from "react";
-import { Button } from "../ui/button";
+import { useState, ChangeEvent, DragEvent } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogDescription,
 } from "../ui/dialog";
-import { Input } from "../ui/input";
+import { Button } from "../ui/button";
+
+interface User {
+  id: string;
+  name: string;
+  created: string;
+  protected: boolean;
+}
 
 interface ImportUserProps {
   isOpen: boolean;
   onClose: () => void;
-  onImport: (file: File) => void;
+  onImport: (users: User[]) => void;
 }
 
 const ImportUser = ({ isOpen, onClose, onImport }: ImportUserProps) => {
   const [file, setFile] = useState<File | null>(null);
+  const [previewData, setPreviewData] = useState<User[]>([]);
+  const fileReader = new FileReader();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
       setFile(e.target.files[0]);
+      processFile(e.target.files[0]);
     }
   };
 
-  const handleImport = () => {
-    if (file) {
-      onImport(file);
-      onClose();
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (e.dataTransfer.files.length) {
+      setFile(e.dataTransfer.files[0]);
+      processFile(e.dataTransfer.files[0]);
     }
+  };
+
+  const processFile = (file: File) => {
+    fileReader.onload = (event) => {
+      const text = event.target?.result as string;
+      parseCSV(text);
+    };
+    fileReader.readAsText(file);
+  };
+
+  const parseCSV = (text: string) => {
+    const rows = text.trim().split("\n");
+    if (rows.length < 2) return;
+
+    const headers = rows[0].split(",").map((h) => h.trim().toLowerCase());
+    if (
+      !headers.includes("id") ||
+      !headers.includes("name") ||
+      !headers.includes("created")
+    ) {
+      alert("Invalid CSV format: Missing 'id', 'name', or 'created' column.");
+      return;
+    }
+
+    const parsedUsers: User[] = rows.slice(1).map((row) => {
+      const values = row.split(",").map((v) => v.trim());
+      return {
+        id:
+          values[headers.indexOf("id")] ||
+          `ABC${Math.random().toString(36).substr(2, 5)}`,
+        name: values[headers.indexOf("name")] || "",
+        created: values[headers.indexOf("created")] || new Date().toISOString(),
+        protected: headers.includes("protected")
+          ? values[headers.indexOf("protected")].toLowerCase() === "true"
+          : false,
+      };
+    });
+
+    setPreviewData(parsedUsers);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Import Users</DialogTitle>
+          <DialogTitle>Import CSV</DialogTitle>
           <DialogDescription>
-            Upload a CSV file to import users. The file should follow this
-            format:
-            <pre className="bg-gray-100 p-2 mt-2 text-sm">
-              username,password,dateCreated user1,pass123,2025-02-22
-              user2,pass456,2025-02-22
-            </pre>
+            Drag & Drop or Click to Upload a CSV file
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <Input type="file" accept=".csv" onChange={handleFileChange} />
+
+        <div
+          className="border-2 border-dashed border-gray-400 rounded-lg p-6 text-center cursor-pointer"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={handleDrop}
+          onClick={() => document.getElementById("fileInput")?.click()}
+        >
+          <p className="text-gray-600">
+            Drag and drop your CSV file here, or click to select one
+          </p>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            className="bg-blue-500 text-white hover:bg-blue-600"
-            onClick={handleImport}
-            disabled={!file}
-          >
-            Import
-          </Button>
-        </DialogFooter>
+
+        <input
+          id="fileInput"
+          type="file"
+          accept=".csv"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+
+        {previewData.length > 0 && (
+          <>
+            <table className="w-full border-collapse border mt-4">
+              <thead>
+                <tr>
+                  <th className="border p-2">Name</th>
+                  <th className="border p-2">Created</th>
+                  <th className="border p-2">Protected</th>
+                </tr>
+              </thead>
+              <tbody>
+                {previewData.map((item, index) => (
+                  <tr key={index}>
+                    <td className="border p-2">{item.name}</td>
+                    <td className="border p-2">{item.created || "N/A"}</td>
+                    <td className="border p-2">
+                      {item.protected ? "True" : "False"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <Button
+              onClick={() => {
+                setPreviewData([]);
+                onImport(previewData);
+                onClose();
+              }}
+            >
+              Import
+            </Button>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

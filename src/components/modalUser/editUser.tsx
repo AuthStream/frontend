@@ -10,13 +10,7 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Checkbox } from "../ui/checkbox";
-
-interface User {
-  id: string;
-  email: string;
-  password: string;
-  created: string;
-}
+import { User } from "../../api/type";
 
 interface EditUserProps {
   isOpen: boolean;
@@ -65,9 +59,9 @@ const EditUser = ({ isOpen, onClose, userToEdit, onEdit }: EditUserProps) => {
         </DialogHeader>
         <div className="space-y-4">
           <Input
-            type="email"
-            name="email"
-            value={editedUser.email}
+            type="username"
+            name="username"
+            value={editedUser.username}
             onChange={handleChange}
             placeholder="Username"
           />

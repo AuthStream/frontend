@@ -26,7 +26,7 @@
 		return  response;
 	}, (error) => {
 		console.log("Axios Error:", error);
-		return error.response;
+		return Promise.reject(error);
 	});
 	
 

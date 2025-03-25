@@ -12,14 +12,21 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { dbSchema, tableSchema } from "../../api/type";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
 import { Button } from "../ui/button";
 
 const viewSchemaModal: React.FC<{
   schema: dbSchema;
   onClose: () => void;
   onSubmit: (replicateTable: tableSchema[]) => void;
-}> = ({ schema, onClose, onSubmit }) => {
+  loading: boolean;
+}> = ({ schema, onClose, onSubmit, loading }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [open] = useState(true);
@@ -176,7 +183,7 @@ const viewSchemaModal: React.FC<{
           <DialogTitle>{schema.databaseName}</DialogTitle>
         </DialogHeader>
         <div className="flex" style={{ height: "600px" }}>
-          <div style={{ width: "60%", height: "100%" }}>
+          <div style={{ width: "80%", height: "100%" }}>
             <ReactFlow
               nodes={nodes}
               edges={edges}
@@ -193,7 +200,7 @@ const viewSchemaModal: React.FC<{
 
           <div
             style={{
-              width: "40%",
+              width: "20%",
               padding: "16px",
               borderLeft: "1px solid #ccc",
               display: "flex",
@@ -216,7 +223,7 @@ const viewSchemaModal: React.FC<{
                   >
                     <div
                       className="flex items-center mb-2"
-                      onClick={() => handleTableToggle(table.tableName)} // Toggle only when clicking the header
+                      onClick={() => handleTableToggle(table.tableName)}
                     >
                       <span className="mr-2">📋</span>
                       <strong>{table.tableName}</strong>
@@ -238,6 +245,7 @@ const viewSchemaModal: React.FC<{
                                 handleFieldToggle(table.tableName, col.name, e)
                               }
                               className="mr-2"
+                              disabled={loading}
                             />
                             <span className="flex-1">
                               {col.constraints.includes("PRIMARY KEY") && (
@@ -256,15 +264,15 @@ const viewSchemaModal: React.FC<{
                 ))}
               </div>
             </div>
-
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={handleCancel}>
-                Cancel
-              </Button>
-              <Button onClick={handleSubmit}>Submit</Button>
-            </div>
           </div>
         </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleCancel}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit}>Submit</Button>
+        </DialogFooter>
+        {loading && <div className="circle-loader"></div>}
       </DialogContent>
     </Dialog>
   );

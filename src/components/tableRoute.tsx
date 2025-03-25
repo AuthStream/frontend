@@ -92,7 +92,6 @@ const TableRoute = ({ routes }: TableRouteProps) => {
   };
 
   const handleReplaceRoutes = (duplicates: Route[]) => {
-    console.log(duplicates);
     editRouteMutation.mutate(duplicates, {
       onSuccess: () => {
         toast.success("Duplicate routes replaced successfully");
