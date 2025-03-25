@@ -1,11 +1,9 @@
 import React, { createContext, useContext, useState } from "react";
 
-// Create Sidebar Context
 const SidebarContext = createContext<
   { isOpenSidebar: boolean; toggleSidebar: () => void } | undefined
 >(undefined);
 
-// Sidebar Provider Component
 export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -22,7 +20,6 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-// Custom hook to use Sidebar Context
 export const useSidebar = () => {
   const context = useContext(SidebarContext);
   if (!context) {

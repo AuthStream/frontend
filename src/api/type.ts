@@ -46,9 +46,10 @@ export interface EditApplicationResponse {
 
 export interface User {
   id: string;
-  email: string;
+  username: string;
   password: string;
-  created: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export interface UserResponse {
@@ -225,8 +226,9 @@ export interface EditRouteResponse {
 export  interface SignInResponse {
   id: string;
   username: string;
-  created: string;
   password: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface SigninData{
@@ -237,7 +239,6 @@ export interface SigninData{
 export interface RegisterData {
   username: string;
   password: string;
-  key: string;
 }
 
 export   interface RegisterResponse {
@@ -298,3 +299,45 @@ export interface TableData {
   tableName: string;
   rows: Row[];
 }
+
+export interface TableConfig {
+  userTable: string;
+  passwordAttribute: string;
+  hashingType: string;
+  hashConfig: HashConfig;
+}
+
+export type HashConfig = 
+  | Argon2Config
+  | BcryptConfig
+  | Pbkdf2Config
+  | ScryptConfig
+  | ShaConfig;
+
+interface BaseConfig {
+  salt: string;
+}
+
+interface Argon2Config extends BaseConfig {
+  iterations: number;
+  memory: number;
+  parallelism: number;
+}
+
+interface BcryptConfig extends BaseConfig {
+  workFactor: number;
+}
+
+interface Pbkdf2Config extends BaseConfig {
+  iterations: number;
+  keyLength: number;
+}
+
+interface ScryptConfig extends BaseConfig {
+  n: number;
+  r: number;
+  p: number;
+  keyLength: number;
+}
+
+interface ShaConfig extends BaseConfig {}

@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
 import { Button } from "../ui/button";
 import { TableData } from "../../api/type";
 import { Resizable } from "react-resizable";
@@ -9,12 +15,14 @@ interface PreviewDataModalProps {
   previewData: TableData[];
   onSubmit: () => void;
   onClose: () => void;
+  loading: boolean;
 }
 
 const PreviewDataModal: React.FC<PreviewDataModalProps> = ({
   previewData,
   onSubmit,
   onClose,
+  loading,
 }) => {
   const [open] = useState(true);
   const [selectedTable, setSelectedTable] = useState<string | null>(
@@ -181,17 +189,17 @@ const PreviewDataModal: React.FC<PreviewDataModalProps> = ({
                 </p>
               )}
             </div>
-
-            <div className="flex justify-end gap-2 p-4">
-              <Button variant="outline" onClick={handleClose}>
-                Close
-              </Button>
-              <Button variant="outline" onClick={handleSubmit}>
-                Submit
-              </Button>
-            </div>
           </div>
         </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose}>
+            Close
+          </Button>
+          <Button variant="outline" onClick={handleSubmit}>
+            Submit
+          </Button>
+        </DialogFooter>
+        {loading && <div className="circle-loader"></div>}
       </DialogContent>
     </Dialog>
   );

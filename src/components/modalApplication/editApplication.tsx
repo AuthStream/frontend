@@ -10,7 +10,6 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Application } from "../../api/type";
-import { ProviderType } from "../../api/type";
 import { useGetProviders } from "../../hooks/useProviderQueries";
 
 interface EditApplicationProps {
@@ -26,7 +25,7 @@ const EditApplication = ({
   applicationToEdit,
   onEdit,
 }: EditApplicationProps) => {
-  const { data: providers, isLoading, error } = useGetProviders();
+  const { data: providers, isLoading } = useGetProviders();
 
   const [editedApplication, setEditedApplication] =
     useState<Application | null>(null);

@@ -3,13 +3,6 @@ import TableUser from "../components/tableUser.tsx";
 import { ToggleButton } from "../context/SidebarContext";
 import { useGetUsers } from "../hooks/useUserQueries.tsx";
 
-interface User {
-  id: string;
-  email: string;
-  password: string;
-  created: string;
-}
-
 const User = () => {
   const { data: users, isLoading, error } = useGetUsers();
 
@@ -42,10 +35,10 @@ const User = () => {
               ? error.message
               : "An unknown error occurred"}
           </p>
-        ) : users ? (
-          <TableUser users={users.contents} />
+        ) : users && Array.isArray(users) ? (
+          <TableUser users={users} />
         ) : (
-          <p>No tokens available</p>
+          <p>No user available</p>
         )}
       </div>
     </div>

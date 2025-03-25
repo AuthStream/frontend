@@ -8,6 +8,7 @@ import {
   RegisterResponse,
   SigninData,
   SignInResponse,
+  TableConfig,
 } from "../api/type";
 
 // interface ResendKeyRequest {
@@ -50,6 +51,13 @@ export const useSubmitConfig = () => {
   return useMutationAction<any, DbConfig>(
     ["signin"],
     signinService.submitConfig
+  );
+};
+
+export const useSubmitTableConfig = () => {
+  return useMutationAction<any, TableConfig>(
+    ["signin"],
+    signinService.submitTableConfig
   );
 };
 

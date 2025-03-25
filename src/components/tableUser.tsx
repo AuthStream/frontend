@@ -22,13 +22,8 @@ import {
   useRefreshUsers,
 } from "../hooks/useUserQueries";
 import userService from "../api/service/userService";
-
-interface User {
-  id: string;
-  email: string;
-  password: string;
-  created: string;
-}
+import ImportUser from "./modalUser/importUser";
+import { User } from "../api/type";
 
 interface TableUserProps {
   users: User[];
@@ -52,6 +47,8 @@ const TableUser = ({ users }: TableUserProps) => {
   };
 
   const [isOpen, setIsOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const [isOpenConfirm, setIsOpenConfirm] = useState(false);
@@ -173,6 +170,28 @@ const TableUser = ({ users }: TableUserProps) => {
     }
   };
 
+  // const onImport = async (newUser: User[]) => {
+  //   const existingNames = new Set(userList.map((user) => user.name));
+  //   const duplicates = newUser.filter((user) => existingNames.has(user.name));
+  //   const uniqueUsers = newUser.filter((user) => !existingNames.has(user.name));
+
+  //   if (duplicates.length > 0) {
+  //     setDuplicateUsers(duplicates);
+  //     setIsDuplicateModalOpen(true);
+  //   } else {
+  //     setDuplicateUsers([]);
+  //     setIsDuplicateModalOpen(false);
+  //   }
+
+  //   if (uniqueUsers.length > 0) {
+  //     createUserMutation.mutate(uniqueUsers, {
+  //       onSuccess: () => {
+  //         toast.success("Users imported successfully");
+  //       },
+  //     });
+  //   }
+  // };
+
   return (
     <div className="w-full bg-white dark:bg-background border p-5 rounded-lg shadow-md">
       <div className="flex items-center justify-between mb-4">
@@ -228,11 +247,11 @@ const TableUser = ({ users }: TableUserProps) => {
                 />
               </TableCell>
               <TableCell>{user.id}</TableCell>
-              <TableCell>{user.email}</TableCell>
+              <TableCell>{user.username}</TableCell>
               <TableCell>{user.password}</TableCell>
               <TableCell>
                 {" "}
-                {new Date(user.created).toISOString().split("T")[0]}
+                {new Date(user.createdAt).toISOString().split("T")[0]}
               </TableCell>
               <TableCell className="flex space-x-2">
                 <Button
@@ -286,6 +305,12 @@ const TableUser = ({ users }: TableUserProps) => {
           onEdit={handleEditUser}
         />
       )}
+
+      {/* <ImportUser
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        onImport={onImport}
+      /> */}
       <DeleteConfirm
         isOpen={isOpenConfirm}
         onClose={() => setIsOpenConfirm(false)}

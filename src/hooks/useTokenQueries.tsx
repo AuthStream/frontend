@@ -1,11 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import tokenService from "../api/service/tokenService";
-import {
-  Token,
-  TokenResponse,
-  CreateTokenResponse,
-  EditTokenResponse,
-} from "../api/type";
+import { Token } from "../api/type";
 import useMutationAction from "../provider/queryGlobal";
 
 export const useGetTokens = () => {
@@ -24,7 +19,7 @@ export const useCreateToken = () => {
 };
 
 export const useEditToken = () => {
-  return useMutationAction<EditTokenResponse, Token>(
+  return useMutationAction<Token, Token>(
     ["tokens"],
     tokenService.editToken,
     {}
@@ -44,7 +39,6 @@ export const useDeleteMultipleToken = () => {
   return useMutation<{ success: boolean }, Error, string[]>({
     mutationFn: tokenService.deleteMultipleTokens,
     onSettled: () => {
-      // Invalidate query để làm mới dữ liệu sau khi mutation (thành công hoặc thất bại)
       queryClient.invalidateQueries({
         queryKey: ["tokens"],
       });

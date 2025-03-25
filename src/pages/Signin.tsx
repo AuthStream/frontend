@@ -12,20 +12,23 @@ import {
   usePreviewData,
   useRegister,
   useSubmitConfig,
+  useSubmitTableConfig,
 } from "../hooks/useSigninQueries";
 import RegisterModal from "../components/modalSignin/registerModal";
 import ConfigDBModal from "../components/modalSignin/configDbModal";
 import ViewSchemaModal from "../components/modalSignin/viewSchemaModal";
-
+import PreviewDataModal from "../components/modalSignin/previewDataModal";
+import TableConfigModal from "../components/modalSignin/tableConfigModal";
+import { AxiosError } from "axios";
 import {
   DbConfig,
   dbSchema,
   RegisterData,
   SigninData,
+  TableConfig,
   TableData,
   tableSchema,
 } from "../api/type";
-import PreviewDataModal from "../components/modalSignin/previewDataModal";
 
 const SignIn = () => {
   const [username, setEmail] = useState("");
@@ -40,7 +43,6 @@ const SignIn = () => {
     databaseSchema: [],
   });
   const [previewData, setPreviewData] = useState<TableData[]>([]);
-
   const [config, setConfig] = useState<DbConfig>({
     id: "",
     username: "",
@@ -65,6 +67,7 @@ const SignIn = () => {
   const [isSchemaModalOpen, setSchemaModalOpen] = useState(false);
   const [isConnectionChecked, setIsConnectionChecked] = useState(false);
   const [isPreviewDataModalOpen, setPreviewDataModalOpen] = useState(false);
+  const [isTableConfigModalOpen, setTableConfigModalOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -74,14 +77,17 @@ const SignIn = () => {
   const getSchemaMutation = useGetSchema();
   const previewDataMutation = usePreviewData();
   const submitConfigMutation = useSubmitConfig();
+  const submitTableMutation = useSubmitTableConfig();
 
   const handleLoginClick = () => {
     handleSignIn({ username, password });
   };
+
   const handleSignIn = async (signinData: SigninData) => {
     try {
       loginMutation.mutate(signinData, {
         onSuccess: (response) => {
+          console.log(response);
           if (signinData.username === "admin@example.authstream") {
             setRegisterModalOpen(true);
           } else {
@@ -161,20 +167,14 @@ const SignIn = () => {
               username: userData.username,
               password: userData.password,
             });
-            // const pendingSignIn = localStorage.getItem("pendingSignIn");
-            // if (pendingSignIn) {
-            //   const registerData = JSON.parse(pendingSignIn);
-            //   handleSignInAfterRegister(registerData);
-            //   localStorage.removeItem("pendingSignIn");
-            // }
           },
           onError: () => {
-            toast.success("Cannot Save");
+            toast.error("Cannot Save");
           },
         }
       );
     } catch (error) {
-      toast.error("error");
+      toast.error("Error fetching schema");
     }
   };
 
@@ -191,14 +191,28 @@ const SignIn = () => {
             toast.success(response);
             setIsConnectionChecked(true);
           },
-          onError: (error) => {
-            toast.error(error.toString());
+          onError: (error: Error) => {
+            // toast.error(error.message);
+            if ((error as AxiosError).isAxiosError) {
+              const axiosError = error as AxiosError;
+              if (axiosError.response && axiosError.response.data) {
+                const errorMessage =
+                  typeof axiosError.response.data === "string"
+                    ? axiosError.response.data
+                    : JSON.stringify(axiosError.response.data);
+                toast.error(errorMessage);
+              } else {
+                toast.error("An unexpected error occurred");
+              }
+            } else {
+              toast.error(error.message || "An unexpected error occurred");
+            }
             setIsConnectionChecked(false);
           },
         }
       );
     } catch (error) {
-      toast.error("error");
+      toast.error("Error checking connection");
       setIsConnectionChecked(false);
     }
   };
@@ -216,27 +230,59 @@ const SignIn = () => {
             setPreviewData(response);
             setPreviewDataModalOpen(true);
             setSchemaModalOpen(false);
-            // console.log(response);
+          },
+          onError: (error: Error) => {
+            toast.error("Failed to preview table");
+            console.error(error);
           },
         }
       );
     } catch (error) {
+      toast.error("Error previewing table");
       throw error;
     }
   };
 
   const handleSubmitConfig = async () => {
+    setPreviewDataModalOpen(false);
+    setTableConfigModalOpen(true);
+    // try {
+    //   submitConfigMutation.mutate(config, {
+    //     onSuccess: () => {
+    //       toast.success("Configuration submitted successfully!");
+    //       setPreviewDataModalOpen(false);
+    //       setTableConfigModalOpen(true);
+    //     },
+    //     onError: (error: Error) => {
+    //       toast.error("Failed to submit configuration");
+    //       console.error(error);
+    //     },
+    //   });
+    // } catch (error) {
+    //   toast.error("An unexpected error occurred");
+    //   throw error;
+    // }
+  };
+
+  const handleTableConfigSubmit = async (tableConfig: TableConfig) => {
     try {
-      submitConfigMutation.mutate(config, {
+      submitTableMutation.mutate(tableConfig, {
         onSuccess: () => {
+          toast.success("Table configuration submitted successfully!");
+          setTableConfigModalOpen(false);
           handleSignInAfterRegister({
             username: userData.username,
             password: userData.password,
           });
         },
+        onError: (error: Error) => {
+          toast.error("Failed to submit table configuration");
+          console.error(error);
+        },
       });
     } catch (error) {
-      throw error;
+      toast.error("An unexpected error occurred");
+      console.error(error);
     }
   };
 
@@ -277,16 +323,21 @@ const SignIn = () => {
         <Button
           onClick={handleLoginClick}
           className="w-full bg-blue-500 text-black py-2 hover:bg-blue-600 border-2"
+          disabled={loginMutation.isPending}
         >
-          Log in
+          {loginMutation.isPending ? "Logging in..." : "Log in"}
         </Button>
       </div>
+
+      {/* Modals with Internal Loading */}
       {isRegisterModalOpen && (
         <RegisterModal
           onRegister={handleRegister}
           onClose={() => setRegisterModalOpen(false)}
+          loading={registerMutation.isPending}
         />
       )}
+
       {isConfigModalOpen && (
         <ConfigDBModal
           onCreate={handleGetSchema}
@@ -296,28 +347,66 @@ const SignIn = () => {
             setIsConnectionChecked(false);
           }}
           isConnectionChecked={isConnectionChecked}
+          loading={
+            checkConnectionMutation.isPending || getSchemaMutation.isPending
+          }
         />
       )}
+
       {isSchemaModalOpen && (
         <ViewSchemaModal
           schema={schema}
           onSubmit={handlePreviewTable}
-          onClose={() => {
-            setSchemaModalOpen(false);
-          }}
+          onClose={() => setSchemaModalOpen(false)}
+          loading={previewDataMutation.isPending}
         />
       )}
+
       {isPreviewDataModalOpen && (
         <PreviewDataModal
           previewData={previewData}
           onSubmit={handleSubmitConfig}
-          onClose={() => {
-            setPreviewDataModalOpen(false);
-          }}
+          onClose={() => setPreviewDataModalOpen(false)}
+          loading={submitConfigMutation.isPending}
+        />
+      )}
+
+      {isTableConfigModalOpen && (
+        <TableConfigModal
+          isOpen={isTableConfigModalOpen}
+          onClose={() => setTableConfigModalOpen(false)}
+          onSubmit={handleTableConfigSubmit}
+          tableSchemas={config.tableIncludeList}
+          loading={submitTableMutation.isPending}
         />
       )}
     </div>
   );
 };
+
+const styles = `
+  .circle-loader {
+    width: 24px;
+    height: 24px;
+    border: 4px solid #f3f3f3; /* Light gray */
+    border-top: 4px solid #3498db; /* Blue */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  @keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+`;
+
+if (typeof document !== "undefined") {
+  const styleSheet = document.createElement("style");
+  styleSheet.textContent = styles;
+  document.head.appendChild(styleSheet);
+}
 
 export default SignIn;

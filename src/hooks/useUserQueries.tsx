@@ -9,17 +9,14 @@ import {
 import useMutationAction from "../provider/queryGlobal";
 
 export const useGetUsers = () => {
-  return useQuery<UserResponse>({
+  return useQuery<User>({
     queryKey: ["users"],
     queryFn: userService.getAllUsers,
   });
 };
 
 export const useCreateUsers = () => {
-  return useMutationAction<CreateUserResponse, User>(
-    ["users"],
-    userService.createUser
-  );
+  return useMutationAction<User, User>(["users"], userService.createUser);
 };
 
 export const useRefreshUsers = () => {
@@ -32,11 +29,7 @@ export const useRefreshUsers = () => {
 };
 
 export const useEditUsers = () => {
-  return useMutationAction<EditUserResponse, User>(
-    ["users"],
-    userService.editUser,
-    {}
-  );
+  return useMutationAction<User, User>(["users"], userService.editUser, {});
 };
 
 export const useDeleteUsers = () => {
