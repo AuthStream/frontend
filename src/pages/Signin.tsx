@@ -52,6 +52,7 @@ const SignIn = () => {
     databasePassword: "",
     databaseType: "",
     sslMode: "",
+    host: "",
     port: 0,
     connectionString: "",
     tableIncludeList: [],
@@ -88,7 +89,7 @@ const SignIn = () => {
       loginMutation.mutate(signinData, {
         onSuccess: (response) => {
           console.log(response);
-          if (signinData.username === "admin@example.authstream") {
+          if (signinData.username === "admin@authstream.com") {
             setRegisterModalOpen(true);
           } else {
             toast.success("Sign-in successful!");
@@ -109,7 +110,7 @@ const SignIn = () => {
     try {
       loginMutation.mutate(signinData, {
         onSuccess: (response) => {
-          if (signinData.username === "admin@example.authstream") {
+          if (signinData.username === "admin@authstream.com") {
             setRegisterModalOpen(true);
           } else {
             toast.success("Sign-in successful!");
@@ -244,24 +245,24 @@ const SignIn = () => {
   };
 
   const handleSubmitConfig = async () => {
-    setPreviewDataModalOpen(false);
-    setTableConfigModalOpen(true);
-    // try {
-    //   submitConfigMutation.mutate(config, {
-    //     onSuccess: () => {
-    //       toast.success("Configuration submitted successfully!");
-    //       setPreviewDataModalOpen(false);
-    //       setTableConfigModalOpen(true);
-    //     },
-    //     onError: (error: Error) => {
-    //       toast.error("Failed to submit configuration");
-    //       console.error(error);
-    //     },
-    //   });
-    // } catch (error) {
-    //   toast.error("An unexpected error occurred");
-    //   throw error;
-    // }
+    // setPreviewDataModalOpen(false);
+    // setTableConfigModalOpen(true);
+    try {
+      submitConfigMutation.mutate(config, {
+        onSuccess: () => {
+          toast.success("Configuration submitted successfully!");
+          setPreviewDataModalOpen(false);
+          setTableConfigModalOpen(true);
+        },
+        onError: (error: Error) => {
+          toast.error("Failed to submit configuration");
+          console.error(error);
+        },
+      });
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+      throw error;
+    }
   };
 
   const handleTableConfigSubmit = async (tableConfig: TableConfig) => {

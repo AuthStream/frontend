@@ -1,13 +1,7 @@
 // import axiosClient from "../axiosClient";
 import axiosClient from "../axiosClient";
-import { CreateUserResponse, EditUserResponse, User, UserResponse } from "../type";
-const mockUsers = [
-  { id: "ABC1", email: "truongkinhquinh", password: "bmchien1", created: "2025-02-21T16:51:11.872Z" },
-  { id: "ABC2", email: "tolaokien", password: "bmchien2", created: "2025-02-21T16:51:11.872Z" },
-  { id: "ABC3", email: "truongkinhquinh", password: "bmchien3", created: "2025-02-21T16:51:11.872Z" },
-  { id: "ABC4", email: "tolaokien", password: "bmchien4", created: "2025-02-21T16:51:11.872Z" },
-  { id: "ABC5", email: "tolaokien", password: "bmchien5", created: "2025-02-21T16:51:11.872Z" },
-];
+import { User } from "../type";
+
 
 const userService = {
   getAllUsers: async (): Promise<User> => {

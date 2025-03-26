@@ -12,6 +12,7 @@ import Log from "../pages/Log";
 import Notification from "../pages/Dashboard";
 import ProtectedRoute from "../pages/Route";
 import Forward from "../pages/Forward";
+import ConfigViewPage from "../pages/ConfigView";
 
 const PrivateRoute = {
   home: {
@@ -69,6 +70,10 @@ const PrivateRoute = {
   permission: {
     path: "/permission",
     component: Permission,
+  },
+  config: {
+    path: "/database-config",
+    component: ConfigViewPage,
   },
 };
 

@@ -10,6 +10,7 @@ import {
   SignInResponse,
   TableConfig,
 } from "../api/type";
+import { useQuery } from "@tanstack/react-query";
 
 // interface ResendKeyRequest {
 //   email: string;
@@ -54,11 +55,25 @@ export const useSubmitConfig = () => {
   );
 };
 
+export const useGetConfig = () => {
+  return useQuery<DbConfig[]>({
+    queryKey: ["signin"],
+    queryFn: signinService.getConfig,
+  });
+};
+
 export const useSubmitTableConfig = () => {
   return useMutationAction<any, TableConfig>(
     ["signin"],
     signinService.submitTableConfig
   );
+};
+
+export const useGetTableConfig = () => {
+  return useQuery<TableConfig[]>({
+    queryKey: ["signin"],
+    queryFn: signinService.getTableConfig,
+  });
 };
 
 // export const useResendKey = () => {
