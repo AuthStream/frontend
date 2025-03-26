@@ -48,7 +48,9 @@ const tableConfigSchema = z.object({
   userTable: z.string().min(1, "Table is required"),
   passwordAttribute: z.string().min(1, "Password attribute is required"),
   hashingType: z.string().min(1, "Hashing type is required"),
+  salt: z.string().min(1, "Salt is required"),
   hashConfig: z.union([
+    // Updated to use union of object schemas
     argon2ConfigSchema,
     bcryptConfigSchema,
     pbkdf2ConfigSchema,
@@ -73,6 +75,7 @@ const TableConfigModal = ({
   loading,
 }: TableConfigModalProps) => {
   const [userTable, setUserTable] = useState("");
+  const [usernameAttribute, setUsernameAttribute] = useState("");
   const [passwordAttribute, setPasswordAttribute] = useState("");
   const [hashingType, setHashingType] = useState("");
   const [salt, setSalt] = useState("");
@@ -111,7 +114,11 @@ const TableConfigModal = ({
     switch (name) {
       case "userTable":
         setUserTable(value);
+        setUsernameAttribute("");
         setPasswordAttribute("");
+        break;
+      case "usernameAttribute":
+        setUsernameAttribute(value);
         break;
       case "passwordAttribute":
         setPasswordAttribute(value);
@@ -159,6 +166,7 @@ const TableConfigModal = ({
 
   const resetForm = () => {
     setUserTable("");
+    setUsernameAttribute("");
     setPasswordAttribute("");
     setHashingType("");
     setSalt("");
@@ -200,9 +208,11 @@ const TableConfigModal = ({
 
       const config: TableConfig = {
         userTable,
+        usernameAttribute,
         passwordAttribute,
         hashingType,
-        hashConfig,
+        salt,
+        hashConfig, // Now an object instead of stringified JSON
       };
 
       tableConfigSchema.parse(config);
@@ -245,6 +255,21 @@ const TableConfigModal = ({
             {tableSchemas.map((t) => (
               <option key={t.tableName} value={t.tableName}>
                 {t.tableName}
+              </option>
+            ))}
+          </select>
+
+          <select
+            name="usernameAttribute"
+            value={usernameAttribute}
+            onChange={handleChange}
+            className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+            disabled={!userTable}
+          >
+            <option value="">Select Username Attribute</option>
+            {selectedTableFields.map((col) => (
+              <option key={col.name} value={col.name}>
+                {col.name}
               </option>
             ))}
           </select>

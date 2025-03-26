@@ -276,6 +276,7 @@ export   interface DbConfig {
   databasePassword: string,
   databaseType: string,
   sslMode: string,
+  host:string,
   port: number,
   connectionString: string,
   tableIncludeList: tableSchema[],
@@ -302,8 +303,10 @@ export interface TableData {
 
 export interface TableConfig {
   userTable: string;
+  usernameAttribute: string;
   passwordAttribute: string;
   hashingType: string;
+  salt:string;
   hashConfig: HashConfig;
 }
 

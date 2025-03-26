@@ -31,6 +31,7 @@ const ConfigDBModal = ({
     username: "",
     password: "",
     uri: "",
+    host: "", // Added host field
     databaseUsername: "",
     databasePassword: "",
     port: 0,
@@ -67,6 +68,7 @@ const ConfigDBModal = ({
       setDbConfig((prev) => ({
         ...prev,
         uri,
+        host: hostname, // Set host from URI
         databaseType:
           protocol === "POSTGRESQL" || protocol === "POSTGRES"
             ? "POSTGRESQL"
@@ -88,15 +90,14 @@ const ConfigDBModal = ({
 
   const getConnectionStringPlaceholder = () => {
     const {
-      uri,
+      host,
       databaseUsername,
       databasePassword,
       port,
       databaseType,
       sslMode,
     } = dbConfig;
-    const host = uri.split("://")[1]?.split(":")[0] || "localhost";
-    const dbName = uri.split("/")[3]?.split("?")[0] || "database";
+    const dbName = dbConfig.uri.split("/")[3]?.split("?")[0] || "database";
     const portStr = port > 0 ? port : 5432;
     const sslModeStr = sslMode === "REQUIRE" ? "require" : "disable";
     const typePrefix =
@@ -105,11 +106,13 @@ const ConfigDBModal = ({
         : databaseType === "MYSQL"
         ? "jdbc:mysql"
         : "mongodb";
-    return `${typePrefix}://${host}:${portStr}/${dbName}?user=${databaseUsername}&password=${databasePassword}&sslmode=${sslModeStr}`;
+    return `${typePrefix}://${
+      host || "localhost"
+    }:${portStr}/${dbName}?user=${databaseUsername}&password=${databasePassword}&sslmode=${sslModeStr}`;
   };
 
   const validateUri = (uri: string): string | null => {
-    if (!uri) return "Database URI is REQUIRE.";
+    if (!uri) return "Database URI is required.";
     const uriRegex =
       /^(?:[a-zA-Z]+):\/\/(?:[a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+(?::\d+)?(?:\/[a-zA-Z0-9-]+)*(?:\?.*)?$/;
     if (!uriRegex.test(uri))
@@ -117,8 +120,16 @@ const ConfigDBModal = ({
     return null;
   };
 
+  const validateHost = (host: string): string | null => {
+    if (!host) return "Host is required.";
+    const hostRegex = /^(?:[a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+$/;
+    if (!hostRegex.test(host))
+      return "Invalid host format (e.g., localhost or example.com)";
+    return null;
+  };
+
   const validatePort = (port: number): string | null => {
-    if (!port) return "Port is REQUIRE.";
+    if (!port) return "Port is required.";
     if (isNaN(port) || port < 1 || port > 65535)
       return "Port must be a number between 1 and 65535.";
     return null;
@@ -141,6 +152,9 @@ const ConfigDBModal = ({
 
     const uriError = validateUri(dbConfig.uri);
     if (uriError) newErrors.uri = uriError;
+
+    const hostError = validateHost(dbConfig.host);
+    if (hostError) newErrors.host = hostError;
 
     const portError = validatePort(dbConfig.port);
     if (portError) newErrors.port = portError;
@@ -199,6 +213,16 @@ const ConfigDBModal = ({
               value={dbConfig.uri}
               onChange={handleChange}
               placeholder="URI"
+              disabled={loading}
+            />
+          </div>
+
+          <div>
+            <Input
+              name="host"
+              value={dbConfig.host}
+              onChange={handleChange}
+              placeholder="Host (e.g., localhost or example.com)"
               disabled={loading}
             />
           </div>

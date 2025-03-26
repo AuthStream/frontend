@@ -17,6 +17,22 @@ const QuickAccess = () => {
         </li>
         <li>
           <Link
+            to="/database-config"
+            className="text-blue-500 hover:underline cursor-pointer"
+          >
+            My Database
+          </Link>
+        </li>
+        <li>
+          <Link
+            to="/forward"
+            className="text-blue-500 hover:underline cursor-pointer"
+          >
+            Create new Forward Flow
+          </Link>
+        </li>
+        <li>
+          <Link
             to="/application"
             className="text-blue-500 hover:underline cursor-pointer"
           >

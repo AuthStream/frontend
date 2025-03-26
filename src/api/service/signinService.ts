@@ -4,7 +4,7 @@ import { DbConfig, DbPreviewRequest, TableConfig, RegisterData, RegisterResponse
   const signinService = {
     login: async (data:SigninData):Promise<SignInResponse> => {
       try{
-        console.log(data);
+        // console.log(data);
         const response=await axiosClient.post("/auth/login",data);
         console.log(response.data);
 
@@ -50,6 +50,7 @@ import { DbConfig, DbPreviewRequest, TableConfig, RegisterData, RegisterResponse
     previewData: async (data: DbPreviewRequest ): Promise<any>=>
     {
       try{
+        // console.log(data);
         const response = await axiosClient.post("/previews/preview-data",data);
         return response.data;
       }
@@ -70,18 +71,42 @@ import { DbConfig, DbPreviewRequest, TableConfig, RegisterData, RegisterResponse
         }
       },
 
+      getConfig: async (): Promise<DbConfig[]>=>
+        {
+          try{
+            // console.log(data);
+            const response = await axiosClient.get("/admins/config");
+            return response.data;
+          }
+          catch(error){
+            throw error;
+          }
+        },
+
+
+
       submitTableConfig: async (data: TableConfig ): Promise<any>=>
         {
           try{
-            console.log(data);
+            // console.log(data);
             const response = await axiosClient.post("/auth-table-configs",data);
             return response.data;
           }
           catch(error){
             throw error;
           }
-        }
+        },
 
+      getTableConfig: async (): Promise<TableConfig[]>=>
+        {
+          try{
+            const response = await axiosClient.get("/auth-table-configs");
+            return response.data;
+          }
+          catch(error){
+            throw error;
+          }
+        },
 
   
     // resendKey: async (email: string) => {
