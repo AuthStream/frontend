@@ -50,15 +50,12 @@ const tokenService = {
   },
 
   deleteToken: async (id: string): Promise<{ success: boolean }> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const index = mockTokens.findIndex((token) => token.id === id);
-        if (index !== -1) {
-          mockTokens.splice(index, 1);
-        }
-        resolve({ success: true });
-      }, 500);
-    });
+    try {
+      await axiosClient.delete(`/tokens/${id}`);
+      return { success: true };
+    } catch (error) {
+      throw error;
+    }
   },
   deleteMultipleTokens: async (ids: string[]): Promise<{ success: boolean }> => {
     return new Promise((resolve) => {

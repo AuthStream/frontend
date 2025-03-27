@@ -7,6 +7,8 @@ import {
   DialogDescription,
 } from "../ui/dialog";
 import { Button } from "../ui/button";
+import { useGetConfig, useGetTableConfig } from "../../hooks/useSigninQueries"; // Adjust path as needed
+import { TableConfig, tableSchema, DbConfig } from "../../api/type"; // Adjust path as needed
 
 interface ImportUserProps {
   isOpen: boolean;
@@ -15,8 +17,7 @@ interface ImportUserProps {
 }
 
 interface UserPreview {
-  username: string;
-  password: string;
+  [key: string]: string;
 }
 
 const ImportUser = ({ isOpen, onClose, onImport }: ImportUserProps) => {
@@ -24,6 +25,17 @@ const ImportUser = ({ isOpen, onClose, onImport }: ImportUserProps) => {
   const [previewData, setPreviewData] = useState<UserPreview[]>([]);
   const [error, setError] = useState<string>("");
   const fileReader = new FileReader();
+
+  const { data: tableConfigs, isLoading: tableLoading } = useGetTableConfig();
+  const { data: dbConfigs, isLoading: dbLoading } = useGetConfig();
+
+  const tableConfig = tableConfigs?.[0];
+  const dbConfig = dbConfigs?.[0];
+
+  // Find the table schema that matches tableUser
+  const userTableSchema = dbConfig?.tableIncludeList.find(
+    (table) => table.tableName === tableConfig?.userTable
+  );
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -50,6 +62,11 @@ const ImportUser = ({ isOpen, onClose, onImport }: ImportUserProps) => {
 
   const validateAndParseCSV = (text: string) => {
     setError("");
+    if (!userTableSchema) {
+      setError("User table configuration not found");
+      return;
+    }
+
     const rows = text.trim().split("\n");
     if (rows.length < 1) {
       setError("CSV file is empty");
@@ -58,30 +75,33 @@ const ImportUser = ({ isOpen, onClose, onImport }: ImportUserProps) => {
     }
 
     const headers = rows[0].split(",").map((h) => h.trim().toLowerCase());
+    const expectedHeaders = userTableSchema.columns.map((col) =>
+      col.name.toLowerCase()
+    );
+
     if (
-      headers.length !== 2 ||
-      headers[0] !== "username" ||
-      headers[1] !== "password"
+      headers.length !== expectedHeaders.length ||
+      !headers.every((header, index) => header === expectedHeaders[index])
     ) {
-      setError("CSV must have exactly two columns: 'username' and 'password'");
+      setError(`CSV must have columns: ${expectedHeaders.join(", ")}`);
       setPreviewData([]);
       return;
     }
 
     const parsedUsers: UserPreview[] = rows.slice(1).map((row) => {
-      const [username, password] = row.split(",").map((v) => v.trim());
-      return {
-        username: username || "",
-        password: password || "",
-      };
+      const values = row.split(",").map((v) => v.trim());
+      const user: UserPreview = {};
+      userTableSchema.columns.forEach((column, index) => {
+        user[column.name] = values[index] || "";
+      });
+      return user;
     });
 
-    // Additional validation
-    const invalidRows = parsedUsers.filter(
-      (user) => !user.username || !user.password
+    const invalidRows = parsedUsers.filter((user) =>
+      userTableSchema.columns.some((column) => !user[column.name])
     );
     if (invalidRows.length > 0) {
-      setError("All rows must have both username and password");
+      setError("All rows must have values for all columns");
       setPreviewData([]);
       return;
     }
@@ -90,12 +110,15 @@ const ImportUser = ({ isOpen, onClose, onImport }: ImportUserProps) => {
   };
 
   const handleImport = () => {
-    if (previewData.length > 0) {
-      // Convert back to CSV string for the backend
+    if (previewData.length > 0 && userTableSchema) {
+      const headers = userTableSchema.columns.map((col) => col.name).join(",");
       const csvContent =
-        "username,password\n" +
+        headers +
+        "\n" +
         previewData
-          .map((user) => `${user.username},${user.password}`)
+          .map((user) =>
+            userTableSchema.columns.map((col) => user[col.name]).join(",")
+          )
           .join("\n");
       onImport(csvContent);
       setPreviewData([]);
@@ -103,13 +126,18 @@ const ImportUser = ({ isOpen, onClose, onImport }: ImportUserProps) => {
     }
   };
 
+  if (tableLoading || dbLoading) {
+    return <div>Loading configuration...</div>;
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Import CSV</DialogTitle>
           <DialogDescription>
-            Upload a CSV file with 'username' and 'password' columns
+            Upload a CSV file for table '{tableConfig?.userTable}' with columns:
+            {userTableSchema?.columns.map((col) => col.name).join(", ")}
           </DialogDescription>
         </DialogHeader>
 
@@ -123,7 +151,8 @@ const ImportUser = ({ isOpen, onClose, onImport }: ImportUserProps) => {
             Drag and drop your CSV file here, or click to select one
           </p>
           <p className="text-sm text-gray-500 mt-2">
-            Expected format: username,password
+            Expected format:{" "}
+            {userTableSchema?.columns.map((col) => col.name).join(", ")}
           </p>
         </div>
 
@@ -137,7 +166,7 @@ const ImportUser = ({ isOpen, onClose, onImport }: ImportUserProps) => {
 
         {error && <p className="text-red-500 mt-2">{error}</p>}
 
-        {previewData.length > 0 && (
+        {previewData.length > 0 && userTableSchema && (
           <div className="mt-4">
             <h4 className="font-semibold mb-2">
               Preview ({previewData.length} users):
@@ -146,15 +175,21 @@ const ImportUser = ({ isOpen, onClose, onImport }: ImportUserProps) => {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-gray-100">
-                    <th className="border p-2 text-left">Username</th>
-                    <th className="border p-2 text-left">Password</th>
+                    {userTableSchema.columns.map((column) => (
+                      <th key={column.name} className="border p-2 text-left">
+                        {column.name}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {previewData.map((user, index) => (
                     <tr key={index}>
-                      <td className="border p-2">{user.username}</td>
-                      <td className="border p-2">{user.password}</td>
+                      {userTableSchema.columns.map((column) => (
+                        <td key={column.name} className="border p-2">
+                          {user[column.name]}
+                        </td>
+                      ))}
                     </tr>
                   ))}
                 </tbody>

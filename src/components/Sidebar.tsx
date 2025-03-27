@@ -211,7 +211,24 @@ const Sidebar = () => {
                 </Link>
               </div>
             )}
-
+            <Link
+              to="/database-config"
+              className={`block px-4 py-2 rounded border-b-2 border-gray-200 ${
+                isActive("/database-config")
+                  ? "font-bold text-blue-500"
+                  : "text-black"
+              }`}
+            >
+              My Database
+            </Link>
+            <Link
+              to="/my-user"
+              className={`block px-4 py-2 rounded border-b-2 border-gray-200 ${
+                isActive("/my-user") ? "font-bold text-blue-500" : "text-black"
+              }`}
+            >
+              My User
+            </Link>
             <Link
               to="/about"
               className={`block px-4 py-2 rounded border-b-2 border-gray-200 ${

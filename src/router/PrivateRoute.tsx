@@ -13,6 +13,7 @@ import Notification from "../pages/Dashboard";
 import ProtectedRoute from "../pages/Route";
 import Forward from "../pages/Forward";
 import ConfigViewPage from "../pages/ConfigView";
+import GuestUser from "../pages/GuestUser";
 
 const PrivateRoute = {
   home: {
@@ -58,6 +59,10 @@ const PrivateRoute = {
   user: {
     path: "/user",
     component: User,
+  },
+  myUser: {
+    path: "/my-user",
+    component: GuestUser,
   },
   role: {
     path: "/role",
