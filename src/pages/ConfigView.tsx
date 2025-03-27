@@ -5,14 +5,7 @@ import {
   useGetSchema,
   usePreviewData,
 } from "../hooks/useSigninQueries";
-import {
-  DbConfig,
-  TableConfig,
-  dbSchema,
-  TableData,
-  DbPreviewRequest,
-  tableSchema,
-} from "../api/type";
+import { TableData, tableSchema } from "../api/type";
 import { Resizable } from "react-resizable";
 import "react-resizable/css/styles.css";
 import ReactFlow, {
@@ -34,29 +27,21 @@ const ConfigViewPage: React.FC = () => {
     isLoading: dbLoading,
     error: dbError,
   } = useGetConfig();
-  // const {
-  //   data: tableConfigArray,
-  //   isLoading: tableLoading,
-  //   error: tableError,
-  // } = useGetTableConfig();
+  const {
+    data: tableConfigArray,
+    isLoading: tableLoading,
+    error: tableError,
+  } = useGetTableConfig();
 
-  // Take the first element of the arrays
   const dbConfig = dbConfigArray?.[0];
-  // const tableConfig = tableConfigArray?.[0];
+  const tableConfig = tableConfigArray?.[0];
 
-  // console.log("dbConfigArray", dbConfigArray);
-  // console.log("dbConfig", dbConfig);
-  // console.log("tableConfigArray", tableConfigArray);
-
-  // console.log("tableConfig", tableConfig);
-  // Schema Mutation
   const {
     mutate: fetchSchema,
     data: schemaData,
     isPending: schemaLoading,
     error: schemaError,
   } = useGetSchema();
-  // Preview Data Mutation
   const {
     mutate: fetchPreviewData,
     data: previewData,
@@ -64,29 +49,29 @@ const ConfigViewPage: React.FC = () => {
     error: previewError,
   } = usePreviewData();
 
-  // Schema Diagram States
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-
-  // Preview Data States
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [columnWidths, setColumnWidths] = useState<
     Record<string, Record<string, number>>
   >({});
 
-  // Fetch Schema and Preview Data when dbConfig is available
   useEffect(() => {
     if (dbConfig?.id) {
-      fetchSchema({ ...dbConfig, tableIncludeList: [] }); // Trigger schema fetch
-      // console.log("schema", { ...dbConfig, tableIncludeList: [] });
+      fetchSchema({ ...dbConfig, tableIncludeList: [] });
       fetchPreviewData({
         connectionString: dbConfig.connectionString,
-        tables: dbConfig.tableIncludeList,
-      } as DbPreviewRequest);
+        tables: dbConfig.tableIncludeList || [],
+      });
     }
   }, [dbConfig, fetchSchema, fetchPreviewData]);
 
-  // Initialize Schema Diagram
+  useEffect(() => {
+    if (previewData) {
+      console.log("Preview Data Updated:", previewData);
+    }
+  }, [previewData]);
+
   const initializeDiagram = () => {
     if (!schemaData?.databaseSchema) return;
 
@@ -172,9 +157,8 @@ const ConfigViewPage: React.FC = () => {
   const onConnect = (params: Edge | Connection) =>
     setEdges((eds) => addEdge(params, eds));
 
-  // Initialize Preview Data Column Widths
   useEffect(() => {
-    if (!previewData) return;
+    if (!previewData || previewData.length === 0) return;
 
     const initialWidths: Record<string, Record<string, number>> = {};
     previewData.forEach((table: TableData) => {
@@ -187,10 +171,11 @@ const ConfigViewPage: React.FC = () => {
       }
     });
     setColumnWidths(initialWidths);
-    if (previewData.length > 0 && !selectedTable) {
+
+    if (!selectedTable && previewData.length > 0) {
       setSelectedTable(previewData[0].tableName);
     }
-  }, [previewData]);
+  }, [previewData, selectedTable]);
 
   const handleResize =
     (tableName: string, column: string) =>
@@ -205,15 +190,15 @@ const ConfigViewPage: React.FC = () => {
     };
 
   const selectedTableData = previewData?.find(
-    (table: { tableName: string | null }) => table.tableName === selectedTable
+    (table: TableData) => table.tableName === selectedTable
   );
 
-  if (dbLoading || schemaLoading || previewLoading)
+  if (dbLoading || tableLoading || schemaLoading || previewLoading)
     return <div>Loading...</div>;
+  if (tableError)
+    return <div>Error loading preview table: {tableError.message}</div>;
   if (dbError)
     return <div>Error loading database config: {dbError.message}</div>;
-  // if (tableError)
-  //   return <div>Error loading table config: {tableError.message}</div>;
   if (schemaError)
     return <div>Error loading schema: {schemaError.message}</div>;
   if (previewError)
@@ -223,7 +208,6 @@ const ConfigViewPage: React.FC = () => {
     <div className="p-6">
       {/* Two Column Config Display */}
       <div className="grid grid-cols-2 gap-6 mb-6">
-        {/* Database Config Column */}
         <div className="border p-4 rounded-lg">
           <h2 className="text-xl font-semibold mb-4">Database Configuration</h2>
           {dbConfig ? (
@@ -237,7 +221,6 @@ const ConfigViewPage: React.FC = () => {
               <p>
                 <strong>Port:</strong> {dbConfig.port}
               </p>
-
               <p>
                 <strong>Username:</strong> {dbConfig.databaseUsername}
               </p>
@@ -256,10 +239,9 @@ const ConfigViewPage: React.FC = () => {
           )}
         </div>
 
-        {/* Table Config Column */}
         <div className="border p-4 rounded-lg">
           <h2 className="text-xl font-semibold mb-4">Table Configuration</h2>
-          {/* {tableConfig ? (
+          {tableConfig ? (
             <div className="space-y-2">
               <p>
                 <strong>Table:</strong> {tableConfig.userTable}
@@ -287,7 +269,7 @@ const ConfigViewPage: React.FC = () => {
             </div>
           ) : (
             <p>No table configuration available.</p>
-          )} */}
+          )}
         </div>
       </div>
 
@@ -393,20 +375,7 @@ const ConfigViewPage: React.FC = () => {
                       <tbody>
                         {selectedTableData.rows.map(
                           (
-                            row: {
-                              [x: string]:
-                                | string
-                                | number
-                                | boolean
-                                | React.ReactElement<
-                                    any,
-                                    string | React.JSXElementConstructor<any>
-                                  >
-                                | Iterable<React.ReactNode>
-                                | React.ReactPortal
-                                | null
-                                | undefined;
-                            },
+                            row: { [x: string]: any },
                             rowIndex: React.Key | null | undefined
                           ) => (
                             <tr key={rowIndex} className="border">
@@ -428,7 +397,7 @@ const ConfigViewPage: React.FC = () => {
                                         ]?.[column] ?? 150,
                                     }}
                                   >
-                                    {row[column]}
+                                    {String(row[column])}
                                   </td>
                                 ))}
                             </tr>

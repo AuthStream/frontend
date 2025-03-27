@@ -9,6 +9,7 @@ const Sidebar = () => {
   const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({
     application: false,
     event: false,
+    directory: false,
   });
 
   const toggleMenu = (menu: string) => {
@@ -18,7 +19,7 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`absolute left-0 top-16 h-screen bg-gray-100 dark:bg-background dark:text-white border transition-all duration-200 ${
+      className={`h-full bg-gray-100 dark:bg-background dark:text-white border transition-all duration-200 ${
         isOpenSidebar ? "w-64 p-4" : "w-0 p-0 overflow-hidden"
       }`}
     >
@@ -78,9 +79,12 @@ const Sidebar = () => {
               </div>
             )}
 
+            {/* Event Dropdown */}
             <div
               className={`px-4 py-2 cursor-pointer rounded flex items-center justify-between border-b-2 border-gray-200 ${
-                isActive("/directory-services")
+                isActive("/message") ||
+                isActive("/log") ||
+                isActive("/notification")
                   ? "font-bold text-blue-500"
                   : "text-black"
               }`}
@@ -129,7 +133,12 @@ const Sidebar = () => {
             {/* Directory Dropdown */}
             <div
               className={`px-4 py-2 cursor-pointer rounded flex items-center justify-between border-b-2 border-gray-200 ${
-                isActive("/token") || isActive("/user")
+                isActive("/token") ||
+                isActive("/user") ||
+                isActive("/role") ||
+                isActive("/group") ||
+                isActive("/permission") ||
+                isActive("/route")
                   ? "font-bold text-blue-500"
                   : "text-black"
               }`}
@@ -193,7 +202,7 @@ const Sidebar = () => {
                 <Link
                   to="/route"
                   className={`block px-4 py-2 rounded border-b-2 border-gray-200 ${
-                    isActive("/group")
+                    isActive("/route")
                       ? "font-bold text-blue-500"
                       : "text-black"
                   }`}
