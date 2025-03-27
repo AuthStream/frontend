@@ -41,7 +41,17 @@ const userService = {
   },
   deleteMultipleUsers: async (ids: string[]): Promise<{ success: boolean }> => {
     try {
+      // console.log(ids);
       await Promise.all(ids.map((id) => axiosClient.delete(`/users/${id}`)));
+      return { success: true };
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  createBulkUsers: async (file: string): Promise<{ success: boolean }> => {
+    try {
+      const response = await axiosClient.post("/users/bulk", { file });
       return { success: true };
     } catch (error) {
       throw error;

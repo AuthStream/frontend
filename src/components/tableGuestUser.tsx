@@ -22,15 +22,15 @@ import {
   useRefreshUsers,
 } from "../hooks/useUserQueries";
 import userService from "../api/service/userService";
-import ImportUser from "./modalUser/importUser";
+import ImportUser from "./modalGuestUser/ImportUser";
 import { useCreateBulkUsers } from "../hooks/useUserQueries";
 import { User } from "../api/type";
 
-interface TableUserProps {
+interface TableGuestUserProps {
   users: User[];
 }
 
-const TableUser = ({ users }: TableUserProps) => {
+const TableGuestUser = ({ users }: TableGuestUserProps) => {
   const [userList, setUserList] = useState(users);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -331,4 +331,4 @@ const TableUser = ({ users }: TableUserProps) => {
   );
 };
 
-export default TableUser;
+export default TableGuestUser;

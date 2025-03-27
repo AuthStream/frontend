@@ -49,3 +49,14 @@ export const useDeleteMultipleUsers = () => {
     },
   });
 };
+
+export const useCreateBulkUsers = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ success: boolean }, Error, string>({
+    mutationFn: userService.createBulkUsers,
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+};
