@@ -57,7 +57,7 @@ export const useSubmitConfig = () => {
 
 export const useGetConfig = () => {
   return useQuery<DbConfig[]>({
-    queryKey: ["signin"],
+    queryKey: ["tableConfig"],
     queryFn: signinService.getConfig,
   });
 };
@@ -71,7 +71,7 @@ export const useSubmitTableConfig = () => {
 
 export const useGetTableConfig = () => {
   return useQuery<TableConfig[]>({
-    queryKey: ["signin"],
+    queryKey: ["dbConfig"],
     queryFn: signinService.getTableConfig,
   });
 };
