@@ -1,4 +1,12 @@
-import { Search, Plus, RefreshCw, Trash2, Edit, Trash } from "lucide-react";
+import {
+  Search,
+  Plus,
+  RefreshCw,
+  Trash2,
+  Edit,
+  Trash,
+  ArrowUpDown,
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -27,28 +35,51 @@ interface TableProviderProps {
   providers: ProviderType[];
 }
 
+type SortKey = keyof ProviderType;
+type SortOrder = "asc" | "desc";
+
 const TableProvider = ({ providers }: TableProviderProps) => {
   const [providerList, setProviderList] = useState(providers);
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [providerToEdit, setProviderToEdit] = useState<ProviderType | null>(
-    null
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("id");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
+
+  // Filter providers by name
+  const filteredProviders = providerList.filter((provider) =>
+    provider.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  const [isOpenConfirm, setIsOpenConfirm] = useState(false);
 
-  const createProviderMutation = useCreateProviders();
-  const editProviderMutation = useEditProviders();
-  const deleteProviderMutation = useDeleteProviders();
-  const deleteMultipleProviderMutation = useDeleteMultipleProvider();
+  // Sort providers
+  const sortedProviders = [...filteredProviders].sort((a, b) => {
+    const aValue = a[sortKey];
+    const bValue = b[sortKey];
 
-  // pagination
+    if (sortKey === "createdAt") {
+      return sortOrder === "asc"
+        ? new Date(aValue).getTime() - new Date(bValue).getTime()
+        : new Date(bValue).getTime() - new Date(aValue).getTime();
+    }
+
+    if (typeof aValue === "string" && typeof bValue === "string") {
+      return sortOrder === "asc"
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    }
+    return sortOrder === "asc"
+      ? aValue > bValue
+        ? 1
+        : -1
+      : bValue > aValue
+      ? 1
+      : -1;
+  });
+
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-
-  const totalPages = Math.ceil(providers.length / itemsPerPage);
-
-  const currentProviders = providers.slice(
+  const totalPages = Math.ceil(sortedProviders.length / itemsPerPage);
+  const currentProviders = sortedProviders.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -59,7 +90,38 @@ const TableProvider = ({ providers }: TableProviderProps) => {
     }
   };
 
-  //select
+  // Sort handler
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortOrder("asc");
+    }
+    setCurrentPage(1);
+  };
+
+  // Search handler
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  // Existing state and mutations
+  const [isOpen, setIsOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [providerToEdit, setProviderToEdit] = useState<ProviderType | null>(
+    null
+  );
+  const [isOpenConfirm, setIsOpenConfirm] = useState(false);
+  const [isOpenConfirmMultiple, setIsOpenConfirmMultiple] = useState(false);
+  const [idDelete, setIdDelete] = useState<string>("");
+
+  const createProviderMutation = useCreateProviders();
+  const editProviderMutation = useEditProviders();
+  const deleteProviderMutation = useDeleteProviders();
+  const deleteMultipleProviderMutation = useDeleteMultipleProvider();
+
   const handleCheckboxChange = (id: string) => {
     setSelectedProviders((prev) =>
       prev.includes(id)
@@ -69,39 +131,34 @@ const TableProvider = ({ providers }: TableProviderProps) => {
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedProviders(e.target.checked ? providers.map((t) => t.id) : []);
+    setSelectedProviders(
+      e.target.checked ? sortedProviders.map((t) => t.id) : []
+    );
   };
 
   const onCreate = async (newProvider: ProviderType) => {
     try {
       createProviderMutation.mutate(newProvider, {
-        onSuccess: () => {
-          toast.success("Provider created successfully");
-        },
+        onSuccess: () => toast.success("Provider created successfully"),
       });
       setIsOpen(false);
     } catch (error) {
       toast.error("Failed to create Provider");
     }
   };
-  const handleCreateProvider = () => {
-    setIsOpen(true);
-  };
+
+  const handleCreateProvider = () => setIsOpen(true);
 
   const handleEditProvider = async (updatedProvider: ProviderType) => {
     try {
       editProviderMutation.mutate(updatedProvider, {
-        onSuccess: () => {
-          toast.success("Provider updated successfully");
-        },
+        onSuccess: () => toast.success("Provider updated successfully"),
       });
       setIsEditOpen(false);
     } catch (error) {
       toast.error("Failed to edit Provider");
     }
   };
-
-  const [idDelete, setIdDelete] = useState<string>("");
 
   const handleClickDeleteProvider = (id: string) => {
     setIdDelete(id);
@@ -115,25 +172,14 @@ const TableProvider = ({ providers }: TableProviderProps) => {
           const updatedProvider = providerList.filter(
             (provider) => provider.id !== id
           );
-
           setProviderList(updatedProvider);
-
-          const newTotalPages = Math.ceil(
-            updatedProvider.length / itemsPerPage
-          );
-
-          if (currentPage > newTotalPages) {
-            setCurrentPage(newTotalPages || 1);
-          }
-          toast.success("provider delete successfully");
+          toast.success("Provider deleted successfully");
         },
       });
     } catch (error) {
-      toast.error("something wrong with delete provider");
+      toast.error("Something went wrong with delete provider");
     }
   };
-
-  const [isOpenConfirmMultiple, setIsOpenConfirmMultiple] = useState(false);
 
   const handleDeleteSelected = () => {
     if (selectedProviders.length === 0) {
@@ -154,17 +200,8 @@ const TableProvider = ({ providers }: TableProviderProps) => {
           const updatedProvider = providerList.filter(
             (provider) => !selectedProviders.includes(provider.id)
           );
-
           setProviderList(updatedProvider);
           setSelectedProviders([]);
-
-          const newTotalPages = Math.ceil(
-            updatedProvider.length / itemsPerPage
-          );
-
-          if (currentPage > newTotalPages) {
-            setCurrentPage(newTotalPages || 1);
-          }
           toast.success("Providers deleted successfully");
         },
       });
@@ -175,10 +212,14 @@ const TableProvider = ({ providers }: TableProviderProps) => {
 
   return (
     <div className="w-full bg-white dark:bg-background border p-5 rounded-lg shadow-md">
-      {/* Search & Actions */}
       <div className="flex items-center justify-between mb-4">
         <div className="relative w-1/3">
-          <Input placeholder="Search..." className="pl-10" />
+          <Input
+            placeholder="Search by name..."
+            className="pl-10"
+            value={searchTerm}
+            onChange={handleSearch}
+          />
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
         </div>
 
@@ -201,7 +242,6 @@ const TableProvider = ({ providers }: TableProviderProps) => {
         </div>
       </div>
 
-      {/* Table */}
       <Table>
         <TableHeader>
           <TableRow>
@@ -209,16 +249,51 @@ const TableProvider = ({ providers }: TableProviderProps) => {
               <input
                 type="checkbox"
                 onChange={handleSelectAll}
-                checked={selectedProviders.length === providers.length}
+                checked={selectedProviders.length === sortedProviders.length}
               />
             </TableHead>
-            <TableHead>ID</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Domain</TableHead>
-            <TableHead>Application</TableHead>
-            <TableHead>CallBack Url</TableHead>
-            <TableHead>Created</TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("id")}
+            >
+              ID <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("name")}
+            >
+              Name <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("type")}
+            >
+              Type <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("domainName")}
+            >
+              Domain <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("applicationId")}
+            >
+              Application <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("callbackUrl")}
+            >
+              CallBack Url <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("createdAt")}
+            >
+              Created <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -263,7 +338,6 @@ const TableProvider = ({ providers }: TableProviderProps) => {
         </TableBody>
       </Table>
 
-      {/* Pagination */}
       <div className="flex justify-between items-center mt-4 text-gray-500">
         <Button
           onClick={() => handlePageChange(currentPage - 1)}
@@ -287,7 +361,6 @@ const TableProvider = ({ providers }: TableProviderProps) => {
         onClose={() => setIsOpen(false)}
         onCreate={onCreate}
       />
-
       {providerToEdit && (
         <EditProvider
           isOpen={isEditOpen}
@@ -296,7 +369,6 @@ const TableProvider = ({ providers }: TableProviderProps) => {
           onEdit={handleEditProvider}
         />
       )}
-
       <DeleteConfirm
         isOpen={isOpenConfirm}
         onClose={() => setIsOpenConfirm(false)}
@@ -309,7 +381,7 @@ const TableProvider = ({ providers }: TableProviderProps) => {
         onClose={() => setIsOpenConfirmMultiple(false)}
         onConfirm={handleDeleteSelectedProviders}
         selectedArray={selectedProviders}
-        type={"Provider"}
+        type="Provider"
       />
     </div>
   );

@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Search, Plus, RefreshCw, Trash2, Edit, Trash } from "lucide-react";
+import {
+  Search,
+  Plus,
+  RefreshCw,
+  Trash2,
+  Edit,
+  Trash,
+  ArrowUpDown,
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -28,13 +36,51 @@ interface TableRoleProps {
   roles: Role[];
 }
 
+type SortKey = keyof Role;
+type SortOrder = "asc" | "desc";
+
 const TableRole = ({ roles }: TableRoleProps) => {
   const [roleList, setRoleList] = useState(roles);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("id");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
+
+  // Filter roles by name
+  const filteredRoles = roleList.filter((role) =>
+    role.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Sort roles
+  const sortedRoles = [...filteredRoles].sort((a, b) => {
+    const aValue = a[sortKey];
+    const bValue = b[sortKey];
+
+    if (sortKey === "createdAt") {
+      return sortOrder === "asc"
+        ? new Date(aValue).getTime() - new Date(bValue).getTime()
+        : new Date(bValue).getTime() - new Date(aValue).getTime();
+    }
+
+    if (typeof aValue === "string" && typeof bValue === "string") {
+      return sortOrder === "asc"
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    }
+    return sortOrder === "asc"
+      ? aValue > bValue
+        ? 1
+        : -1
+      : bValue > aValue
+      ? 1
+      : -1;
+  });
+
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-  const totalPages = Math.ceil(roles.length / itemsPerPage);
-  const currentRoles = roles.slice(
+  const totalPages = Math.ceil(sortedRoles.length / itemsPerPage);
+  const currentRoles = sortedRoles.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -45,6 +91,24 @@ const TableRole = ({ roles }: TableRoleProps) => {
     }
   };
 
+  // Sort handler
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortOrder("asc");
+    }
+    setCurrentPage(1);
+  };
+
+  // Search handler
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  // Existing state and mutations
   const [isOpen, setIsOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [roleToEdit, setRoleToEdit] = useState<Role | null>(null);
@@ -64,12 +128,12 @@ const TableRole = ({ roles }: TableRoleProps) => {
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedRoles(e.target.checked ? roles.map((role) => role.id) : []);
+    setSelectedRoles(
+      e.target.checked ? sortedRoles.map((role) => role.id) : []
+    );
   };
 
-  const handleCreateRole = () => {
-    setIsOpen(true);
-  };
+  const handleCreateRole = () => setIsOpen(true);
 
   const onCreate = async (newRole: Role) => {
     try {
@@ -80,9 +144,7 @@ const TableRole = ({ roles }: TableRoleProps) => {
     }
   };
 
-  const handleClickRefresh = () => {
-    refreshRoleMutation.refresh();
-  };
+  const handleClickRefresh = () => refreshRoleMutation.refresh();
 
   const handleClickEdit = (role: Role) => {
     setRoleToEdit(role);
@@ -97,9 +159,7 @@ const TableRole = ({ roles }: TableRoleProps) => {
   const handleEditRole = async (updatedRole: Role) => {
     try {
       editRoleMutation.mutate(updatedRole, {
-        onSuccess: () => {
-          toast.success("Role updated successfully");
-        },
+        onSuccess: () => toast.success("Role updated successfully"),
       });
       setIsEditOpen(false);
     } catch (error) {
@@ -118,11 +178,6 @@ const TableRole = ({ roles }: TableRoleProps) => {
         onSuccess: () => {
           const updatedRoles = roleList.filter((role) => role.id !== id);
           setRoleList(updatedRoles);
-
-          const newTotalPages = Math.ceil(updatedRoles.length / itemsPerPage);
-          if (currentPage > newTotalPages) {
-            setCurrentPage(newTotalPages || 1);
-          }
           toast.success("Role deleted successfully");
         },
       });
@@ -151,15 +206,8 @@ const TableRole = ({ roles }: TableRoleProps) => {
         const updatedRoles = roleList.filter(
           (role) => !selectedRoles.includes(role.id)
         );
-
         setRoleList(updatedRoles);
         setSelectedRoles([]);
-
-        const newTotalPages = Math.ceil(updatedRoles.length / itemsPerPage);
-        if (currentPage > newTotalPages) {
-          setCurrentPage(newTotalPages || 1);
-        }
-
         toast.success("Selected roles deleted successfully");
       }
     } catch (error) {
@@ -171,7 +219,12 @@ const TableRole = ({ roles }: TableRoleProps) => {
     <div className="w-full bg-white dark:bg-background border p-5 rounded-lg shadow-md">
       <div className="flex items-center justify-between mb-4">
         <div className="relative w-1/3">
-          <Input placeholder="Search..." className="pl-10" />
+          <Input
+            placeholder="Search by role name..."
+            className="pl-10"
+            value={searchTerm}
+            onChange={handleSearch}
+          />
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
         </div>
 
@@ -201,14 +254,39 @@ const TableRole = ({ roles }: TableRoleProps) => {
               <input
                 type="checkbox"
                 onChange={handleSelectAll}
-                checked={selectedRoles.length === roleList.length}
+                checked={selectedRoles.length === sortedRoles.length}
               />
             </TableHead>
-            <TableHead>ID</TableHead>
-            <TableHead>RoleName</TableHead>
-            <TableHead>Group</TableHead>
-            <TableHead>Pemission</TableHead>
-            <TableHead>Date Created</TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("id")}
+            >
+              ID <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("name")}
+            >
+              RoleName <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("groupId")}
+            >
+              Group <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("permissionId")}
+            >
+              Permission <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("createdAt")}
+            >
+              Date Created <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -227,7 +305,6 @@ const TableRole = ({ roles }: TableRoleProps) => {
               <TableCell>{role.groupId}</TableCell>
               <TableCell>{role.permissionId}</TableCell>
               <TableCell>
-                {" "}
                 {new Date(role.createdAt).toISOString().split("T")[0]}
               </TableCell>
               <TableCell className="flex space-x-2">

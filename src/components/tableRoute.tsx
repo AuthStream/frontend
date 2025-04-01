@@ -1,4 +1,12 @@
-import { Search, Plus, Trash, Trash2, RefreshCw, Save } from "lucide-react";
+import {
+  Search,
+  Plus,
+  Trash,
+  Trash2,
+  RefreshCw,
+  Save,
+  ArrowUpDown,
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -28,6 +36,9 @@ interface TableRouteProps {
   routes: Route[];
 }
 
+type SortKey = keyof Route;
+type SortOrder = "asc" | "desc";
+
 const TableRoute = ({ routes }: TableRouteProps) => {
   const [routeList, setRouteList] = useState<Route[]>(routes);
   const [searchQuery, setSearchQuery] = useState("");
@@ -41,6 +52,8 @@ const TableRoute = ({ routes }: TableRouteProps) => {
   const [isOpenConfirmMultiple, setIsOpenConfirmMultiple] = useState(false);
   const [idDelete, setIdDelete] = useState<string>("");
   const [isCreateRouteOpen, setIsCreateRouteOpen] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>("id");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
   const itemsPerPage = 5;
 
@@ -55,21 +68,61 @@ const TableRoute = ({ routes }: TableRouteProps) => {
       route.method.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredRoutes.length / itemsPerPage)
+  const sortedRoutes = [...filteredRoutes].sort((a, b) => {
+    const aValue = a[sortKey];
+    const bValue = b[sortKey];
+
+    if (sortKey === "createdAt") {
+      const aDate = new Date(aValue as string | Date);
+      const bDate = new Date(bValue as string | Date);
+      return sortOrder === "asc"
+        ? aDate.getTime() - bDate.getTime()
+        : bDate.getTime() - aDate.getTime();
+    }
+
+    if (sortKey === "checkProtected") {
+      const aBool = aValue as boolean;
+      const bBool = bValue as boolean;
+      return sortOrder === "asc"
+        ? aBool === bBool
+          ? 0
+          : aBool
+          ? -1
+          : 1
+        : bBool === aBool
+        ? 0
+        : bBool
+        ? -1
+        : 1;
+    }
+
+    if (typeof aValue === "string" && typeof bValue === "string") {
+      return sortOrder === "asc"
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    }
+
+    // Fallback for numeric comparison (e.g., id if it's a number)
+    return sortOrder === "asc"
+      ? aValue > bValue
+        ? 1
+        : -1
+      : bValue > aValue
+      ? 1
+      : -1;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(sortedRoutes.length / itemsPerPage));
+  const currentRoutes = sortedRoutes.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   useEffect(() => {
     if (currentPage > totalPages) {
       setCurrentPage(totalPages);
     }
-  }, [filteredRoutes, totalPages, currentPage]);
-
-  const currentRoutes = filteredRoutes.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  }, [sortedRoutes, totalPages, currentPage]);
 
   const createRouteMutation = useCreateRoute();
   const editRouteMutation = useEditRoute();
@@ -80,6 +133,16 @@ const TableRoute = ({ routes }: TableRouteProps) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
     }
+  };
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortOrder("asc");
+    }
+    setCurrentPage(1);
   };
 
   const handleCheckboxChange = (id: string) => {
@@ -100,7 +163,6 @@ const TableRoute = ({ routes }: TableRouteProps) => {
       return;
     }
 
-    // Since useEditRoute expects a single Route, we'll mutate one at a time
     Promise.all(
       editedRoutes.map((route) =>
         editRouteMutation.mutateAsync(route, {
@@ -121,7 +183,6 @@ const TableRoute = ({ routes }: TableRouteProps) => {
   };
 
   const handleReplaceRoutes = (duplicates: Route[]) => {
-    // Handle one duplicate at a time
     Promise.all(
       duplicates.map((route) =>
         editRouteMutation.mutateAsync(route, {
@@ -159,7 +220,6 @@ const TableRoute = ({ routes }: TableRouteProps) => {
     }
 
     if (uniqueRoutes.length > 0) {
-      // Create one route at a time
       Promise.all(
         uniqueRoutes.map((route) =>
           createRouteMutation.mutateAsync(route, {
@@ -326,12 +386,40 @@ const TableRoute = ({ routes }: TableRouteProps) => {
                 }
               />
             </TableHead>
-            <TableHead>ID</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Route</TableHead>
-            <TableHead>Method</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead className="w-32">
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("id")}
+            >
+              ID <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("name")}
+            >
+              Name <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("route")}
+            >
+              Route <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("method")}
+            >
+              Method <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("createdAt")}
+            >
+              Created <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="w-32 cursor-pointer"
+              onClick={() => handleSort("checkProtected")}
+            >
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -340,8 +428,11 @@ const TableRoute = ({ routes }: TableRouteProps) => {
                     currentRoutes.length > 0 &&
                     currentRoutes.every((route) => route.checkProtected)
                   }
+                  onClick={(e) => e.stopPropagation()}
                 />
-                <span>Protected</span>
+                <span>
+                  Protected <ArrowUpDown className="inline w-4 h-4 ml-1" />
+                </span>
               </div>
             </TableHead>
             <TableHead>Action</TableHead>
@@ -407,7 +498,7 @@ const TableRoute = ({ routes }: TableRouteProps) => {
         </span>
         <Button
           onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages || filteredRoutes.length === 0}
+          disabled={currentPage === totalPages || sortedRoutes.length === 0}
         >
           Next
         </Button>
@@ -418,7 +509,6 @@ const TableRoute = ({ routes }: TableRouteProps) => {
         onClose={() => setIsOpen(false)}
         onImport={onImport}
       />
-
       <CreateRouteModal
         isOpen={isCreateRouteOpen}
         onClose={() => setIsCreateRouteOpen(false)}
@@ -436,7 +526,7 @@ const TableRoute = ({ routes }: TableRouteProps) => {
         onClose={() => setIsOpenConfirmMultiple(false)}
         onConfirm={handleDeleteSelectedRoutes}
         selectedArray={selectedRoutes}
-        type="route"
+        type="Route"
       />
       <DuplicateRoute
         isOpen={isDuplicateModalOpen}

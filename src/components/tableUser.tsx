@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Search, Plus, RefreshCw, Trash2, Edit, Trash } from "lucide-react";
+import {
+  Search,
+  Plus,
+  RefreshCw,
+  Trash2,
+  Edit,
+  Trash,
+  ArrowUpDown,
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -20,23 +28,61 @@ import {
   useDeleteUsers,
   useEditUsers,
   useRefreshUsers,
+  useCreateBulkUsers,
 } from "../hooks/useUserQueries";
 import userService from "../api/service/userService";
 import ImportUser from "./modalUser/importUser";
-import { useCreateBulkUsers } from "../hooks/useUserQueries";
 import { User } from "../api/type";
 
 interface TableUserProps {
   users: User[];
 }
 
+type SortKey = keyof User;
+type SortOrder = "asc" | "desc";
+
 const TableUser = ({ users }: TableUserProps) => {
   const [userList, setUserList] = useState(users);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("id");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
+
+  // Filter users by username
+  const filteredUsers = userList.filter((user) =>
+    user.username.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Sort users
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    const aValue = a[sortKey];
+    const bValue = b[sortKey];
+
+    if (sortKey === "createdAt") {
+      return sortOrder === "asc"
+        ? new Date(aValue).getTime() - new Date(bValue).getTime()
+        : new Date(bValue).getTime() - new Date(aValue).getTime();
+    }
+
+    if (typeof aValue === "string" && typeof bValue === "string") {
+      return sortOrder === "asc"
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    }
+    return sortOrder === "asc"
+      ? aValue > bValue
+        ? 1
+        : -1
+      : bValue > aValue
+      ? 1
+      : -1;
+  });
+
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-  const totalPages = Math.ceil(users.length / itemsPerPage);
-  const currentUsers = users.slice(
+  const totalPages = Math.ceil(sortedUsers.length / itemsPerPage);
+  const currentUsers = sortedUsers.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -47,9 +93,26 @@ const TableUser = ({ users }: TableUserProps) => {
     }
   };
 
+  // Sort handler
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortOrder("asc");
+    }
+    setCurrentPage(1);
+  };
+
+  // Search handler
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  // Existing state and mutations
   const [isOpen, setIsOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
-
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const [isOpenConfirm, setIsOpenConfirm] = useState(false);
@@ -69,12 +132,12 @@ const TableUser = ({ users }: TableUserProps) => {
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedUsers(e.target.checked ? users.map((user) => user.id) : []);
+    setSelectedUsers(
+      e.target.checked ? sortedUsers.map((user) => user.id) : []
+    );
   };
 
-  const handleCreateUser = () => {
-    setIsOpen(true);
-  };
+  const handleCreateUser = () => setIsOpen(true);
 
   const onCreate = async (newUser: User) => {
     try {
@@ -85,9 +148,7 @@ const TableUser = ({ users }: TableUserProps) => {
     }
   };
 
-  const handleClickRefresh = () => {
-    refreshUserMutation.refresh();
-  };
+  const handleClickRefresh = () => refreshUserMutation.refresh();
 
   const handleClickEdit = (user: User) => {
     setUserToEdit(user);
@@ -102,9 +163,7 @@ const TableUser = ({ users }: TableUserProps) => {
   const handleEditUser = async (updatedUser: User) => {
     try {
       editUserMutation.mutate(updatedUser, {
-        onSuccess: () => {
-          toast.success("User updated successfully");
-        },
+        onSuccess: () => toast.success("User updated successfully"),
       });
       setIsEditOpen(false);
     } catch (error) {
@@ -123,11 +182,6 @@ const TableUser = ({ users }: TableUserProps) => {
         onSuccess: () => {
           const updatedUsers = userList.filter((user) => user.id !== id);
           setUserList(updatedUsers);
-
-          const newTotalPages = Math.ceil(updatedUsers.length / itemsPerPage);
-          if (currentPage > newTotalPages) {
-            setCurrentPage(newTotalPages || 1);
-          }
           toast.success("User deleted successfully");
         },
       });
@@ -156,15 +210,8 @@ const TableUser = ({ users }: TableUserProps) => {
         const updatedUsers = userList.filter(
           (user) => !selectedUsers.includes(user.id)
         );
-
         setUserList(updatedUsers);
         setSelectedUsers([]);
-
-        const newTotalPages = Math.ceil(updatedUsers.length / itemsPerPage);
-        if (currentPage > newTotalPages) {
-          setCurrentPage(newTotalPages || 1);
-        }
-
         toast.success("Selected users deleted successfully");
       }
     } catch (error) {
@@ -192,7 +239,12 @@ const TableUser = ({ users }: TableUserProps) => {
     <div className="w-full bg-white dark:bg-background border p-5 rounded-lg shadow-md">
       <div className="flex items-center justify-between mb-4">
         <div className="relative w-1/3">
-          <Input placeholder="Search..." className="pl-10" />
+          <Input
+            placeholder="Search by username..."
+            className="pl-10"
+            value={searchTerm}
+            onChange={handleSearch}
+          />
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
         </div>
 
@@ -228,13 +280,33 @@ const TableUser = ({ users }: TableUserProps) => {
               <input
                 type="checkbox"
                 onChange={handleSelectAll}
-                checked={selectedUsers.length === userList.length}
+                checked={selectedUsers.length === sortedUsers.length}
               />
             </TableHead>
-            <TableHead>ID</TableHead>
-            <TableHead>Username</TableHead>
-            <TableHead>Password</TableHead>
-            <TableHead>Date Created</TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("id")}
+            >
+              ID <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("username")}
+            >
+              Username <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("password")}
+            >
+              Password <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("createdAt")}
+            >
+              Date Created <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -252,7 +324,6 @@ const TableUser = ({ users }: TableUserProps) => {
               <TableCell>{user.username}</TableCell>
               <TableCell>{user.password}</TableCell>
               <TableCell>
-                {" "}
                 {new Date(user.createdAt).toISOString().split("T")[0]}
               </TableCell>
               <TableCell className="flex space-x-2">
@@ -307,7 +378,6 @@ const TableUser = ({ users }: TableUserProps) => {
           onEdit={handleEditUser}
         />
       )}
-
       <ImportUser
         isOpen={isImportOpen}
         onClose={() => setIsImportOpen(false)}

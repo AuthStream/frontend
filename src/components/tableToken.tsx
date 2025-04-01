@@ -1,4 +1,12 @@
-import { Search, Plus, Edit, Trash, Trash2, RefreshCw } from "lucide-react";
+import {
+  Search,
+  Plus,
+  Edit,
+  Trash,
+  Trash2,
+  RefreshCw,
+  ArrowUpDown,
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -27,33 +35,84 @@ interface TableTokenProps {
   tokens: Token[];
 }
 
+type SortKey = keyof Token;
+type SortOrder = "asc" | "desc";
+
 const TableToken = ({ tokens }: TableTokenProps) => {
   const [tokenList, setTokenList] = useState(tokens);
-
   const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("id");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
+  // Filter tokens by encryptToken
+  const filteredTokens = tokenList.filter((token) =>
+    token.encryptToken.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Sort tokens
+  const sortedTokens = [...filteredTokens].sort((a, b) => {
+    const aValue = a[sortKey];
+    const bValue = b[sortKey];
+
+    if (typeof aValue === "string" && typeof bValue === "string") {
+      return sortOrder === "asc"
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    }
+    return sortOrder === "asc"
+      ? aValue > bValue
+        ? 1
+        : -1
+      : bValue > aValue
+      ? 1
+      : -1;
+  });
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-  const totalPages = Math.ceil(tokens.length / itemsPerPage);
-  const currentTokens = tokens.slice(
+  const totalPages = Math.ceil(sortedTokens.length / itemsPerPage);
+  const currentTokens = sortedTokens.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [tokenToEdit, setTokenToEdit] = useState<Token | null>(null);
-
-  const createTokenMutation = useCreateToken();
-  const editTokenMutation = useEditToken();
-  const deleteTokenMutation = useDeleteToken();
-  const deleteMultipleTokenMutation = useDeleteMultipleToken();
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
     }
   };
+
+  // Sort handler
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortOrder("asc");
+    }
+    setCurrentPage(1);
+  };
+
+  // Search handler
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  // Existing state and mutations
+  const [isOpen, setIsOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [tokenToEdit, setTokenToEdit] = useState<Token | null>(null);
+  const [isOpenConfirm, setIsOpenConfirm] = useState(false);
+  const [isOpenConfirmMultiple, setIsOpenConfirmMultiple] = useState(false);
+  const [idDelete, setIdDelete] = useState<string>("");
+
+  const createTokenMutation = useCreateToken();
+  const editTokenMutation = useEditToken();
+  const deleteTokenMutation = useDeleteToken();
+  const deleteMultipleTokenMutation = useDeleteMultipleToken();
 
   const handleCheckboxChange = (id: string) => {
     setSelectedTokens((prev) =>
@@ -64,15 +123,13 @@ const TableToken = ({ tokens }: TableTokenProps) => {
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedTokens(e.target.checked ? tokens.map((t) => t.id) : []);
+    setSelectedTokens(e.target.checked ? sortedTokens.map((t) => t.id) : []);
   };
 
   const onCreate = async (newToken: Token) => {
     try {
       createTokenMutation.mutate(newToken, {
-        onSuccess: () => {
-          toast.success("Token created successfully");
-        },
+        onSuccess: () => toast.success("Token created successfully"),
       });
       setIsOpen(false);
     } catch (error) {
@@ -80,25 +137,18 @@ const TableToken = ({ tokens }: TableTokenProps) => {
     }
   };
 
-  const handleCreateToken = () => {
-    setIsOpen(true);
-  };
+  const handleCreateToken = () => setIsOpen(true);
 
   const handleEditToken = async (updatedToken: Token) => {
     try {
       editTokenMutation.mutate(updatedToken, {
-        onSuccess: () => {
-          toast.success("Token updated successfully");
-        },
+        onSuccess: () => toast.success("Token updated successfully"),
       });
       setIsEditOpen(false);
     } catch (error) {
       toast.error("Failed to edit token");
     }
   };
-
-  const [isOpenConfirm, setIsOpenConfirm] = useState(false);
-  const [idDelete, setIdDelete] = useState<string>("");
 
   const handleClickDeleteToken = (id: string) => {
     setIdDelete(id);
@@ -110,14 +160,7 @@ const TableToken = ({ tokens }: TableTokenProps) => {
       deleteTokenMutation.mutate(id, {
         onSuccess: () => {
           const updatedTokens = tokenList.filter((token) => token.id !== id);
-
           setTokenList(updatedTokens);
-
-          const newTotalPages = Math.ceil(updatedTokens.length / itemsPerPage);
-
-          if (currentPage > newTotalPages) {
-            setCurrentPage(newTotalPages || 1);
-          }
           toast.success("Token deleted successfully");
         },
       });
@@ -125,8 +168,6 @@ const TableToken = ({ tokens }: TableTokenProps) => {
       toast.error("Failed to delete token");
     }
   };
-
-  const [isOpenConfirmMultiple, setIsOpenConfirmMultiple] = useState(false);
 
   const handleDeleteSelected = () => {
     if (selectedTokens.length === 0) {
@@ -147,14 +188,8 @@ const TableToken = ({ tokens }: TableTokenProps) => {
           const updatedToken = tokenList.filter(
             (token) => !selectedTokens.includes(token.id)
           );
-
           setTokenList(updatedToken);
           setSelectedTokens([]);
-
-          const newTotalPages = Math.ceil(updatedToken.length / itemsPerPage);
-          if (currentPage > newTotalPages) {
-            setCurrentPage(newTotalPages || 1);
-          }
           toast.success("Tokens deleted successfully");
         },
       });
@@ -162,11 +197,17 @@ const TableToken = ({ tokens }: TableTokenProps) => {
       toast.error("Failed to delete selected tokens");
     }
   };
+
   return (
     <div className="w-full bg-white dark:bg-background border p-5 rounded-lg shadow-md">
       <div className="flex items-center justify-between mb-4">
         <div className="relative w-1/3">
-          <Input placeholder="Search..." className="pl-10" />
+          <Input
+            placeholder="Search by encrypt token..."
+            className="pl-10"
+            value={searchTerm}
+            onChange={handleSearch}
+          />
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
         </div>
 
@@ -177,7 +218,7 @@ const TableToken = ({ tokens }: TableTokenProps) => {
           >
             <Plus className="w-4 h-4 mr-2" /> Create
           </Button>
-
+          alda{" "}
           <Button variant="outline">
             <RefreshCw className="w-4 h-4 mr-2" /> Refresh
           </Button>
@@ -197,12 +238,27 @@ const TableToken = ({ tokens }: TableTokenProps) => {
               <input
                 type="checkbox"
                 onChange={handleSelectAll}
-                checked={selectedTokens.length === tokens.length}
+                checked={selectedTokens.length === sortedTokens.length}
               />
             </TableHead>
-            <TableHead>ID</TableHead>
-            <TableHead>Encrypt Token</TableHead>
-            <TableHead>Expired</TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("id")}
+            >
+              ID <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("encryptToken")}
+            >
+              Encrypt Token <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("expiredDuration")}
+            >
+              Expired <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -274,7 +330,6 @@ const TableToken = ({ tokens }: TableTokenProps) => {
           onEdit={handleEditToken}
         />
       )}
-
       <DeleteConfirm
         isOpen={isOpenConfirm}
         onClose={() => setIsOpenConfirm(false)}
@@ -287,7 +342,7 @@ const TableToken = ({ tokens }: TableTokenProps) => {
         onClose={() => setIsOpenConfirmMultiple(false)}
         onConfirm={handleDeleteSelectedTokens}
         selectedArray={selectedTokens}
-        type={"token"}
+        type="Token"
       />
     </div>
   );
