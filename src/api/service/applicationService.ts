@@ -6,7 +6,8 @@ const applicationService = {
   getAllApplications: async (): Promise<Application[]> => {
     try {
       const response = await axiosClient.get("/applications");
-      return response.data;
+      console.log(response.data);
+      return response.data.data;
   } catch (error) {
       throw error;
   }
@@ -15,7 +16,7 @@ const applicationService = {
   createApplication: async (newApplication: Application): Promise<Application> => {
     try {
       const response = await axiosClient.post("/applications", newApplication);
-      return response.data;
+      return response.data.data;
     } catch (error) {
       throw error;
     }
@@ -24,7 +25,7 @@ const applicationService = {
   editApplication: async (updatedApplication: Application): Promise<Application> => {
     try {
       const response = await axiosClient.put("/applications", updatedApplication);
-      return response.data;
+      return response.data.data;
     } catch (error) {
       throw error;
     }

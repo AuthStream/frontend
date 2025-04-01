@@ -1,4 +1,5 @@
 // import axiosClient from "../axiosClient";
+import axiosClient from "../axiosClient";
 import { CreateGroupResponse, EditGroupResponse, Group, GroupResponse } from "../type";
 const mockGroups = [
   { id: "ABC1", email: "truongkinhquinh", password: "bmchien1", created: "2025-02-21T16:51:11.872Z" },
@@ -9,58 +10,49 @@ const mockGroups = [
 ];
 
 const groupService = {
-  getAllGroups: async (): Promise<GroupResponse> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ contents: mockGroups, totalElements: mockGroups.length });
-      }, 500);
-    });
+  getAllGroups: async (): Promise<Group[]> => {
+    try {
+      const response = await axiosClient.get("/groups");
+      // console.log(response.data);
+      return response.data;
+  } catch (error) {
+      throw error;
+  }
   },
 
-  createGroup: async (newGroup: Group): Promise<CreateGroupResponse> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        mockGroups.push({ ...newGroup, id: `ABC${mockGroups.length + 1}` });
-        resolve({ success: true });
-      }, 500);
-    });
+  createGroup: async (newGroup: Group): Promise<Group> => {
+    try {
+      const response = await axiosClient.post("/groups", newGroup);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  editGroup: async (updatedGroup: Group): Promise<EditGroupResponse> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const index = mockGroups.findIndex((group) => group.id === updatedGroup.id);
-        if (index !== -1) {
-          mockGroups[index] = updatedGroup;
-        }
-        resolve({ success: true });
-      }, 500);
-    });
+  editGroup: async (updatedGroup: Group): Promise<Group> => {
+    try {
+      const response = await axiosClient.put(`/groups/${updatedGroup.id}`, updatedGroup);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 
   deleteGroup: async (id: string): Promise<{ success: boolean }> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const index = mockGroups.findIndex((group) => group.id === id);
-        if (index !== -1) {
-          mockGroups.splice(index, 1);
-        }
-        resolve({ success: true });
-      }, 500);
-    });
+    try {
+      await axiosClient.delete(`/groups/${id}`);
+      return { success: true };
+    } catch (error) {
+      throw error;
+    }
   },
   deleteMultipleGroups: async (ids: string[]): Promise<{ success: boolean }> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        ids.forEach((id) => {
-          const index = mockGroups.findIndex((group) => group.id === id);
-          if (index !== -1) {
-            mockGroups.splice(index, 1);
-          }
-        });
-        resolve({ success: true });
-      }, 500);
-    });
+    try {
+      await Promise.all(ids.map((id) => axiosClient.delete(`/groups/${id}`)));
+      return { success: true };
+    } catch (error) {
+      throw error;
+    }
   },
 };
 

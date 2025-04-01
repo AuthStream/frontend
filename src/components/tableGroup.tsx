@@ -22,13 +22,7 @@ import {
   useRefreshGroups,
 } from "../hooks/useGroupQueries";
 import groupService from "../api/service/groupService";
-
-interface Group {
-  id: string;
-  email: string;
-  password: string;
-  created: string;
-}
+import { Group } from "../api/type";
 
 interface TableGroupProps {
   groups: Group[];
@@ -214,7 +208,8 @@ const TableGroup = ({ groups }: TableGroupProps) => {
             </TableHead>
             <TableHead>ID</TableHead>
             <TableHead>Groupname</TableHead>
-            <TableHead>Password</TableHead>
+            <TableHead>Role</TableHead>
+            <TableHead>Description</TableHead>
             <TableHead>Date Created</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -230,11 +225,12 @@ const TableGroup = ({ groups }: TableGroupProps) => {
                 />
               </TableCell>
               <TableCell>{group.id}</TableCell>
-              <TableCell>{group.email}</TableCell>
-              <TableCell>{group.password}</TableCell>
+              <TableCell>{group.name}</TableCell>
+              <TableCell>{group.roleId}</TableCell>
+              <TableCell>{group.description}</TableCell>
               <TableCell>
                 {" "}
-                {new Date(group.created).toISOString().split("T")[0]}
+                {new Date(group.createdAt).toISOString().split("T")[0]}
               </TableCell>
               <TableCell className="flex space-x-2">
                 <Button

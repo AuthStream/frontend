@@ -22,13 +22,7 @@ import {
   useRefreshRoles,
 } from "../hooks/useRoleQueries";
 import roleService from "../api/service/roleService";
-
-interface Role {
-  id: string;
-  name: string;
-  application: string;
-  created: string;
-}
+import { Role } from "../api/type";
 
 interface TableRoleProps {
   roles: Role[];
@@ -212,7 +206,8 @@ const TableRole = ({ roles }: TableRoleProps) => {
             </TableHead>
             <TableHead>ID</TableHead>
             <TableHead>RoleName</TableHead>
-            <TableHead>Application</TableHead>
+            <TableHead>Group</TableHead>
+            <TableHead>Pemission</TableHead>
             <TableHead>Date Created</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -229,10 +224,11 @@ const TableRole = ({ roles }: TableRoleProps) => {
               </TableCell>
               <TableCell>{role.id}</TableCell>
               <TableCell>{role.name}</TableCell>
-              <TableCell>{role.application}</TableCell>
+              <TableCell>{role.groupId}</TableCell>
+              <TableCell>{role.permissionId}</TableCell>
               <TableCell>
                 {" "}
-                {new Date(role.created).toISOString().split("T")[0]}
+                {new Date(role.createdAt).toISOString().split("T")[0]}
               </TableCell>
               <TableCell className="flex space-x-2">
                 <Button

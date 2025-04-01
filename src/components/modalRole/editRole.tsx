@@ -9,14 +9,10 @@ import {
   DialogDescription,
 } from "../ui/dialog";
 import { Input } from "../ui/input";
-import { Checkbox } from "../ui/checkbox";
-
-interface Role {
-  id: string;
-  name: string;
-  application: string;
-  created: string;
-}
+import { Role } from "../../api/type";
+import { useGetGroups } from "../../hooks/useGroupQueries";
+import { useGetPermissions } from "../../hooks/usePermissionQueries";
+import { toast } from "react-toastify";
 
 interface EditRoleProps {
   isOpen: boolean;
@@ -27,7 +23,17 @@ interface EditRoleProps {
 
 const EditRole = ({ isOpen, onClose, roleToEdit, onEdit }: EditRoleProps) => {
   const [editedRole, setEditedRole] = useState<Role | null>(null);
-  const [changePassword, setChangePassword] = useState(false);
+
+  const {
+    data: groups,
+    isLoading: groupsLoading,
+    error: groupsError,
+  } = useGetGroups();
+  const {
+    data: permissions,
+    isLoading: permissionsLoading,
+    error: permissionsError,
+  } = useGetPermissions();
 
   useEffect(() => {
     if (roleToEdit) {
@@ -35,7 +41,9 @@ const EditRole = ({ isOpen, onClose, roleToEdit, onEdit }: EditRoleProps) => {
     }
   }, [roleToEdit]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     if (editedRole) {
       setEditedRole((prev) => ({
@@ -46,10 +54,28 @@ const EditRole = ({ isOpen, onClose, roleToEdit, onEdit }: EditRoleProps) => {
   };
 
   const handleEdit = () => {
-    if (editedRole) {
-      onEdit(editedRole);
-      onClose();
+    if (!editedRole) return;
+
+    if (!editedRole.name.trim()) {
+      toast.warning("Role name is required.");
+      return;
     }
+
+    if (!editedRole.groupId) {
+      toast.warning("A group must be selected.");
+      return;
+    }
+
+    if (!editedRole.permissionId) {
+      toast.warning("A permission must be selected.");
+      return;
+    }
+
+    onEdit({
+      ...editedRole,
+      updatedAt: new Date().toISOString(),
+    });
+    onClose();
   };
 
   if (!editedRole) {
@@ -68,13 +94,55 @@ const EditRole = ({ isOpen, onClose, roleToEdit, onEdit }: EditRoleProps) => {
             name="name"
             value={editedRole.name}
             onChange={handleChange}
-            placeholder="Email"
+            placeholder="Role Name"
           />
+          {groupsLoading ? (
+            <p>Loading groups...</p>
+          ) : groupsError ? (
+            <p className="text-red-500">Error loading groups</p>
+          ) : groups && groups.length > 0 ? (
+            <select
+              name="groupId"
+              value={editedRole.groupId}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+            >
+              <option value="">Select Group</option>
+              {groups.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p>No groups available</p>
+          )}
+          {permissionsLoading ? (
+            <p>Loading permissions...</p>
+          ) : permissionsError ? (
+            <p className="text-red-500">Error loading permissions</p>
+          ) : permissions && permissions.length > 0 ? (
+            <select
+              name="permissionId"
+              value={editedRole.permissionId}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+            >
+              <option value="">Select Permission</option>
+              {permissions.map((permission) => (
+                <option key={permission.id} value={permission.id}>
+                  {permission.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p>No permissions available</p>
+          )}
           <Input
-            name="application"
-            value={editedRole.application}
+            name="description"
+            value={editedRole.description}
             onChange={handleChange}
-            placeholder="Application"
+            placeholder="Description (optional)"
           />
         </div>
         <DialogFooter>

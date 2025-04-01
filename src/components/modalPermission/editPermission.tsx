@@ -9,14 +9,9 @@ import {
   DialogDescription,
 } from "../ui/dialog";
 import { Input } from "../ui/input";
-import { Checkbox } from "../ui/checkbox";
-
-interface Permission {
-  id: string;
-  name: string;
-  application: string;
-  created: string;
-}
+import { Permission, Route } from "../../api/type";
+import { useGetRoutes } from "../../hooks/useRouteQueries";
+import { toast } from "react-toastify";
 
 interface EditPermissionProps {
   isOpen: boolean;
@@ -34,13 +29,28 @@ const EditPermission = ({
   const [editedPermission, setEditedPermission] = useState<Permission | null>(
     null
   );
-  const [changePassword, setChangePassword] = useState(false);
+  const [selectedRoutes, setSelectedRoutes] = useState<Route[]>([]);
+
+  const {
+    data: routes,
+    isLoading: routesLoading,
+    error: routesError,
+  } = useGetRoutes();
 
   useEffect(() => {
     if (permissionToEdit) {
       setEditedPermission(permissionToEdit);
+      // Parse apiRoutes to pre-select routes
+      const parsedRoutes = JSON.parse(permissionToEdit.apiRoutes || "[]");
+      const preSelected = (routes || []).filter((route: Route) =>
+        parsedRoutes.some(
+          (r: { path: string; method: string }) =>
+            r.path === route.route && r.method === route.method
+        )
+      );
+      setSelectedRoutes(preSelected);
     }
-  }, [permissionToEdit]);
+  }, [permissionToEdit, routes]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -52,11 +62,40 @@ const EditPermission = ({
     }
   };
 
+  const handleRouteToggle = (route: Route) => {
+    setSelectedRoutes((prev) =>
+      prev.some((r) => r.id === route.id)
+        ? prev.filter((r) => r.id !== route.id)
+        : [...prev, route]
+    );
+  };
+
   const handleEdit = () => {
-    if (editedPermission) {
-      onEdit(editedPermission);
-      onClose();
+    if (!editedPermission) return;
+
+    if (!editedPermission.name.trim()) {
+      toast.warning("Permission name is required.");
+      return;
     }
+
+    if (selectedRoutes.length === 0) {
+      toast.warning("At least one API route must be selected.");
+      return;
+    }
+
+    const formattedApiRoutes = JSON.stringify(
+      selectedRoutes.map((route) => ({
+        path: route.route,
+        method: route.method,
+      }))
+    );
+
+    onEdit({
+      ...editedPermission,
+      apiRoutes: formattedApiRoutes,
+      updatedAt: new Date().toISOString(),
+    });
+    onClose();
   };
 
   if (!editedPermission) {
@@ -77,13 +116,38 @@ const EditPermission = ({
             name="name"
             value={editedPermission.name}
             onChange={handleChange}
-            placeholder="Permissionname"
+            placeholder="Permission Name"
           />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              API Routes
+            </label>
+            {routesLoading ? (
+              <p>Loading routes...</p>
+            ) : routesError ? (
+              <p className="text-red-500">Error loading routes</p>
+            ) : routes && routes.length > 0 ? (
+              <div className="max-h-40 overflow-y-auto border rounded-md p-2">
+                {routes.map((route: Route) => (
+                  <div key={route.id} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedRoutes.some((r) => r.id === route.id)}
+                      onChange={() => handleRouteToggle(route)}
+                    />
+                    <span>{`${route.route} (${route.method})`}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p>No routes available</p>
+            )}
+          </div>
           <Input
-            name="application"
-            value={editedPermission.application}
+            name="description"
+            value={editedPermission.description}
             onChange={handleChange}
-            placeholder="Application"
+            placeholder="Description (optional)"
           />
         </div>
         <DialogFooter>

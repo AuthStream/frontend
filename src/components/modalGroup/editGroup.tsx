@@ -9,14 +9,9 @@ import {
   DialogDescription,
 } from "../ui/dialog";
 import { Input } from "../ui/input";
-import { Checkbox } from "../ui/checkbox";
-
-interface Group {
-  id: string;
-  email: string;
-  password: string;
-  created: string;
-}
+import { Group } from "../../api/type";
+import { useGetRoles } from "../../hooks/useRoleQueries";
+import { toast } from "react-toastify";
 
 interface EditGroupProps {
   isOpen: boolean;
@@ -25,9 +20,19 @@ interface EditGroupProps {
   onEdit: (updatedGroup: Group) => void;
 }
 
-const EditGroup = ({ isOpen, onClose, groupToEdit, onEdit }: EditGroupProps) => {
+const EditGroup = ({
+  isOpen,
+  onClose,
+  groupToEdit,
+  onEdit,
+}: EditGroupProps) => {
   const [editedGroup, setEditedGroup] = useState<Group | null>(null);
-  const [changePassword, setChangePassword] = useState(false);
+
+  const {
+    data: roles,
+    isLoading: rolesLoading,
+    error: rolesError,
+  } = useGetRoles();
 
   useEffect(() => {
     if (groupToEdit) {
@@ -35,7 +40,9 @@ const EditGroup = ({ isOpen, onClose, groupToEdit, onEdit }: EditGroupProps) => 
     }
   }, [groupToEdit]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     if (editedGroup) {
       setEditedGroup((prev) => ({
@@ -46,10 +53,23 @@ const EditGroup = ({ isOpen, onClose, groupToEdit, onEdit }: EditGroupProps) => 
   };
 
   const handleEdit = () => {
-    if (editedGroup) {
-      onEdit(editedGroup);
-      onClose();
+    if (!editedGroup) return;
+
+    if (!editedGroup.name.trim()) {
+      toast.warning("Group name is required.");
+      return;
     }
+
+    if (!editedGroup.roleId) {
+      toast.warning("A role must be selected.");
+      return;
+    }
+
+    onEdit({
+      ...editedGroup,
+      updatedAt: new Date().toISOString(),
+    });
+    onClose();
   };
 
   if (!editedGroup) {
@@ -61,39 +81,44 @@ const EditGroup = ({ isOpen, onClose, groupToEdit, onEdit }: EditGroupProps) => 
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Group</DialogTitle>
-          <DialogDescription>Update the details of the group.</DialogDescription>
+          <DialogDescription>
+            Update the details of the group.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <Input
-            type="email"
-            name="email"
-            value={editedGroup.email}
+            name="name"
+            value={editedGroup.name}
             onChange={handleChange}
-            placeholder="Groupname"
+            placeholder="Group Name"
           />
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              checked={changePassword}
-              onChange={(e) => setChangePassword(e.target.checked)}
-            />
-            <label>Change Password</label>
-          </div>
-          {changePassword && (
-            <>
-              <Input
-                type="password"
-                name="oldPassword"
-                onChange={handleChange}
-                placeholder="Old Password"
-              />
-              <Input
-                type="password"
-                name="newPassword"
-                onChange={handleChange}
-                placeholder="New Password"
-              />
-            </>
+          {rolesLoading ? (
+            <p>Loading roles...</p>
+          ) : rolesError ? (
+            <p className="text-red-500">Error loading roles</p>
+          ) : roles && roles.length > 0 ? (
+            <select
+              name="roleId"
+              value={editedGroup.roleId}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+            >
+              <option value="">Select Role</option>
+              {roles.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p>No roles available</p>
           )}
+          <Input
+            name="description"
+            value={editedGroup.description}
+            onChange={handleChange}
+            placeholder="Description (optional)"
+          />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>

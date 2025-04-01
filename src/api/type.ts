@@ -68,8 +68,11 @@ export interface EditUserResponse {
 export interface Role {
   id: string;
   name: string;
-  application:string;
-  created: string;
+  groupId:string;
+  permissionId: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export interface RoleResponse {
@@ -87,9 +90,11 @@ export interface EditRoleResponse {
 
 export interface Group {
   id: string;
-  email: string;
-  password: string;
-  created: string;
+  name: string;
+  roleId: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export interface GroupResponse {
@@ -109,8 +114,10 @@ export interface EditGroupResponse {
 export interface Permission {
   id: string;
   name: string;
-  application:string;
-  created: string;
+  apiRoutes:string;
+  description:string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export interface PermissionResponse {
@@ -204,10 +211,14 @@ export interface EditLogResponse {
 
 
 export interface Route {
-  id:string;
-  name: string;
-  created: string;
-  protected:boolean;
+  id: string,
+  name: string,
+  route: string,
+  method: string,
+  checkProtected: boolean,
+  descripString: string,
+  createdAt: string,
+  updatedAt: string
 };
 
 export interface RouteResponse {

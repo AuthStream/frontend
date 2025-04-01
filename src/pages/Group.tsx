@@ -3,13 +3,6 @@ import TableGroup from "../components/tableGroup.tsx";
 import { ToggleButton } from "../context/SidebarContext";
 import { useGetGroups } from "../hooks/useGroupQueries.tsx";
 
-interface Group {
-  id: string;
-  email: string;
-  password: string;
-  created: string;
-}
-
 const Group = () => {
   const { data: groups, isLoading, error } = useGetGroups();
 
@@ -34,7 +27,7 @@ const Group = () => {
         </div>
         {isLoading ? (
           <p className="text-center text-gray-600 dark:text-gray-400">
-            Loading tokens...
+            Loading groups...
           </p>
         ) : error ? (
           <p className="text-center text-red-500">
@@ -43,9 +36,9 @@ const Group = () => {
               : "An unknown error occurred"}
           </p>
         ) : groups ? (
-          <TableGroup groups={groups.contents} />
+          <TableGroup groups={groups} />
         ) : (
-          <p>No tokens available</p>
+          <p>No groups available</p>
         )}
       </div>
     </div>

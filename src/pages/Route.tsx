@@ -36,7 +36,7 @@ const ProtectedRoute = () => {
               : "An unknown error occurred"}
           </p>
         ) : routes ? (
-          <TableRoute routes={routes.contents} />
+          <TableRoute routes={routes} />
         ) : (
           <p>No routes available</p>
         )}

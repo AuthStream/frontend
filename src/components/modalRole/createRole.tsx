@@ -10,13 +10,11 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { toast } from "react-toastify";
+import { Role } from "../../api/type";
 
-interface Role {
-  id: string;
-  name: string;
-  application: string;
-  created: string;
-}
+// Assuming these hooks exist to fetch groups and permissions
+import { useGetGroups } from "../../hooks/useGroupQueries";
+import { useGetPermissions } from "../../hooks/usePermissionQueries";
 
 interface CreateRoleProps {
   isOpen: boolean;
@@ -25,14 +23,31 @@ interface CreateRoleProps {
 }
 
 const CreateRole = ({ isOpen, onClose, onCreate }: CreateRoleProps) => {
-  const [newRole, setNewRole] = useState({
+  const [newRole, setNewRole] = useState<Role>({
     id: "",
     name: "",
-    application: "",
-    created: new Date().toISOString(),
+    groupId: "",
+    permissionId: "",
+    description: "",
+    createdAt: "",
+    updatedAt: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Fetch groups and permissions
+  const {
+    data: groups,
+    isLoading: groupsLoading,
+    error: groupsError,
+  } = useGetGroups();
+  const {
+    data: permissions,
+    isLoading: permissionsLoading,
+    error: permissionsError,
+  } = useGetPermissions();
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setNewRole((prev) => ({
       ...prev,
@@ -44,24 +59,29 @@ const CreateRole = ({ isOpen, onClose, onCreate }: CreateRoleProps) => {
     setNewRole({
       id: "",
       name: "",
-      application: "",
-      created: new Date().toISOString(),
+      groupId: "",
+      permissionId: "",
+      description: "",
+      createdAt: "",
+      updatedAt: "",
     });
   };
 
   const handleCreate = () => {
-    const { name, application } = newRole;
+    const { name, groupId, permissionId } = newRole;
 
-    if (!name.trim() || !application.trim()) {
-      toast.warning("All fields are required.");
+    // Validate required fields
+    if (!name.trim() || !groupId || !permissionId) {
+      toast.warning("Name, Group, and Permission are required.");
       return;
     }
 
+    // Create the role with current timestamp
     onCreate({
-      id: crypto.randomUUID(),
+      ...newRole,
       name: name.trim(),
-      application: application.trim(),
-      created: newRole.created,
+      groupId,
+      permissionId,
     });
     resetRole();
     onClose();
@@ -86,13 +106,56 @@ const CreateRole = ({ isOpen, onClose, onCreate }: CreateRoleProps) => {
             name="name"
             value={newRole.name}
             onChange={handleChange}
-            placeholder="Rolename"
+            placeholder="Role Name"
           />
+
+          {/* Group Selection */}
+          {groupsLoading ? (
+            <p>Loading groups...</p>
+          ) : groupsError ? (
+            <p className="text-red-500">Error loading groups</p>
+          ) : (
+            <select
+              name="groupId"
+              value={newRole.groupId}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+            >
+              <option value="">Select Group</option>
+              {groups?.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {/* Permission Selection */}
+          {permissionsLoading ? (
+            <p>Loading permissions...</p>
+          ) : permissionsError ? (
+            <p className="text-red-500">Error loading permissions</p>
+          ) : (
+            <select
+              name="permissionId"
+              value={newRole.permissionId}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+            >
+              <option value="">Select Permission</option>
+              {permissions?.map((permission) => (
+                <option key={permission.id} value={permission.id}>
+                  {permission.name}
+                </option>
+              ))}
+            </select>
+          )}
+
           <Input
-            name="application"
-            value={newRole.application}
+            name="description"
+            value={newRole.description}
             onChange={handleChange}
-            placeholder="Application"
+            placeholder="Description (optional)"
           />
         </div>
         <DialogFooter>

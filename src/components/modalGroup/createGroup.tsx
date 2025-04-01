@@ -10,13 +10,10 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { toast } from "react-toastify";
+import { Group } from "../../api/type";
 
-interface Group {
-  id: string;
-  email: string;
-  password: string;
-  created: string;
-}
+// Assuming this hook exists to fetch roles
+import { useGetRoles } from "../../hooks/useRoleQueries";
 
 interface CreateGroupProps {
   isOpen: boolean;
@@ -25,15 +22,25 @@ interface CreateGroupProps {
 }
 
 const CreateGroup = ({ isOpen, onClose, onCreate }: CreateGroupProps) => {
-  const [newGroup, setNewGroup] = useState({
+  const [newGroup, setNewGroup] = useState<Group>({
     id: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    created: new Date().toISOString(),
+    name: "",
+    roleId: "",
+    description: "",
+    createdAt: "",
+    updatedAt: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Fetch roles
+  const {
+    data: roles,
+    isLoading: rolesLoading,
+    error: rolesError,
+  } = useGetRoles();
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setNewGroup((prev) => ({
       ...prev,
@@ -44,36 +51,30 @@ const CreateGroup = ({ isOpen, onClose, onCreate }: CreateGroupProps) => {
   const resetGroup = () => {
     setNewGroup({
       id: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      created: new Date().toISOString(),
+      name: "",
+      roleId: "",
+      description: "",
+      createdAt: "",
+      updatedAt: "",
     });
   };
 
   const handleCreate = () => {
-    const { email, password, confirmPassword } = newGroup;
+    const { name, roleId } = newGroup;
 
-    if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
-      toast.warning("All fields are required.");
+    if (!name.trim()) {
+      toast.warning("Group name is required.");
       return;
     }
 
-    if (password.length < 8) {
-      toast.warning("Password must be at least 8 characters long.");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast.warning("Passwords do not match.");
+    if (!roleId) {
+      toast.warning("A role must be selected.");
       return;
     }
 
     onCreate({
-      id: crypto.randomUUID(),
-      email: email.trim(),
-      password: password.trim(),
-      created: newGroup.created,
+      ...newGroup,
+      name: name.trim(),
     });
     resetGroup();
     onClose();
@@ -95,25 +96,40 @@ const CreateGroup = ({ isOpen, onClose, onCreate }: CreateGroupProps) => {
         </DialogHeader>
         <div className="space-y-4">
           <Input
-            type="email"
-            name="email"
-            value={newGroup.email}
+            name="name"
+            value={newGroup.name}
             onChange={handleChange}
-            placeholder="Groupname"
+            placeholder="Group Name"
           />
+
+          {/* Role Selection */}
+          {rolesLoading ? (
+            <p>Loading roles...</p>
+          ) : rolesError ? (
+            <p className="text-red-500">Error loading roles</p>
+          ) : roles && roles.length > 0 ? (
+            <select
+              name="roleId"
+              value={newGroup.roleId}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+            >
+              <option value="">Select Role</option>
+              {roles.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p>No roles available</p>
+          )}
+
           <Input
-            type="password"
-            name="password"
-            value={newGroup.password}
+            name="description"
+            value={newGroup.description}
             onChange={handleChange}
-            placeholder="Password"
-          />
-          <Input
-            type="password"
-            name="confirmPassword"
-            value={newGroup.confirmPassword}
-            onChange={handleChange}
-            placeholder="Confirm Password"
+            placeholder="Description (optional)"
           />
         </div>
         <DialogFooter>

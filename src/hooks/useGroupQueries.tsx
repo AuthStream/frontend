@@ -9,17 +9,14 @@ import {
 import useMutationAction from "../provider/queryGlobal";
 
 export const useGetGroups = () => {
-  return useQuery<GroupResponse>({
+  return useQuery<Group[]>({
     queryKey: ["groups"],
     queryFn: groupService.getAllGroups,
   });
 };
 
 export const useCreateGroups = () => {
-  return useMutationAction<CreateGroupResponse, Group>(
-    ["groups"],
-    groupService.createGroup
-  );
+  return useMutationAction<Group, Group>(["groups"], groupService.createGroup);
 };
 
 export const useRefreshGroups = () => {
@@ -32,7 +29,7 @@ export const useRefreshGroups = () => {
 };
 
 export const useEditGroups = () => {
-  return useMutationAction<EditGroupResponse, Group>(
+  return useMutationAction<Group, Group>(
     ["groups"],
     groupService.editGroup,
     {}

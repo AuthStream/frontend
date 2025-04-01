@@ -63,7 +63,6 @@ const RegisterModal = ({
     }
 
     onRegister(registerData);
-    onClose();
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,6 +81,7 @@ const RegisterModal = ({
             value={registerData.username}
             onChange={handleChange}
             placeholder="Email"
+            disabled={loading}
           />
           <Input
             name="password"
@@ -89,6 +89,7 @@ const RegisterModal = ({
             value={registerData.password}
             onChange={handleChange}
             placeholder="Password"
+            disabled={loading}
           />
         </div>
         <DialogFooter>
@@ -102,7 +103,6 @@ const RegisterModal = ({
             Register
           </Button>
         </DialogFooter>
-        {loading && <div className="circle-loader"></div>}
       </DialogContent>
     </Dialog>
   );

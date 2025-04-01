@@ -9,17 +9,14 @@ import {
 import useMutationAction from "../provider/queryGlobal";
 
 export const useGetRoles = () => {
-  return useQuery<RoleResponse>({
+  return useQuery<Role[]>({
     queryKey: ["roles"],
     queryFn: roleService.getAllRoles,
   });
 };
 
 export const useCreateRoles = () => {
-  return useMutationAction<CreateRoleResponse, Role>(
-    ["roles"],
-    roleService.createRole
-  );
+  return useMutationAction<Role, Role>(["roles"], roleService.createRole);
 };
 
 export const useRefreshRoles = () => {
@@ -32,11 +29,7 @@ export const useRefreshRoles = () => {
 };
 
 export const useEditRoles = () => {
-  return useMutationAction<EditRoleResponse, Role>(
-    ["roles"],
-    roleService.editRole,
-    {}
-  );
+  return useMutationAction<Role, Role>(["roles"], roleService.editRole, {});
 };
 
 export const useDeleteRoles = () => {
