@@ -20,7 +20,7 @@ const Sidebar = () => {
   return (
     <div
       className={`h-full bg-gray-100 dark:bg-background dark:text-white border transition-all duration-200 ${
-        isOpenSidebar ? "w-64 p-4" : "w-0 p-0 overflow-hidden"
+        isOpenSidebar ? "w-64 p-4" : "w-0 p-0 overflow-hidden hidden"
       }`}
     >
       {isOpenSidebar && (
@@ -129,7 +129,7 @@ const Sidebar = () => {
                 >
                   Log
                 </Link>
-                <Link
+                {/* <Link
                   to="/notification"
                   className={`block px-4 py-2 rounded border-b-2 border-gray-200 ${
                     isActive("/notification")
@@ -138,7 +138,7 @@ const Sidebar = () => {
                   }`}
                 >
                   Notification
-                </Link>
+                </Link> */}
               </div>
             )}
 

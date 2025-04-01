@@ -46,6 +46,7 @@ const shaConfigSchema = z.object({
 
 const tableConfigSchema = z.object({
   userTable: z.string().min(1, "Table is required"),
+  usernameAttribute: z.string().min(1, "Username attribute is required"),
   passwordAttribute: z.string().min(1, "Password attribute is required"),
   hashingType: z.string().min(1, "Hashing type is required"),
   salt: z.string().min(1, "Salt is required"),
@@ -245,7 +246,7 @@ const TableConfigModal = ({
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="_employee_ block text-sm font-medium text-gray-700 mb-1">
               User Table
             </label>
             <select
@@ -396,9 +397,11 @@ const TableConfigModal = ({
               <Input
                 name="bcryptWorkFactor"
                 type="number"
-                value={bcryptConfig.workFactor}
+                value={bcryptConfig.workFactor.toString()} // Convert to string for input
                 onChange={handleChange}
                 placeholder="Enter work factor (e.g., 12)"
+                min={1} // Enforce positive numbers
+                step={1} // Ensure whole numbers only
               />
               <p className="text-xs text-gray-500 mt-1">
                 Controls hashing time (higher = slower, more secure)

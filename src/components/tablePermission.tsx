@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Search, Plus, RefreshCw, Trash2, Edit, Trash } from "lucide-react";
+import {
+  Search,
+  Plus,
+  RefreshCw,
+  Trash2,
+  Edit,
+  Trash,
+  ArrowUpDown,
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -28,13 +36,51 @@ interface TablePermissionProps {
   permissions: Permission[];
 }
 
+type SortKey = keyof Permission;
+type SortOrder = "asc" | "desc";
+
 const TablePermission = ({ permissions }: TablePermissionProps) => {
   const [permissionList, setPermissionList] = useState(permissions);
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("id");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
+
+  // Filter permissions by name
+  const filteredPermissions = permissionList.filter((permission) =>
+    permission.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Sort permissions
+  const sortedPermissions = [...filteredPermissions].sort((a, b) => {
+    const aValue = a[sortKey];
+    const bValue = b[sortKey];
+
+    if (sortKey === "createdAt") {
+      return sortOrder === "asc"
+        ? new Date(aValue).getTime() - new Date(bValue).getTime()
+        : new Date(bValue).getTime() - new Date(aValue).getTime();
+    }
+
+    if (typeof aValue === "string" && typeof bValue === "string") {
+      return sortOrder === "asc"
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    }
+    return sortOrder === "asc"
+      ? aValue > bValue
+        ? 1
+        : -1
+      : bValue > aValue
+      ? 1
+      : -1;
+  });
+
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-  const totalPages = Math.ceil(permissions.length / itemsPerPage);
-  const currentPermissions = permissions.slice(
+  const totalPages = Math.ceil(sortedPermissions.length / itemsPerPage);
+  const currentPermissions = sortedPermissions.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -45,6 +91,24 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
     }
   };
 
+  // Sort handler
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortOrder("asc");
+    }
+    setCurrentPage(1);
+  };
+
+  // Search handler
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  // Existing state and mutations
   const [isOpen, setIsOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [permissionToEdit, setPermissionToEdit] = useState<Permission | null>(
@@ -69,13 +133,13 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedPermissions(
-      e.target.checked ? permissions.map((permission) => permission.id) : []
+      e.target.checked
+        ? sortedPermissions.map((permission) => permission.id)
+        : []
     );
   };
 
-  const handleCreatePermission = () => {
-    setIsOpen(true);
-  };
+  const handleCreatePermission = () => setIsOpen(true);
 
   const onCreate = async (newPermission: Permission) => {
     try {
@@ -86,9 +150,7 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
     }
   };
 
-  const handleClickRefresh = () => {
-    refreshPermissionMutation.refresh();
-  };
+  const handleClickRefresh = () => refreshPermissionMutation.refresh();
 
   const handleClickEdit = (permission: Permission) => {
     setPermissionToEdit(permission);
@@ -103,9 +165,7 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
   const handleEditPermission = async (updatedPermission: Permission) => {
     try {
       editPermissionMutation.mutate(updatedPermission, {
-        onSuccess: () => {
-          toast.success("Permission updated successfully");
-        },
+        onSuccess: () => toast.success("Permission updated successfully"),
       });
       setIsEditOpen(false);
     } catch (error) {
@@ -126,13 +186,6 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
             (permission) => permission.id !== id
           );
           setPermissionList(updatedPermissions);
-
-          const newTotalPages = Math.ceil(
-            updatedPermissions.length / itemsPerPage
-          );
-          if (currentPage > newTotalPages) {
-            setCurrentPage(newTotalPages || 1);
-          }
           toast.success("Permission deleted successfully");
         },
       });
@@ -163,17 +216,8 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
         const updatedPermissions = permissionList.filter(
           (permission) => !selectedPermissions.includes(permission.id)
         );
-
         setPermissionList(updatedPermissions);
         setSelectedPermissions([]);
-
-        const newTotalPages = Math.ceil(
-          updatedPermissions.length / itemsPerPage
-        );
-        if (currentPage > newTotalPages) {
-          setCurrentPage(newTotalPages || 1);
-        }
-
         toast.success("Selected permissions deleted successfully");
       }
     } catch (error) {
@@ -185,7 +229,12 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
     <div className="w-full bg-white dark:bg-background border p-5 rounded-lg shadow-md">
       <div className="flex items-center justify-between mb-4">
         <div className="relative w-1/3">
-          <Input placeholder="Search..." className="pl-10" />
+          <Input
+            placeholder="Search by permission name..."
+            className="pl-10"
+            value={searchTerm}
+            onChange={handleSearch}
+          />
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
         </div>
 
@@ -215,14 +264,41 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
               <input
                 type="checkbox"
                 onChange={handleSelectAll}
-                checked={selectedPermissions.length === permissionList.length}
+                checked={
+                  selectedPermissions.length === sortedPermissions.length
+                }
               />
             </TableHead>
-            <TableHead>ID</TableHead>
-            <TableHead>Permission Name</TableHead>
-            <TableHead>Route</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Date Created</TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("id")}
+            >
+              ID <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("name")}
+            >
+              Permission Name <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("apiRoutes")}
+            >
+              Route <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("description")}
+            >
+              Description <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
+              onClick={() => handleSort("createdAt")}
+            >
+              Date Created <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -241,7 +317,6 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
               <TableCell>{permission.apiRoutes}</TableCell>
               <TableCell>{permission.description}</TableCell>
               <TableCell>
-                {" "}
                 {new Date(permission.createdAt).toISOString().split("T")[0]}
               </TableCell>
               <TableCell className="flex space-x-2">

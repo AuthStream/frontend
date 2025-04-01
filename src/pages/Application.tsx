@@ -4,13 +4,6 @@ import { ToggleButton } from "../context/SidebarContext";
 import { useGetApplications } from "../hooks/useApplicationQueries.tsx";
 import LoadingBar from "../components/LoadingBar.tsx";
 
-interface Application {
-  id: string;
-  name: string;
-  provider: string;
-  token: string;
-}
-
 const Application = () => {
   const { data: applications, isLoading, error } = useGetApplications();
 

@@ -22,7 +22,7 @@ import {
   useRefreshUsers,
 } from "../hooks/useUserQueries";
 import userService from "../api/service/userService";
-import ImportUser from "./modalGuestUser/ImportUser";
+import ImportUser from "../components/modalGuestUser/importUser";
 import { useCreateBulkUsers } from "../hooks/useUserQueries";
 import { User } from "../api/type";
 

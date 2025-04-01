@@ -139,7 +139,7 @@ const viewSchemaModal: React.FC<{
       const allSelected = columns.every((col) => currentFields.includes(col));
       return {
         ...prev,
-        [tableName]: allSelected ? [] : columns,
+        [tableName]: allSelected ? [] : [...columns], // Toggle all fields on/off
       };
     });
   };
@@ -153,7 +153,7 @@ const viewSchemaModal: React.FC<{
         if (!table) return null;
 
         const selectedColumns = table.columns.filter((col) =>
-          selectedFields[tableName].includes(col.name)
+          (selectedFields[tableName] || []).includes(col.name)
         );
 
         if (selectedColumns.length === 0) return null;
@@ -166,7 +166,6 @@ const viewSchemaModal: React.FC<{
       .filter((table): table is tableSchema => table !== null);
 
     onSubmit(replicateTables);
-    // onClose();
   };
 
   const filteredTables = schema.databaseSchema.filter((table) =>
@@ -219,6 +218,12 @@ const viewSchemaModal: React.FC<{
                 const selectedCount = (selectedFields[table.tableName] || [])
                   .length;
                 const allColumns = table.columns.map((col) => col.name);
+                const allSelected =
+                  selectedCount > 0 &&
+                  allColumns.every((col) =>
+                    (selectedFields[table.tableName] || []).includes(col)
+                  );
+
                 return (
                   <div
                     key={table.tableName}
@@ -242,10 +247,11 @@ const viewSchemaModal: React.FC<{
                       <label className="flex items-center text-sm text-gray-600">
                         <input
                           type="checkbox"
-                          checked={selectedCount === table.columns.length}
+                          checked={allSelected}
                           onChange={() =>
                             handleSelectAll(table.tableName, allColumns)
                           }
+                          onClick={(e) => e.stopPropagation()}
                           className="mr-2"
                           disabled={loading}
                         />
@@ -264,6 +270,7 @@ const viewSchemaModal: React.FC<{
                             onChange={() =>
                               handleFieldToggle(table.tableName, col.name)
                             }
+                            onClick={(e) => e.stopPropagation()} // Prevent parent click
                             className="mr-2"
                             disabled={loading}
                           />

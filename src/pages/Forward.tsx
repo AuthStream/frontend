@@ -61,7 +61,6 @@ const Forward = () => {
     body: {},
     encryptToken: "",
     expiredDuration: 0,
-    applicationId: "",
   });
 
   const [bodyInput, setBodyInput] = useState<string>(
@@ -271,7 +270,7 @@ const Forward = () => {
                       name="tokenId"
                       value={selectedTokenId}
                       onChange={handleTokenSelect}
-                      className="w-full p-3 border rounded-lg bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      className="w-1/4 p-2 border rounded-lg bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
                     >
                       <option value="">Select a token</option>
                       <option value="create">Create New Token</option>
@@ -319,9 +318,11 @@ const Forward = () => {
                       <Input
                         type="number"
                         name="expiredDuration"
-                        value={tokenData.expiredDuration}
+                        value={tokenData.expiredDuration.toString()}
                         onChange={(e) => handleChange(e, setTokenData)}
                         placeholder="e.g. 3600"
+                        min={0}
+                        step={1}
                         className="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                       />
                     </div>

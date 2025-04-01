@@ -9,6 +9,7 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { toast } from "react-toastify";
+import { Eye, EyeOff } from "lucide-react"; // Import eye icons from lucide-react
 
 interface RegisterModalProps {
   onRegister: (registerData: { username: string; password: string }) => void;
@@ -25,6 +26,7 @@ const RegisterModal = ({
     username: "",
     password: "",
   });
+  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
 
   const validateUsername = (username: string): string | null => {
     if (!username) return "Username is required.";
@@ -48,10 +50,9 @@ const RegisterModal = ({
       return;
     }
 
-    if (!validateUsername(username)) {
-      toast.warning(
-        "Username can only contain letters, numbers, underscores, dots, or hyphens."
-      );
+    const usernameError = validateUsername(username);
+    if (usernameError) {
+      toast.warning(usernameError);
       return;
     }
 
@@ -69,6 +70,10 @@ const RegisterModal = ({
     setRegisterData({ ...registerData, [e.target.name]: e.target.value });
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent>
@@ -83,22 +88,35 @@ const RegisterModal = ({
             placeholder="Email"
             disabled={loading}
           />
-          <Input
-            name="password"
-            type="password"
-            value={registerData.password}
-            onChange={handleChange}
-            placeholder="Password"
-            disabled={loading}
-          />
+          <div className="relative">
+            <Input
+              name="password"
+              type={showPassword ? "text" : "password"} // Toggle type based on showPassword state
+              value={registerData.password}
+              onChange={handleChange}
+              placeholder="Password"
+              disabled={loading}
+              className="pr-10" // Add padding-right to make space for the icon
+            />
+            <button
+              // variant="ghost"
+              type="button"
+              className="absolute right-2 top-2 text-gray-500 p-0"
+              onClick={togglePasswordVisibility}
+              disabled={loading}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={loading}>
             Cancel
           </Button>
           <Button
             className="bg-blue-500 text-white hover:bg-blue-600"
             onClick={handleRegister}
+            disabled={loading}
           >
             Register
           </Button>
