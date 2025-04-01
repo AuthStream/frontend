@@ -3,13 +3,6 @@ import TablePermission from "../components/tablePermission.tsx";
 import { ToggleButton } from "../context/SidebarContext";
 import { useGetPermissions } from "../hooks/usePermissionQueries.tsx";
 
-interface Permission {
-  id: string;
-  email: string;
-  password: string;
-  created: string;
-}
-
 const Permission = () => {
   const { data: permissions, isLoading, error } = useGetPermissions();
 
@@ -43,7 +36,7 @@ const Permission = () => {
               : "An unknown error occurred"}
           </p>
         ) : permissions ? (
-          <TablePermission permissions={permissions.contents} />
+          <TablePermission permissions={permissions} />
         ) : (
           <p>No tokens available</p>
         )}

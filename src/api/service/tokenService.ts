@@ -40,7 +40,7 @@ const tokenService = {
 
   editToken: async (updatedToken: Token): Promise<Token> => {
     try{
-      const response=await axiosClient.put("/tokens",updatedToken);
+      const response=await axiosClient.put(`/tokens/${updatedToken.id}`,updatedToken);
       return response.data;
     }
     catch(error)

@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from "../ui/dialog";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 
 const viewSchemaModal: React.FC<{
   schema: dbSchema;
@@ -30,10 +31,10 @@ const viewSchemaModal: React.FC<{
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [open] = useState(true);
-  const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [selectedFields, setSelectedFields] = useState<
     Record<string, string[]>
   >({});
+  const [searchQuery, setSearchQuery] = useState("");
 
   const initializeDiagram = useCallback(() => {
     const newNodes: Node[] = [];
@@ -120,29 +121,27 @@ const viewSchemaModal: React.FC<{
     [setEdges]
   );
 
-  const handleFieldToggle = (
-    tableName: string,
-    fieldName: string,
-    event: React.MouseEvent
-  ) => {
-    event.stopPropagation();
+  const handleFieldToggle = (tableName: string, fieldName: string) => {
     setSelectedFields((prev) => {
       const tableFields = prev[tableName] || [];
-      if (tableFields.includes(fieldName)) {
-        return {
-          ...prev,
-          [tableName]: tableFields.filter((f) => f !== fieldName),
-        };
-      }
       return {
         ...prev,
-        [tableName]: [...tableFields, fieldName],
+        [tableName]: tableFields.includes(fieldName)
+          ? tableFields.filter((f) => f !== fieldName)
+          : [...tableFields, fieldName],
       };
     });
   };
 
-  const handleTableToggle = (tableName: string) => {
-    setSelectedTable(selectedTable === tableName ? null : tableName);
+  const handleSelectAll = (tableName: string, columns: string[]) => {
+    setSelectedFields((prev) => {
+      const currentFields = prev[tableName] || [];
+      const allSelected = columns.every((col) => currentFields.includes(col));
+      return {
+        ...prev,
+        [tableName]: allSelected ? [] : columns,
+      };
+    });
   };
 
   const handleSubmit = () => {
@@ -170,11 +169,9 @@ const viewSchemaModal: React.FC<{
     // onClose();
   };
 
-  const handleCancel = () => {
-    setSelectedFields({});
-    setSelectedTable(null);
-    onClose();
-  };
+  const filteredTables = schema.databaseSchema.filter((table) =>
+    table.tableName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -183,7 +180,7 @@ const viewSchemaModal: React.FC<{
           <DialogTitle>{schema.databaseName}</DialogTitle>
         </DialogHeader>
         <div className="flex" style={{ height: "600px" }}>
-          <div style={{ width: "80%", height: "100%" }}>
+          <div style={{ width: "70%", height: "100%" }}>
             <ReactFlow
               nodes={nodes}
               edges={edges}
@@ -200,79 +197,104 @@ const viewSchemaModal: React.FC<{
 
           <div
             style={{
-              width: "20%",
+              width: "30%",
               padding: "16px",
-              borderLeft: "1px solid #ccc",
+              background: "#f9fafb",
+              borderLeft: "1px solid #e5e7eb",
               display: "flex",
               flexDirection: "column",
             }}
           >
-            <div className="flex-1 overflow-y-auto mb-4">
-              <h3 className="text-lg font-semibold mb-2">
-                Choose the replicate tables and fields
-              </h3>
-              <div className="space-y-2">
-                {schema.databaseSchema.map((table) => (
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold mb-2">Replicate Tables</h3>
+              <Input
+                placeholder="Search tables..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full mb-2"
+              />
+            </div>
+            <div className="flex-1 overflow-y-auto space-y-2">
+              {filteredTables.map((table) => {
+                const selectedCount = (selectedFields[table.tableName] || [])
+                  .length;
+                const allColumns = table.columns.map((col) => col.name);
+                return (
                   <div
                     key={table.tableName}
-                    className={`p-3 border rounded cursor-pointer hover:bg-gray-100 ${
-                      selectedTable === table.tableName
-                        ? "bg-gray-200 border-gray-400"
-                        : "border-gray-300"
-                    }`}
+                    className="p-3 bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow"
                   >
                     <div
-                      className="flex items-center mb-2"
-                      onClick={() => handleTableToggle(table.tableName)}
+                      className="flex items-center justify-between cursor-pointer"
+                      onClick={() =>
+                        handleSelectAll(table.tableName, allColumns)
+                      }
                     >
-                      <span className="mr-2">📋</span>
-                      <strong>{table.tableName}</strong>
-                    </div>
-                    {selectedTable === table.tableName && (
-                      <div className="space-y-1">
-                        {table.columns.map((col) => (
-                          <div
-                            key={col.name}
-                            className="flex items-center"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={(
-                                selectedFields[table.tableName] || []
-                              ).includes(col.name)}
-                              onClick={(e) =>
-                                handleFieldToggle(table.tableName, col.name, e)
-                              }
-                              className="mr-2"
-                              disabled={loading}
-                            />
-                            <span className="flex-1">
-                              {col.constraints.includes("PRIMARY KEY") && (
-                                <span className="mr-1">🔑</span>
-                              )}
-                              {col.name}
-                            </span>
-                            <span className="text-gray-500 text-sm">
-                              ({col.type})
-                            </span>
-                          </div>
-                        ))}
+                      <div className="flex items-center">
+                        <span className="mr-2">📋</span>
+                        <strong>{table.tableName}</strong>
                       </div>
-                    )}
+                      <span className="text-sm text-gray-500">
+                        {selectedCount}/{table.columns.length}
+                      </span>
+                    </div>
+                    <div className="mt-2 space-y-1">
+                      <label className="flex items-center text-sm text-gray-600">
+                        <input
+                          type="checkbox"
+                          checked={selectedCount === table.columns.length}
+                          onChange={() =>
+                            handleSelectAll(table.tableName, allColumns)
+                          }
+                          className="mr-2"
+                          disabled={loading}
+                        />
+                        Select All
+                      </label>
+                      {table.columns.map((col) => (
+                        <label
+                          key={col.name}
+                          className="flex items-center text-sm hover:bg-gray-100 p-1 rounded"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={(
+                              selectedFields[table.tableName] || []
+                            ).includes(col.name)}
+                            onChange={() =>
+                              handleFieldToggle(table.tableName, col.name)
+                            }
+                            className="mr-2"
+                            disabled={loading}
+                          />
+                          <span className="flex-1">
+                            {col.constraints.includes("PRIMARY KEY") && (
+                              <span className="mr-1" title="Primary Key">
+                                🔑
+                              </span>
+                            )}
+                            {col.name}
+                          </span>
+                          <span className="text-gray-500 text-xs">
+                            ({col.type})
+                          </span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
+          <Button variant="outline" onClick={onClose} disabled={loading}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>Submit</Button>
+          <Button onClick={handleSubmit} disabled={loading}>
+            {loading ? "Submitting..." : "Submit"}
+          </Button>
         </DialogFooter>
-        {loading && <div className="circle-loader"></div>}
       </DialogContent>
     </Dialog>
   );

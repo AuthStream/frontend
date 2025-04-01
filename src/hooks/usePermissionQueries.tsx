@@ -9,14 +9,14 @@ import {
 import useMutationAction from "../provider/queryGlobal";
 
 export const useGetPermissions = () => {
-  return useQuery<PermissionResponse>({
+  return useQuery<Permission[]>({
     queryKey: ["permissions"],
     queryFn: permissionService.getAllPermissions,
   });
 };
 
 export const useCreatePermissions = () => {
-  return useMutationAction<CreatePermissionResponse, Permission>(
+  return useMutationAction<Permission, Permission>(
     ["permissions"],
     permissionService.createPermission
   );
@@ -32,7 +32,7 @@ export const useRefreshPermissions = () => {
 };
 
 export const useEditPermissions = () => {
-  return useMutationAction<EditPermissionResponse, Permission>(
+  return useMutationAction<Permission, Permission>(
     ["permissions"],
     permissionService.editPermission,
     {}

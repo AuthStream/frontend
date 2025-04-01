@@ -14,6 +14,7 @@ import ProtectedRoute from "../pages/Route";
 import Forward from "../pages/Forward";
 import ConfigViewPage from "../pages/ConfigView";
 import GuestUser from "../pages/GuestUser";
+import TemplateView from "../pages/TemplateView";
 
 const PrivateRoute = {
   home: {
@@ -79,6 +80,10 @@ const PrivateRoute = {
   config: {
     path: "/database-config",
     component: ConfigViewPage,
+  },
+  template: {
+    path: "/template",
+    component: TemplateView,
   },
 };
 

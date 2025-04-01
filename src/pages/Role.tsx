@@ -3,13 +3,6 @@ import TableRole from "../components/tableRole.tsx";
 import { ToggleButton } from "../context/SidebarContext";
 import { useGetRoles } from "../hooks/useRoleQueries.tsx";
 
-interface Role {
-  id: string;
-  email: string;
-  password: string;
-  created: string;
-}
-
 const Role = () => {
   const { data: roles, isLoading, error } = useGetRoles();
 
@@ -34,7 +27,7 @@ const Role = () => {
         </div>
         {isLoading ? (
           <p className="text-center text-gray-600 dark:text-gray-400">
-            Loading tokens...
+            Loading roles...
           </p>
         ) : error ? (
           <p className="text-center text-red-500">
@@ -43,9 +36,9 @@ const Role = () => {
               : "An unknown error occurred"}
           </p>
         ) : roles ? (
-          <TableRole roles={roles.contents} />
+          <TableRole roles={roles} />
         ) : (
-          <p>No tokens available</p>
+          <p>No roles available</p>
         )}
       </div>
     </div>

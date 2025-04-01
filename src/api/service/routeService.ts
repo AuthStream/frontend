@@ -1,78 +1,52 @@
 // import axiosClient from "../axiosClient";
+import axiosClient from "../axiosClient";
 import { CreateRouteResponse, EditRouteResponse, Route, RouteResponse } from "../type";
-const mockRoutes = [
-  {
-    id: "ABC1",
-    name: "truongkinhquinh",
-    created: "",
-    protected: false,
-  },
-  {
-    id: "ABC2",
-    name: "tolaokien",
-    created: "",
-    protected: true,
-  },
-];
 
 const tokenService = {
-  getAllRoutes: async (): Promise<RouteResponse> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ contents: mockRoutes, totalElements: mockRoutes.length });
-      }, 500);
-    });
+  getAllRoutes: async (): Promise<Route[]> => {
+    try {
+      const response = await axiosClient.get("/routes");
+      console.log(response.data);
+      return response.data.data;
+  } catch (error) {
+      throw error;
+  }
   },
 
-  createRoute: async (newRoutes: Route[]): Promise<CreateRouteResponse> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        newRoutes.forEach((route) => {
-          mockRoutes.push({ ...route, id: `ABC${mockRoutes.length + 1}` });
-        });
-        resolve({ success: true });
-      }, 500);
-    });
+  createRoute: async (newRoutes: Route): Promise<Route> => {
+    try {
+      const response = await axiosClient.post("/routes", newRoutes);
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
   },
   
 
-  editRoute: async (updatedRoutes: Route[]): Promise<EditRouteResponse> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        updatedRoutes.forEach((updatedRoute) => {
-          const index = mockRoutes.findIndex((route) => route.name === updatedRoute.name);
-          if (index !== -1) {
-            mockRoutes[index].protected = updatedRoute.protected;
-          }
-        });
-        resolve({ success: true });
-      }, 500);
-    });
+  editRoute: async (updatedRoutes: Route): Promise<Route> => {
+    try {
+      const response = await axiosClient.put(`/routes/${updatedRoutes.id}`, updatedRoutes);
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
   },
   
   deleteRoute: async (id: string): Promise<{ success: boolean }> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const index = mockRoutes.findIndex((token) => token.id === id);
-        if (index !== -1) {
-          mockRoutes.splice(index, 1);
-        }
-        resolve({ success: true });
-      }, 500);
-    });
+    try {
+      await axiosClient.delete(`/routes/${id}`);
+      return { success: true };
+    } catch (error) {
+      throw error;
+    }
   },
   deleteMultipleRoutes: async (ids: string[]): Promise<{ success: boolean }> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        ids.forEach((id) => {
-          const index = mockRoutes.findIndex((token) => token.id === id);
-          if (index !== -1) {
-            mockRoutes.splice(index, 1);
-          }
-        });
-        resolve({ success: true });
-      }, 500);
-    });
+    try {
+      await Promise.all(ids.map((id) => axiosClient.delete(`/routes/${id}`)));
+      return { success: true };
+    } catch (error) {
+      throw error;
+    }
   },
 
 };

@@ -24,7 +24,7 @@ const userService = {
 
   editUser: async (updatedUser: User): Promise<User> => {
     try {
-      const response = await axiosClient.put("/users", updatedUser);
+      const response = await axiosClient.put(`/users/${updatedUser.id}`, updatedUser);
       return response.data;
     } catch (error) {
       throw error;

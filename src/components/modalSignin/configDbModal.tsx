@@ -16,7 +16,7 @@ interface ConfigDBModalProps {
   onCheck: (dbConfig: DbConfig) => void;
   onClose: () => void;
   isConnectionChecked: boolean;
-  loading: boolean;
+  loading: boolean; // Passed from parent, used locally
 }
 
 const ConfigDBModal = ({
@@ -31,7 +31,7 @@ const ConfigDBModal = ({
     username: "",
     password: "",
     uri: "",
-    host: "", // Added host field
+    host: "",
     databaseUsername: "",
     databasePassword: "",
     port: 0,
@@ -45,9 +45,7 @@ const ConfigDBModal = ({
     updatedAt: "",
   });
 
-  const [errors, setErrors] = useState<Partial<Record<keyof DbConfig, string>>>(
-    {}
-  );
+  const [, setErrors] = useState<Partial<Record<keyof DbConfig, string>>>({});
   const [isFormValid, setIsFormValid] = useState(false);
 
   const parseUri = (uri: string) => {
@@ -56,7 +54,7 @@ const ConfigDBModal = ({
       const protocol = url.protocol.replace(":", "").toUpperCase();
       const hostname = url.hostname;
       const port = url.port ? parseInt(url.port) : 0;
-      const pathname = url.pathname.slice(1);
+      // const pathname = url.pathname.slice(1);
       const params = new URLSearchParams(url.search);
       const username = params.get("user") || "";
       const password = params.get("password") || "";
@@ -68,7 +66,7 @@ const ConfigDBModal = ({
       setDbConfig((prev) => ({
         ...prev,
         uri,
-        host: hostname, // Set host from URI
+        host: hostname,
         databaseType:
           protocol === "POSTGRESQL" || protocol === "POSTGRES"
             ? "POSTGRESQL"
@@ -176,6 +174,7 @@ const ConfigDBModal = ({
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
+    if (loading) return; // Prevent changes when loading
     const { name, value } = e.target;
     const newValue = name === "port" ? parseInt(value) || 0 : value;
     setDbConfig((prev) => ({ ...prev, [name]: newValue }));
@@ -202,7 +201,7 @@ const ConfigDBModal = ({
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Configure Database</DialogTitle>
         </DialogHeader>
@@ -315,7 +314,6 @@ const ConfigDBModal = ({
             View Schema
           </Button>
         </DialogFooter>
-        {loading && <div className="circle-loader"></div>}
       </DialogContent>
     </Dialog>
   );

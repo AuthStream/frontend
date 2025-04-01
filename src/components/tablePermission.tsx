@@ -22,13 +22,7 @@ import {
   useRefreshPermissions,
 } from "../hooks/usePermissionQueries";
 import permissionService from "../api/service/permissionService";
-
-interface Permission {
-  id: string;
-  name: string;
-  application: string;
-  created: string;
-}
+import { Permission } from "../api/type";
 
 interface TablePermissionProps {
   permissions: Permission[];
@@ -226,7 +220,8 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
             </TableHead>
             <TableHead>ID</TableHead>
             <TableHead>Permission Name</TableHead>
-            <TableHead>Application</TableHead>
+            <TableHead>Route</TableHead>
+            <TableHead>Description</TableHead>
             <TableHead>Date Created</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -243,10 +238,11 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
               </TableCell>
               <TableCell>{permission.id}</TableCell>
               <TableCell>{permission.name}</TableCell>
-              <TableCell>{permission.application}</TableCell>
+              <TableCell>{permission.apiRoutes}</TableCell>
+              <TableCell>{permission.description}</TableCell>
               <TableCell>
                 {" "}
-                {new Date(permission.created).toISOString().split("T")[0]}
+                {new Date(permission.createdAt).toISOString().split("T")[0]}
               </TableCell>
               <TableCell className="flex space-x-2">
                 <Button

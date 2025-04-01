@@ -29,6 +29,7 @@ import {
   TableData,
   tableSchema,
 } from "../api/type";
+import LoadingBar from "../components/LoadingBar";
 
 const SignIn = () => {
   const [username, setEmail] = useState("");
@@ -287,127 +288,119 @@ const SignIn = () => {
     }
   };
 
+  const isLoading =
+    loginMutation.isPending ||
+    registerMutation.isPending ||
+    checkConnectionMutation.isPending ||
+    getSchemaMutation.isPending ||
+    previewDataMutation.isPending ||
+    submitConfigMutation.isPending ||
+    submitTableMutation.isPending;
+
   return (
-    <div className="text-foreground min-h-screen flex flex-col items-center justify-center">
-      <div className="bg-white dark:bg-gray-800 border-black border-2 p-8 rounded-lg shadow-lg w-96 sketch-border">
-        <h2 className="text-4xl font-bold text-center mb-2">AUTHSTREAM</h2>
-        <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
-          Welcome, AuthStream
-        </p>
-        <div className="mb-4">
-          <Input
-            type="text"
-            className="w-full p-2 border rounded border-black shadow-sm"
-            value={username}
-            placeholder="Username"
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="mb-4 relative">
-          <Input
-            type={showPassword ? "text" : "password"}
-            className="w-full p-2 border rounded border-black shadow-sm"
-            value={password}
-            placeholder="Password"
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button
-            type="button"
-            className="absolute right-2 top-2 text-gray-500 p-0"
-            onClick={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-          </button>
-        </div>
-        <Button
-          onClick={handleLoginClick}
-          className="w-full bg-blue-500 text-black py-2 hover:bg-blue-600 border-2"
-          disabled={loginMutation.isPending}
-        >
-          {loginMutation.isPending ? "Logging in..." : "Log in"}
-        </Button>
+    <>
+      <div className="fixed top-0 left-0 w-full z-50">
+        <LoadingBar isLoading={isLoading} />
       </div>
+      <div className="text-foreground min-h-screen flex flex-col items-center justify-center">
+        <div className="absolute top-0 left-0 w-full">
+          <LoadingBar isLoading={loginMutation.isPending} />
+        </div>
+        <div className="bg-white dark:bg-gray-800 border-black border-2 p-8 rounded-lg shadow-lg w-96 sketch-border">
+          <h2 className="text-4xl font-bold text-center mb-2">AUTHSTREAM</h2>
+          <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
+            Welcome, AuthStream
+          </p>
+          <div className="mb-4">
+            <Input
+              type="text"
+              className="w-full p-2 border rounded border-black shadow-sm"
+              value={username}
+              placeholder="Username"
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="mb-4 relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              className="w-full p-2 border rounded border-black shadow-sm"
+              value={password}
+              placeholder="Password"
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              className="absolute right-2 top-2 text-gray-500 p-0"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+          <Button
+            onClick={handleLoginClick}
+            className="w-full bg-blue-500 text-black py-2 hover:bg-blue-600 border-2"
+            disabled={loginMutation.isPending}
+          >
+            {loginMutation.isPending ? "Logging in..." : "Log in"}
+          </Button>
+        </div>
 
-      {/* Modals with Internal Loading */}
-      {isRegisterModalOpen && (
-        <RegisterModal
-          onRegister={handleRegister}
-          onClose={() => setRegisterModalOpen(false)}
-          loading={registerMutation.isPending}
-        />
-      )}
+        {/* Modals with Internal Loading */}
+        {isRegisterModalOpen && (
+          <RegisterModal
+            onRegister={handleRegister}
+            onClose={() => setRegisterModalOpen(false)}
+            loading={registerMutation.isPending}
+          />
+        )}
 
-      {isConfigModalOpen && (
-        <ConfigDBModal
-          onCreate={handleGetSchema}
-          onCheck={handleCheckConnection}
-          onClose={() => {
-            setConfigModalOpen(false);
-            setIsConnectionChecked(false);
-          }}
-          isConnectionChecked={isConnectionChecked}
-          loading={
-            checkConnectionMutation.isPending || getSchemaMutation.isPending
-          }
-        />
-      )}
+        {isConfigModalOpen && (
+          <ConfigDBModal
+            onCreate={handleGetSchema}
+            onCheck={handleCheckConnection}
+            onClose={() => {
+              setConfigModalOpen(false);
+              setIsConnectionChecked(false);
+            }}
+            isConnectionChecked={isConnectionChecked}
+            loading={
+              checkConnectionMutation.isPending || getSchemaMutation.isPending
+            }
+          />
+        )}
 
-      {isSchemaModalOpen && (
-        <ViewSchemaModal
-          schema={schema}
-          onSubmit={handlePreviewTable}
-          onClose={() => setSchemaModalOpen(false)}
-          loading={previewDataMutation.isPending}
-        />
-      )}
+        {isSchemaModalOpen && (
+          <ViewSchemaModal
+            schema={schema}
+            onSubmit={handlePreviewTable}
+            onClose={() => setSchemaModalOpen(false)}
+            loading={previewDataMutation.isPending}
+          />
+        )}
 
-      {isPreviewDataModalOpen && (
-        <PreviewDataModal
-          previewData={previewData}
-          onSubmit={handleSubmitConfig}
-          onClose={() => setPreviewDataModalOpen(false)}
-          loading={submitConfigMutation.isPending}
-        />
-      )}
+        {isPreviewDataModalOpen && (
+          <PreviewDataModal
+            previewData={previewData}
+            onSubmit={handleSubmitConfig}
+            onClose={() => setPreviewDataModalOpen(false)}
+            loading={submitConfigMutation.isPending}
+          />
+        )}
 
-      {isTableConfigModalOpen && (
-        <TableConfigModal
-          isOpen={isTableConfigModalOpen}
-          onClose={() => setTableConfigModalOpen(false)}
-          onSubmit={handleTableConfigSubmit}
-          tableSchemas={config.tableIncludeList}
-          loading={submitTableMutation.isPending}
-        />
-      )}
-    </div>
+        {isTableConfigModalOpen && (
+          <TableConfigModal
+            isOpen={isTableConfigModalOpen}
+            onClose={() => setTableConfigModalOpen(false)}
+            onSubmit={handleTableConfigSubmit}
+            tableSchemas={config.tableIncludeList}
+            loading={submitTableMutation.isPending}
+          />
+        )}
+      </div>
+    </>
   );
 };
-
-const styles = `
-  .circle-loader {
-    width: 24px;
-    height: 24px;
-    border: 4px solid #f3f3f3; /* Light gray */
-    border-top: 4px solid #3498db; /* Blue */
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-  @keyframes spin {
-    0% { transform: translate(-50%, -50%) rotate(0deg); }
-    100% { transform: translate(-50%, -50%) rotate(360deg); }
-  }
-`;
-
-if (typeof document !== "undefined") {
-  const styleSheet = document.createElement("style");
-  styleSheet.textContent = styles;
-  document.head.appendChild(styleSheet);
-}
 
 export default SignIn;

@@ -62,9 +62,9 @@ import { DbConfig, DbPreviewRequest, TableConfig, RegisterData, RegisterResponse
     submitConfig: async (data: DbConfig ): Promise<any>=>
       {
         try{
-          // console.log(data);
+          console.log(data);
           const response = await axiosClient.post("/admins/config",data);
-          return response.data;
+          return response.data.data;
         }
         catch(error){
           throw error;
@@ -76,7 +76,7 @@ import { DbConfig, DbPreviewRequest, TableConfig, RegisterData, RegisterResponse
           try{
             // console.log(data);
             const response = await axiosClient.get("/admins/config");
-            return response.data;
+            return response.data.data;
           }
           catch(error){
             throw error;
@@ -88,7 +88,7 @@ import { DbConfig, DbPreviewRequest, TableConfig, RegisterData, RegisterResponse
       submitTableConfig: async (data: TableConfig ): Promise<any>=>
         {
           try{
-            // console.log(data);
+            console.log(data);
             const response = await axiosClient.post("/auth-table-configs",data);
             return response.data;
           }

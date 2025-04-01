@@ -9,14 +9,14 @@ import {
 import useMutationAction from "../provider/queryGlobal";
 
 export const useGetRoutes = () => {
-  return useQuery<RouteResponse>({
+  return useQuery<Route[]>({
     queryKey: ["routes"],
     queryFn: routeService.getAllRoutes,
   });
 };
 
 export const useCreateRoute = () => {
-  return useMutationAction<CreateRouteResponse, Route[]>(
+  return useMutationAction<Route, Route>(
     ["routes"],
     routeService.createRoute,
     {}
@@ -24,7 +24,7 @@ export const useCreateRoute = () => {
 };
 
 export const useEditRoute = () => {
-  return useMutationAction<EditRouteResponse, Route[]>(
+  return useMutationAction<Route, Route>(
     ["routes"],
     routeService.editRoute,
     {}

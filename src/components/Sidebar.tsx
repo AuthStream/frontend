@@ -41,7 +41,9 @@ const Sidebar = () => {
             {/* Application Dropdown */}
             <div
               className={`px-4 py-2 cursor-pointer rounded flex items-center justify-between border-b-2 border-gray-200 ${
-                isActive("/application") || isActive("/provider")
+                isActive("/application") ||
+                isActive("/provider") ||
+                isActive("/template")
                   ? "font-bold text-blue-500"
                   : "text-black"
               }`}
@@ -75,6 +77,16 @@ const Sidebar = () => {
                   }`}
                 >
                   Provider
+                </Link>
+                <Link
+                  to="/template"
+                  className={`block px-4 py-2 rounded border-b-2 border-gray-200 ${
+                    isActive("/template")
+                      ? "font-bold text-blue-500"
+                      : "text-black"
+                  }`}
+                >
+                  Template
                 </Link>
               </div>
             )}
@@ -213,7 +225,7 @@ const Sidebar = () => {
             )}
             <Link
               to="/database-config"
-              className={`block px-4 py-2 rounded border-b-2 border-gray-200 ${
+              className={`px-4 py-2 cursor-pointer rounded flex items-center justify-between border-b-2 border-gray-200 ${
                 isActive("/database-config")
                   ? "font-bold text-blue-500"
                   : "text-black"
@@ -223,7 +235,7 @@ const Sidebar = () => {
             </Link>
             <Link
               to="/my-user"
-              className={`block px-4 py-2 rounded border-b-2 border-gray-200 ${
+              className={`px-4 py-2 cursor-pointer rounded flex items-center justify-between border-b-2 border-gray-200  ${
                 isActive("/my-user") ? "font-bold text-blue-500" : "text-black"
               }`}
             >
@@ -231,7 +243,7 @@ const Sidebar = () => {
             </Link>
             <Link
               to="/about"
-              className={`block px-4 py-2 rounded border-b-2 border-gray-200 ${
+              className={`px-4 py-2 cursor-pointer rounded flex items-center justify-between border-b-2 border-gray-200  ${
                 isActive("/about") ? "font-bold text-blue-500" : "text-black"
               }`}
             >
@@ -239,7 +251,7 @@ const Sidebar = () => {
             </Link>
             <Link
               to="/documentations"
-              className={`block px-4 py-2 rounded border-b-2 border-gray-200 ${
+              className={`px-4 py-2 cursor-pointer rounded flex items-center justify-between border-b-2 border-gray-200  ${
                 isActive("/documentations")
                   ? "font-bold text-blue-500"
                   : "text-black"

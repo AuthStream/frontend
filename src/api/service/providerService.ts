@@ -6,7 +6,7 @@ const providerService = {
     getAllProviders: async (): Promise<{ contents: ProviderType[] }> => {
         try {
             const response = await axiosClient.get("/providers");
-            return response.data;
+            return response.data.data;
         } catch (error) {
             throw error;
         }
@@ -17,7 +17,7 @@ const providerService = {
       ): Promise<ProviderType> => {
         try {
             const response = await axiosClient.post("/providers", newProvider);
-            return response.data;
+            return response.data.data;
           } catch (error) {
             throw error;
           }
@@ -25,8 +25,9 @@ const providerService = {
 
     editProvider: async (updatedProvider: ProviderType): Promise<ProviderType> => {
         try {
+          // console.log(updatedProvider);
             const response = await axiosClient.put("/providers", updatedProvider);
-            return response.data;
+            return response.data.data;
           } catch (error) {
             throw error;
           }

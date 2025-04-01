@@ -10,13 +10,10 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { toast } from "react-toastify";
+import { Permission, Route } from "../../api/type";
 
-interface Permission {
-  id: string;
-  name: string;
-  application: string;
-  created: string;
-}
+// Assuming this hook exists to fetch routes
+import { useGetRoutes } from "../../hooks/useRouteQueries";
 
 interface CreatePermissionProps {
   isOpen: boolean;
@@ -29,12 +26,22 @@ const CreatePermission = ({
   onClose,
   onCreate,
 }: CreatePermissionProps) => {
-  const [newPermission, setNewPermission] = useState({
+  const [newPermission, setNewPermission] = useState<Permission>({
     id: "",
     name: "",
-    application: "",
-    created: new Date().toISOString(),
+    apiRoutes: "",
+    description: "",
+    createdAt: "",
+    updatedAt: "",
   });
+  const [selectedRoutes, setSelectedRoutes] = useState<Route[]>([]);
+
+  // Fetch routes
+  const {
+    data: routes,
+    isLoading: routesLoading,
+    error: routesError,
+  } = useGetRoutes();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -44,28 +51,51 @@ const CreatePermission = ({
     }));
   };
 
+  const handleRouteToggle = (route: Route) => {
+    setSelectedRoutes((prev) =>
+      prev.some((r) => r.id === route.id)
+        ? prev.filter((r) => r.id !== route.id)
+        : [...prev, route]
+    );
+  };
+
   const resetPermission = () => {
     setNewPermission({
       id: "",
       name: "",
-      application: "",
-      created: new Date().toISOString(),
+      apiRoutes: "",
+      description: "",
+      createdAt: "",
+      updatedAt: "",
     });
+    setSelectedRoutes([]);
   };
 
   const handleCreate = () => {
-    const { name, application } = newPermission;
+    const { name } = newPermission;
 
-    if (!name.trim() || !application.trim()) {
-      toast.warning("All fields are required.");
+    if (!name.trim()) {
+      toast.warning("Permission name is required.");
       return;
     }
 
+    if (selectedRoutes.length === 0) {
+      toast.warning("At least one API route must be selected.");
+      return;
+    }
+
+    // Format apiRoutes as [{"path": "...", "method": "..."}]
+    const formattedApiRoutes = JSON.stringify(
+      selectedRoutes.map((route) => ({
+        path: route.route,
+        method: route.method,
+      }))
+    );
+
     onCreate({
-      id: crypto.randomUUID(),
+      ...newPermission,
       name: name.trim(),
-      application: application.trim(),
-      created: newPermission.created,
+      apiRoutes: formattedApiRoutes,
     });
     resetPermission();
     onClose();
@@ -82,7 +112,7 @@ const CreatePermission = ({
         <DialogHeader>
           <DialogTitle>Create Permission</DialogTitle>
           <DialogDescription>
-            Enter the details of the new permission.
+            Enter the details of the new permission and select API routes.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -90,13 +120,41 @@ const CreatePermission = ({
             name="name"
             value={newPermission.name}
             onChange={handleChange}
-            placeholder="Permissionname"
+            placeholder="Permission Name"
           />
+
+          {/* Route Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              API Routes
+            </label>
+            {routesLoading ? (
+              <p>Loading routes...</p>
+            ) : routesError ? (
+              <p className="text-red-500">Error loading routes</p>
+            ) : routes && routes.length > 0 ? (
+              <div className="max-h-40 overflow-y-auto border rounded-md p-2">
+                {routes.map((route: Route) => (
+                  <div key={route.id} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedRoutes.some((r) => r.id === route.id)}
+                      onChange={() => handleRouteToggle(route)}
+                    />
+                    <span>{`${route.route} (${route.method})`}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p>No routes available</p>
+            )}
+          </div>
+
           <Input
-            name="application"
-            value={newPermission.application}
+            name="description"
+            value={newPermission.description}
             onChange={handleChange}
-            placeholder="Application"
+            placeholder="Description (optional)"
           />
         </div>
         <DialogFooter>

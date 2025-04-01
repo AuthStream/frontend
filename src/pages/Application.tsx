@@ -2,6 +2,7 @@ import { AppWindow } from "lucide-react";
 import TableApplication from "../components/tableApplication.tsx";
 import { ToggleButton } from "../context/SidebarContext";
 import { useGetApplications } from "../hooks/useApplicationQueries.tsx";
+import LoadingBar from "../components/LoadingBar.tsx";
 
 interface Application {
   id: string;
@@ -15,6 +16,8 @@ const Application = () => {
 
   return (
     <div className="h-full w-full flex items-center justify-center dark:bg-gray-950 p-6">
+      <LoadingBar isLoading={isLoading} />
+
       <div className="w-full h-full bg-gray-200 dark:bg-gray-900 p-6 rounded-lg shadow-md">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6">
           <div className="flex items-center justify-between gap-x-4">

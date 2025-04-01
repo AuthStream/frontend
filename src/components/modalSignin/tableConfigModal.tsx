@@ -50,7 +50,6 @@ const tableConfigSchema = z.object({
   hashingType: z.string().min(1, "Hashing type is required"),
   salt: z.string().min(1, "Salt is required"),
   hashConfig: z.union([
-    // Updated to use union of object schemas
     argon2ConfigSchema,
     bcryptConfigSchema,
     pbkdf2ConfigSchema,
@@ -212,7 +211,7 @@ const TableConfigModal = ({
         passwordAttribute,
         hashingType,
         salt,
-        hashConfig, // Now an object instead of stringified JSON
+        hashConfig,
       };
 
       tableConfigSchema.parse(config);
@@ -241,172 +240,282 @@ const TableConfigModal = ({
         <DialogHeader>
           <DialogTitle>Configure Table</DialogTitle>
           <DialogDescription>
-            Select a table and configure hashing settings.
+            Set up the table and hashing settings for user authentication.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <select
-            name="userTable"
-            value={userTable}
-            onChange={handleChange}
-            className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
-          >
-            <option value="">Select Table</option>
-            {tableSchemas.map((t) => (
-              <option key={t.tableName} value={t.tableName}>
-                {t.tableName}
-              </option>
-            ))}
-          </select>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              User Table
+            </label>
+            <select
+              name="userTable"
+              value={userTable}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+            >
+              <option value="">Choose a table containing user data</option>
+              {tableSchemas.map((t) => (
+                <option key={t.tableName} value={t.tableName}>
+                  {t.tableName}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          <select
-            name="usernameAttribute"
-            value={usernameAttribute}
-            onChange={handleChange}
-            className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
-            disabled={!userTable}
-          >
-            <option value="">Select Username Attribute</option>
-            {selectedTableFields.map((col) => (
-              <option key={col.name} value={col.name}>
-                {col.name}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Username Attribute
+            </label>
+            <select
+              name="usernameAttribute"
+              value={usernameAttribute}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+              disabled={!userTable}
+            >
+              <option value="">
+                Select the column for usernames (e.g., email)
               </option>
-            ))}
-          </select>
+              {selectedTableFields.map((col) => (
+                <option key={col.name} value={col.name}>
+                  {col.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          <select
-            name="passwordAttribute"
-            value={passwordAttribute}
-            onChange={handleChange}
-            className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
-            disabled={!userTable}
-          >
-            <option value="">Select Password Attribute</option>
-            {selectedTableFields.map((col) => (
-              <option key={col.name} value={col.name}>
-                {col.name}
-              </option>
-            ))}
-          </select>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Password Attribute
+            </label>
+            <select
+              name="passwordAttribute"
+              value={passwordAttribute}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+              disabled={!userTable}
+            >
+              <option value="">Select the column for hashed passwords</option>
+              {selectedTableFields.map((col) => (
+                <option key={col.name} value={col.name}>
+                  {col.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          <select
-            name="hashingType"
-            value={hashingType}
-            onChange={handleChange}
-            className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
-          >
-            <option value="">Select Hashing Type</option>
-            {hashingTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Hashing Type
+            </label>
+            <select
+              name="hashingType"
+              value={hashingType}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+            >
+              <option value="">Choose a hashing algorithm</option>
+              {hashingTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          <Input
-            name="salt"
-            value={salt}
-            onChange={handleChange}
-            placeholder="Salt"
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Salt
+            </label>
+            <Input
+              name="salt"
+              value={salt}
+              onChange={handleChange}
+              placeholder="Enter a salt value for hashing"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              A unique value to make hashes more secure
+            </p>
+          </div>
 
           {hashingType === "ARGON2" && (
             <>
-              <Input
-                name="argon2Iterations"
-                type="number"
-                value={argon2Config.iterations}
-                onChange={handleChange}
-                placeholder="Iterations"
-              />
-              <Input
-                name="argon2Memory"
-                type="number"
-                value={argon2Config.memory}
-                onChange={handleChange}
-                placeholder="Memory (KB)"
-              />
-              <Input
-                name="argon2Parallelism"
-                type="number"
-                value={argon2Config.parallelism}
-                onChange={handleChange}
-                placeholder="Parallelism"
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Iterations
+                </label>
+                <Input
+                  name="argon2Iterations"
+                  type="number"
+                  value={argon2Config.iterations}
+                  onChange={handleChange}
+                  placeholder="Enter number of iterations (e.g., 3)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Number of passes over the data (higher = slower, more secure)
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Memory (KB)
+                </label>
+                <Input
+                  name="argon2Memory"
+                  type="number"
+                  value={argon2Config.memory}
+                  onChange={handleChange}
+                  placeholder="Enter memory usage in KB (e.g., 65536)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Memory cost in kilobytes
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Parallelism
+                </label>
+                <Input
+                  name="argon2Parallelism"
+                  type="number"
+                  value={argon2Config.parallelism}
+                  onChange={handleChange}
+                  placeholder="Enter parallelism factor (e.g., 1)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Number of parallel threads
+                </p>
+              </div>
             </>
           )}
           {hashingType === "BCRYPT" && (
-            <Input
-              name="bcryptWorkFactor"
-              type="number"
-              value={bcryptConfig.workFactor}
-              onChange={handleChange}
-              placeholder="Work Factor"
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Work Factor
+              </label>
+              <Input
+                name="bcryptWorkFactor"
+                type="number"
+                value={bcryptConfig.workFactor}
+                onChange={handleChange}
+                placeholder="Enter work factor (e.g., 12)"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Controls hashing time (higher = slower, more secure)
+              </p>
+            </div>
           )}
           {hashingType === "PBKDF2" && (
             <>
-              <Input
-                name="pbkdf2Iterations"
-                type="number"
-                value={pbkdf2Config.iterations}
-                onChange={handleChange}
-                placeholder="Iterations"
-              />
-              <Input
-                name="pbkdf2KeyLength"
-                type="number"
-                value={pbkdf2Config.keyLength}
-                onChange={handleChange}
-                placeholder="Key Length"
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Iterations
+                </label>
+                <Input
+                  name="pbkdf2Iterations"
+                  type="number"
+                  value={pbkdf2Config.iterations}
+                  onChange={handleChange}
+                  placeholder="Enter number of iterations (e.g., 10000)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Number of hashing rounds
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Key Length
+                </label>
+                <Input
+                  name="pbkdf2KeyLength"
+                  type="number"
+                  value={pbkdf2Config.keyLength}
+                  onChange={handleChange}
+                  placeholder="Enter key length in bytes (e.g., 32)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Length of the derived key
+                </p>
+              </div>
             </>
           )}
           {hashingType === "SCRYPT" && (
             <>
-              <Input
-                name="scryptN"
-                type="number"
-                value={scryptConfig.n}
-                onChange={handleChange}
-                placeholder="N (CPU/Memory Cost)"
-              />
-              <Input
-                name="scryptR"
-                type="number"
-                value={scryptConfig.r}
-                onChange={handleChange}
-                placeholder="R (Block Size)"
-              />
-              <Input
-                name="scryptP"
-                type="number"
-                value={scryptConfig.p}
-                onChange={handleChange}
-                placeholder="P (Parallelization)"
-              />
-              <Input
-                name="scryptKeyLength"
-                type="number"
-                value={scryptConfig.keyLength}
-                onChange={handleChange}
-                placeholder="Key Length"
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  N (CPU/Memory Cost)
+                </label>
+                <Input
+                  name="scryptN"
+                  type="number"
+                  value={scryptConfig.n}
+                  onChange={handleChange}
+                  placeholder="Enter CPU/memory cost (e.g., 16384)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  General work factor (must be a power of 2)
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  R (Block Size)
+                </label>
+                <Input
+                  name="scryptR"
+                  type="number"
+                  value={scryptConfig.r}
+                  onChange={handleChange}
+                  placeholder="Enter block size (e.g., 8)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Size of memory blocks
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  P (Parallelization)
+                </label>
+                <Input
+                  name="scryptP"
+                  type="number"
+                  value={scryptConfig.p}
+                  onChange={handleChange}
+                  placeholder="Enter parallelization factor (e.g., 1)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Number of parallel threads
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Key Length
+                </label>
+                <Input
+                  name="scryptKeyLength"
+                  type="number"
+                  value={scryptConfig.keyLength}
+                  onChange={handleChange}
+                  placeholder="Enter key length in bytes (e.g., 32)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Length of the derived key
+                </p>
+              </div>
             </>
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" onClick={handleClose} disabled={loading}>
             Cancel
           </Button>
           <Button
             className="bg-blue-500 text-white hover:bg-blue-600"
             onClick={handleSubmit}
+            disabled={loading}
           >
-            Next
+            {loading ? "Submitting..." : "Submit"}
           </Button>
         </DialogFooter>
-        {loading && <div className="circle-loader"></div>}
       </DialogContent>
     </Dialog>
   );

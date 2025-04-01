@@ -1,3 +1,4 @@
+// ConfigViewPage.tsx
 import React, { useState, useEffect } from "react";
 import {
   useGetConfig,
@@ -20,6 +21,8 @@ import ReactFlow, {
   addEdge,
 } from "reactflow";
 import "reactflow/dist/style.css";
+import { Input } from "../components/ui/input";
+import LoadingBar from "../components/LoadingBar"; // Import the new component
 
 const ConfigViewPage: React.FC = () => {
   const {
@@ -55,6 +58,11 @@ const ConfigViewPage: React.FC = () => {
   const [columnWidths, setColumnWidths] = useState<
     Record<string, Record<string, number>>
   >({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortConfig, setSortConfig] = useState<{
+    column: string | null;
+    direction: "asc" | "desc" | null;
+  }>({ column: null, direction: null });
 
   useEffect(() => {
     if (dbConfig?.id) {
@@ -67,9 +75,7 @@ const ConfigViewPage: React.FC = () => {
   }, [dbConfig, fetchSchema, fetchPreviewData]);
 
   useEffect(() => {
-    if (previewData) {
-      console.log("Preview Data Updated:", previewData);
-    }
+    if (previewData) console.log("Preview Data Updated:", previewData);
   }, [previewData]);
 
   const initializeDiagram = () => {
@@ -149,9 +155,7 @@ const ConfigViewPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (schemaData) {
-      initializeDiagram();
-    }
+    if (schemaData) initializeDiagram();
   }, [schemaData]);
 
   const onConnect = (params: Edge | Connection) =>
@@ -189,237 +193,317 @@ const ConfigViewPage: React.FC = () => {
       }));
     };
 
+  const handleSort = (column: string) => {
+    setSortConfig((prev) => ({
+      column,
+      direction:
+        prev.column === column && prev.direction === "asc" ? "desc" : "asc",
+    }));
+  };
+
+  const filteredPreviewData = previewData?.filter((table: TableData) =>
+    table.tableName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const selectedTableData = previewData?.find(
     (table: TableData) => table.tableName === selectedTable
   );
 
-  if (dbLoading || tableLoading || schemaLoading || previewLoading)
-    return <div>Loading...</div>;
-  if (tableError)
-    return <div>Error loading preview table: {tableError.message}</div>;
-  if (dbError)
-    return <div>Error loading database config: {dbError.message}</div>;
-  if (schemaError)
-    return <div>Error loading schema: {schemaError.message}</div>;
-  if (previewError)
-    return <div>Error loading preview data: {previewError.message}</div>;
+  const sortedRows = selectedTableData?.rows
+    .slice()
+    .sort((a: { [x: string]: any }, b: { [x: string]: any }) => {
+      if (!sortConfig.column || !sortConfig.direction) return 0;
+      const aValue = a[sortConfig.column];
+      const bValue = b[sortConfig.column];
+      if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+      return 0;
+    });
+
+  const isLoading =
+    dbLoading || tableLoading || schemaLoading || previewLoading;
 
   return (
-    <div className="p-6">
-      {/* Two Column Config Display */}
-      <div className="grid grid-cols-2 gap-6 mb-6">
-        <div className="border p-4 rounded-lg">
-          <h2 className="text-xl font-semibold mb-4">Database Configuration</h2>
-          {dbConfig ? (
-            <div className="space-y-2">
-              <p>
-                <strong>URI:</strong> {dbConfig.uri}
-              </p>
-              <p>
-                <strong>Host:</strong> {dbConfig.host}
-              </p>
-              <p>
-                <strong>Port:</strong> {dbConfig.port}
-              </p>
-              <p>
-                <strong>Username:</strong> {dbConfig.databaseUsername}
-              </p>
-              <p>
-                <strong>Database Type:</strong> {dbConfig.databaseType}
-              </p>
-              <p>
-                <strong>SSL Mode:</strong> {dbConfig.sslMode}
-              </p>
-              <p>
-                <strong>Connection String:</strong> {dbConfig.connectionString}
-              </p>
-            </div>
-          ) : (
-            <p>No database configuration available.</p>
+    <div className="min-h-screen bg-gray-50">
+      <LoadingBar isLoading={isLoading} />
+
+      {(dbError || tableError || schemaError || previewError) && (
+        <div className="p-6 text-red-600">
+          {dbError && <p>Error loading database config: {dbError.message}</p>}
+          {tableError && (
+            <p>Error loading table config: {tableError.message}</p>
+          )}
+          {schemaError && <p>Error loading schema: {schemaError.message}</p>}
+          {previewError && (
+            <p>Error loading preview data: {previewError.message}</p>
           )}
         </div>
+      )}
 
-        <div className="border p-4 rounded-lg">
-          <h2 className="text-xl font-semibold mb-4">Table Configuration</h2>
-          {tableConfig ? (
-            <div className="space-y-2">
-              <p>
-                <strong>Table:</strong> {tableConfig.userTable}
-              </p>
-              <p>
-                <strong>Username Attribute:</strong>{" "}
-                {tableConfig.usernameAttribute}
-              </p>
-              <p>
-                <strong>Password Attribute:</strong>{" "}
-                {tableConfig.passwordAttribute}
-              </p>
-              <p>
-                <strong>Hashing Type:</strong> {tableConfig.hashingType}
-              </p>
-              <p>
-                <strong>Salt:</strong> {tableConfig.salt}
-              </p>
-              <p>
-                <strong>Hash Config:</strong>
-              </p>
-              <pre className="text-sm">
-                {JSON.stringify(tableConfig.hashConfig, null, 2)}
-              </pre>
-            </div>
-          ) : (
-            <p>No table configuration available.</p>
-          )}
-        </div>
-      </div>
-
-      {/* Schema Relational Diagram */}
-      <div className="mb-6 border p-4 rounded-lg">
-        <h2 className="text-xl font-semibold mb-4">
-          Schema Relational Diagram
-        </h2>
-        {schemaData?.databaseSchema?.length > 0 ? (
-          <div style={{ height: "400px" }}>
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              fitView
-            >
-              <MiniMap />
-              <Controls />
-              <Background />
-            </ReactFlow>
-          </div>
-        ) : (
-          <p>No schema data available.</p>
-        )}
-      </div>
-
-      {/* Preview Database */}
-      <div className="border p-4 rounded-lg">
-        <h2 className="text-xl font-semibold mb-4">Preview Database</h2>
-        <div className="flex" style={{ height: "400px" }}>
-          <div
-            className="w-1/4 border-r p-4 overflow-y-auto"
-            style={{ backgroundColor: "#f9fafb" }}
-          >
-            <h3 className="text-lg font-semibold mb-2">Tables</h3>
-            <div className="space-y-1">
-              {previewData?.map((table: TableData) => (
-                <div
-                  key={table.tableName}
-                  className={`p-2 rounded cursor-pointer hover:bg-gray-200 ${
-                    selectedTable === table.tableName
-                      ? "bg-gray-300 font-semibold"
-                      : "bg-transparent"
-                  }`}
-                  onClick={() => setSelectedTable(table.tableName)}
-                >
-                  <span className="mr-2">📋</span>
-                  {table.tableName}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="w-3/4 flex flex-col">
-            <div className="flex-1 overflow-y-auto p-4">
-              {selectedTableData ? (
-                selectedTableData.rows.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse text-sm">
-                      <thead>
-                        <tr>
-                          {Object.keys(selectedTableData.rows[0])
-                            .filter(
-                              (column) =>
-                                (columnWidths[selectedTableData.tableName]?.[
-                                  column
-                                ] ?? 150) > 0
-                            )
-                            .map((column) => (
-                              <Resizable
-                                key={column}
-                                width={
-                                  columnWidths[selectedTableData.tableName]?.[
-                                    column
-                                  ] ?? 150
-                                }
-                                height={0}
-                                onResize={handleResize(
-                                  selectedTableData.tableName,
-                                  column
-                                )}
-                                resizeHandles={["e"]}
-                                minConstraints={[0, 0]}
-                                maxConstraints={[500, 0]}
-                              >
-                                <th
-                                  className="border p-2 bg-gray-100 text-left"
-                                  style={{
-                                    width:
-                                      columnWidths[
-                                        selectedTableData.tableName
-                                      ]?.[column] ?? 150,
-                                  }}
-                                >
-                                  {column}
-                                </th>
-                              </Resizable>
-                            ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedTableData.rows.map(
-                          (
-                            row: { [x: string]: any },
-                            rowIndex: React.Key | null | undefined
-                          ) => (
-                            <tr key={rowIndex} className="border">
-                              {Object.keys(row)
-                                .filter(
-                                  (column) =>
-                                    (columnWidths[
-                                      selectedTableData.tableName
-                                    ]?.[column] ?? 150) > 0
-                                )
-                                .map((column, colIndex) => (
-                                  <td
-                                    key={colIndex}
-                                    className="border p-2"
-                                    style={{
-                                      width:
-                                        columnWidths[
-                                          selectedTableData.tableName
-                                        ]?.[column] ?? 150,
-                                    }}
-                                  >
-                                    {String(row[column])}
-                                  </td>
-                                ))}
-                            </tr>
-                          )
-                        )}
-                      </tbody>
-                    </table>
+      {!isLoading &&
+        !(dbError || tableError || schemaError || previewError) && (
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                  Database Configuration
+                </h2>
+                {dbConfig ? (
+                  <div className="space-y-3">
+                    {Object.entries({
+                      URI: dbConfig.uri,
+                      Host: dbConfig.host,
+                      Port: dbConfig.port,
+                      Username: dbConfig.databaseUsername,
+                      "Database Type": dbConfig.databaseType,
+                      "SSL Mode": dbConfig.sslMode,
+                      "Connection String": dbConfig.connectionString,
+                    }).map(([key, value]) => (
+                      <p key={key} className="flex items-center text-sm">
+                        <strong className="w-1/3 text-gray-700">{key}:</strong>
+                        <span
+                          className="w-2/3 text-gray-600 truncate"
+                          title={String(value)}
+                        >
+                          {String(value)}
+                        </span>
+                      </p>
+                    ))}
                   </div>
                 ) : (
                   <p className="text-gray-500">
-                    No data available for this table.
+                    No database configuration available.
                   </p>
-                )
+                )}
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                  Table Configuration
+                </h2>
+                {tableConfig ? (
+                  <div className="space-y-3">
+                    {Object.entries({
+                      Table: tableConfig.userTable,
+                      "Username Attribute": tableConfig.usernameAttribute,
+                      "Password Attribute": tableConfig.passwordAttribute,
+                      "Hashing Type": tableConfig.hashingType,
+                      Salt: tableConfig.salt,
+                    }).map(([key, value]) => (
+                      <p key={key} className="flex items-center text-sm">
+                        <strong className="w-1/3 text-gray-700">{key}:</strong>
+                        <span className="w-2/3 text-gray-600">
+                          {String(value)}
+                        </span>
+                      </p>
+                    ))}
+                    <div className="text-sm">
+                      <strong className="text-gray-700">Hash Config:</strong>
+                      <pre className="mt-1 p-2 bg-gray-100 rounded text-gray-600 overflow-x-auto">
+                        {JSON.stringify(tableConfig.hashConfig, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-gray-500">
+                    No table configuration available.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="mb-6 bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                Schema Relational Diagram
+              </h2>
+              {schemaData?.databaseSchema?.length > 0 ? (
+                <div style={{ height: "400px" }}>
+                  <ReactFlow
+                    nodes={nodes}
+                    edges={edges}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onConnect={onConnect}
+                    fitView
+                  >
+                    <MiniMap />
+                    <Controls />
+                    <Background />
+                  </ReactFlow>
+                </div>
               ) : (
-                <p className="text-gray-500">
-                  Select a table to preview its data.
-                </p>
+                <p className="text-gray-500">No schema data available.</p>
               )}
             </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                Preview Database
+              </h2>
+              <div className="flex" style={{ height: "400px" }}>
+                <div className="w-1/4 bg-gray-50 p-4 overflow-y-auto border-r">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                    Tables
+                  </h3>
+                  <Input
+                    placeholder="Search tables..."
+                    value={searchQuery}
+                    onChange={(e: {
+                      target: { value: React.SetStateAction<string> };
+                    }) => setSearchQuery(e.target.value)}
+                    className="mb-3"
+                  />
+                  <div className="space-y-1">
+                    {filteredPreviewData?.map((table: TableData) => (
+                      <div
+                        key={table.tableName}
+                        className={`p-2 rounded cursor-pointer transition-colors ${
+                          selectedTable === table.tableName
+                            ? "bg-blue-100 text-blue-800 font-semibold"
+                            : "hover:bg-gray-100"
+                        }`}
+                        onClick={() => setSelectedTable(table.tableName)}
+                      >
+                        <span className="mr-2">📋</span>
+                        {table.tableName}
+                        <span className="ml-2 text-xs text-gray-500">
+                          ({table.rows.length} rows)
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="w-3/4 flex flex-col p-4">
+                  <div className="flex-1 overflow-y-auto">
+                    {selectedTableData ? (
+                      selectedTableData.rows.length > 0 ? (
+                        <>
+                          <div
+                            className="flex justify
+
+-between items-center mb-2"
+                          >
+                            <span className="text-sm text-gray-600">
+                              Showing {selectedTableData.rows.length} rows and{" "}
+                              {Object.keys(selectedTableData.rows[0]).length}{" "}
+                              columns
+                            </span>
+                          </div>
+                          <div className="overflow-x-auto">
+                            <table className="w-full border-collapse text-sm">
+                              <thead className="sticky top-0 bg-gray-100 z-10">
+                                <tr>
+                                  {Object.keys(selectedTableData.rows[0])
+                                    .filter(
+                                      (column) =>
+                                        (columnWidths[
+                                          selectedTableData.tableName
+                                        ]?.[column] ?? 150) > 0
+                                    )
+                                    .map((column) => (
+                                      <Resizable
+                                        key={column}
+                                        width={
+                                          columnWidths[
+                                            selectedTableData.tableName
+                                          ]?.[column] ?? 150
+                                        }
+                                        height={0}
+                                        onResize={handleResize(
+                                          selectedTableData.tableName,
+                                          column
+                                        )}
+                                        resizeHandles={["e"]}
+                                        minConstraints={[50, 0]}
+                                        maxConstraints={[500, 0]}
+                                      >
+                                        <th
+                                          className="border p-2 text-left cursor-pointer hover:bg-gray-200"
+                                          style={{
+                                            width:
+                                              columnWidths[
+                                                selectedTableData.tableName
+                                              ]?.[column] ?? 150,
+                                          }}
+                                          onClick={() => handleSort(column)}
+                                        >
+                                          {column}
+                                          {sortConfig.column === column && (
+                                            <span className="ml-1">
+                                              {sortConfig.direction === "asc"
+                                                ? "↑"
+                                                : "↓"}
+                                            </span>
+                                          )}
+                                        </th>
+                                      </Resizable>
+                                    ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {sortedRows?.map(
+                                  (
+                                    row: { [x: string]: any },
+                                    index: number
+                                  ) => (
+                                    <tr
+                                      key={index}
+                                      className={`border ${
+                                        index % 2 === 0
+                                          ? "bg-white"
+                                          : "bg-gray-50"
+                                      } hover:bg-gray-100`}
+                                    >
+                                      {Object.keys(row)
+                                        .filter(
+                                          (column) =>
+                                            (columnWidths[
+                                              selectedTableData.tableName
+                                            ]?.[column] ?? 150) > 0
+                                        )
+                                        .map((column, colIndex) => (
+                                          <td
+                                            key={colIndex}
+                                            className="border p-2 truncate"
+                                            style={{
+                                              width:
+                                                columnWidths[
+                                                  selectedTableData.tableName
+                                                ]?.[column] ?? 150,
+                                              maxWidth:
+                                                columnWidths[
+                                                  selectedTableData.tableName
+                                                ]?.[column] ?? 150,
+                                            }}
+                                            title={String(row[column])}
+                                          >
+                                            {String(row[column])}
+                                          </td>
+                                        ))}
+                                    </tr>
+                                  )
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
+                      ) : (
+                        <p className="text-gray-500 flex-1 flex items-center justify-center">
+                          No data available for this table.
+                        </p>
+                      )
+                    ) : (
+                      <p className="text-gray-500 flex-1 flex items-center justify-center">
+                        Select a table to preview its data.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        )}
     </div>
   );
 };
