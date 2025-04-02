@@ -11,6 +11,8 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { useState } from "react";
 import { ProviderType } from "../api/type";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { copyToClipboard, formatId } from "../utils/handleId";
 
 interface TableProviderDashboardProps {
   providers: ProviderType[];
@@ -58,6 +60,24 @@ const TableProviderDashboard = ({ providers }: TableProviderDashboardProps) => {
           {currentProviders.map((provider) => (
             <TableRow key={provider.id}>
               <TableCell>{provider.id}</TableCell>
+                <TableCell>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      className="cursor-pointer hover:underline"
+                      onClick={() => copyToClipboard(provider.id)}
+                    >
+                      {formatId(provider.id)}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{provider.id}</p>
+                    <p>click to copy</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </TableCell>
               <TableCell>{provider.name}</TableCell>
               <TableCell>{provider.type}</TableCell>
               <TableCell>{provider.domainName}</TableCell>

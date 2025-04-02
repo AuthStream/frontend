@@ -31,6 +31,8 @@ import {
 } from "../hooks/useGroupQueries";
 import groupService from "../api/service/groupService";
 import { Group } from "../api/type";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { copyToClipboard, formatId } from "../utils/handleId";
 
 interface TableGroupProps {
   groups: Group[];
@@ -307,7 +309,27 @@ const TableGroup = ({ groups }: TableGroupProps) => {
                   checked={selectedGroups.includes(group.id)}
                 />
               </TableCell>
-              <TableCell>{group.id}</TableCell>
+
+               <TableCell>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      className="cursor-pointer hover:underline"
+                      onClick={() => copyToClipboard(group.id)}
+                    >
+                      {formatId(group.id)}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{group.id}</p>
+                    <p>click to copy</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </TableCell>
+
+            
               <TableCell>{group.name}</TableCell>
               <TableCell>{group.roleId}</TableCell>
               <TableCell>{group.description}</TableCell>

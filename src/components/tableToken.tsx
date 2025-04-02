@@ -30,7 +30,8 @@ import { toast } from "react-toastify";
 import { Token } from "../api/type";
 import DeleteConfirm from "./confirmBox";
 import DeleteMultipleConfirm from "./confirmMultipleBox";
-
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { copyToClipboard, formatId } from "../utils/handleId";
 interface TableTokenProps {
   tokens: Token[];
 }
@@ -272,7 +273,24 @@ const TableToken = ({ tokens }: TableTokenProps) => {
                   checked={selectedTokens.includes(token.id)}
                 />
               </TableCell>
-              <TableCell>{token.id}</TableCell>
+                <TableCell>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      className="cursor-pointer hover:underline"
+                      onClick={() => copyToClipboard(token.id)}
+                    >
+                      {formatId(token.id)}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{token.id}</p>
+                    <p>click to copy</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </TableCell>
               <TableCell>{token.encryptToken}</TableCell>
               <TableCell>{token.expiredDuration}</TableCell>
               <TableCell>
