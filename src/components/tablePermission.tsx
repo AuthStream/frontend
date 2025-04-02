@@ -31,7 +31,8 @@ import {
 } from "../hooks/usePermissionQueries";
 import permissionService from "../api/service/permissionService";
 import { Permission } from "../api/type";
-
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { copyToClipboard, formatId } from "../utils/handleId";
 interface TablePermissionProps {
   permissions: Permission[];
 }
@@ -320,7 +321,26 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
                   checked={selectedPermissions.includes(permission.id)}
                 />
               </TableCell>
-              <TableCell>{permission.id}</TableCell>
+
+
+               <TableCell>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      className="cursor-pointer hover:underline"
+                      onClick={() => copyToClipboard(permission.id)}
+                    >
+                      {formatId(permission.id)}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{permission.id}</p>
+                    <p>click to copy</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </TableCell>
               <TableCell>{permission.name}</TableCell>
               <TableCell>{permission.apiRoutes}</TableCell>
               <TableCell>{permission.description}</TableCell>

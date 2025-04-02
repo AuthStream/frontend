@@ -16,6 +16,9 @@ import {
   TableHeader,
   TableRow,
 } from "../components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { copyToClipboard, formatId } from "../utils/handleId";
+
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import CreateRole from "./modalRole/createRole";
@@ -353,7 +356,24 @@ const handleClickRefresh = () => refreshRoleMutation.refresh();
                   checked={selectedRoles.includes(role.id)}
                 />
               </TableCell>
-              <TableCell>{role.id}</TableCell>
+                <TableCell>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      className="cursor-pointer hover:underline"
+                      onClick={() => copyToClipboard(role.id)}
+                    >
+                      {formatId(role.id)}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{role.id}</p>
+                    <p>click to copy</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </TableCell>
               <TableCell>{role.name}</TableCell>
               <TableCell>{role.groupId}</TableCell>
               <TableCell>{role.permissionId}</TableCell>

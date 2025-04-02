@@ -26,11 +26,12 @@ import {
   useEditApplications,
   useRefreshApplications,
 } from "../hooks/useApplicationQueries";
-import applicationService from "../api/service/applicationService";
 import { toast } from "react-toastify";
 import DeleteMultipleConfirm from "./confirmMultipleBox";
 import DeleteConfirm from "./confirmBox";
 import { Application } from "../api/type";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { copyToClipboard, formatId } from "../utils/handleId";
 
 interface TableApplicationProps {
   applications: Application[];
@@ -268,7 +269,26 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
                   checked={selectedApplications.includes(application.id)}
                 />
               </TableCell>
-              <TableCell>{application.id}</TableCell>
+
+               <TableCell>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      className="cursor-pointer hover:underline"
+                      onClick={() => copyToClipboard(application.id)}
+                    >
+                      {formatId(application.id)}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{application.id}</p>
+                    <p>click to copy</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </TableCell>
+
               <TableCell>{application.name}</TableCell>
               <TableCell>{application.providerId}</TableCell>
               <TableCell>{application.tokenId}</TableCell>
