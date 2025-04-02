@@ -4,7 +4,7 @@ import { User } from "../type";
 
 
 const userService = {
-  getAllUsers: async (): Promise<User> => {
+  getAllUsers: async (): Promise<User[]> => {
     try {
       const response = await axiosClient.get("/users");
       return response.data;
@@ -57,6 +57,16 @@ const userService = {
       throw error;
     }
   },
+
+  getUserById: async(id: string):Promise<User>=>{
+    try{
+      const response=await axiosClient.get(`/users/${id}`);
+      return response.data;
+    }
+    catch(error){
+      throw error;
+    }
+  }
 };
 
 export default userService;

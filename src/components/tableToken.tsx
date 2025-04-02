@@ -30,8 +30,14 @@ import { toast } from "react-toastify";
 import { Token } from "../api/type";
 import DeleteConfirm from "./confirmBox";
 import DeleteMultipleConfirm from "./confirmMultipleBox";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 import { copyToClipboard, formatId } from "../utils/handleId";
+
 interface TableTokenProps {
   tokens: Token[];
 }
@@ -46,9 +52,12 @@ const TableToken = ({ tokens }: TableTokenProps) => {
   const [sortKey, setSortKey] = useState<SortKey>("id");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
-  // Filter tokens by encryptToken
-  const filteredTokens = tokenList.filter((token) =>
-    token.encryptToken.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filter tokens by encryptToken or name
+  const filteredTokens = tokenList.filter(
+    (token) =>
+      token.encryptToken.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (token.name &&
+        token.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // Sort tokens
@@ -130,9 +139,15 @@ const TableToken = ({ tokens }: TableTokenProps) => {
   const onCreate = async (newToken: Token) => {
     try {
       createTokenMutation.mutate(newToken, {
-        onSuccess: () => toast.success("Token created successfully"),
+        onSuccess: (createdToken) => {
+          setTokenList((prev) => [...prev, createdToken]);
+          toast.success("Token created successfully");
+          setIsOpen(false);
+        },
+        onError: () => {
+          toast.error("Failed to create token");
+        },
       });
-      setIsOpen(false);
     } catch (error) {
       toast.error("Failed to create token");
     }
@@ -204,7 +219,7 @@ const TableToken = ({ tokens }: TableTokenProps) => {
       <div className="flex items-center justify-between mb-4">
         <div className="relative w-1/3">
           <Input
-            placeholder="Search by encrypt token..."
+            placeholder="Search by name or encrypt token..."
             className="pl-10"
             value={searchTerm}
             onChange={handleSearch}
@@ -219,7 +234,6 @@ const TableToken = ({ tokens }: TableTokenProps) => {
           >
             <Plus className="w-4 h-4 mr-2" /> Create
           </Button>
-          alda{" "}
           <Button variant="outline">
             <RefreshCw className="w-4 h-4 mr-2" /> Refresh
           </Button>
@@ -250,6 +264,12 @@ const TableToken = ({ tokens }: TableTokenProps) => {
             </TableHead>
             <TableHead
               className="cursor-pointer"
+              onClick={() => handleSort("name")}
+            >
+              Name <ArrowUpDown className="inline w-4 h-4 ml-1" />
+            </TableHead>
+            <TableHead
+              className="cursor-pointer"
               onClick={() => handleSort("encryptToken")}
             >
               Encrypt Token <ArrowUpDown className="inline w-4 h-4 ml-1" />
@@ -273,24 +293,25 @@ const TableToken = ({ tokens }: TableTokenProps) => {
                   checked={selectedTokens.includes(token.id)}
                 />
               </TableCell>
-                <TableCell>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      className="cursor-pointer hover:underline"
-                      onClick={() => copyToClipboard(token.id)}
-                    >
-                      {formatId(token.id)}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{token.id}</p>
-                    <p>click to copy</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </TableCell>
+              <TableCell>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        className="cursor-pointer hover:underline"
+                        onClick={() => copyToClipboard(token.id)}
+                      >
+                        {formatId(token.id)}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{token.id}</p>
+                      <p>Click to copy</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </TableCell>
+              <TableCell>{token.name || "N/A"}</TableCell>
               <TableCell>{token.encryptToken}</TableCell>
               <TableCell>{token.expiredDuration}</TableCell>
               <TableCell>

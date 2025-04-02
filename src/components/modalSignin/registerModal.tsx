@@ -30,9 +30,7 @@ const RegisterModal = ({
 
   const validateUsername = (username: string): string | null => {
     if (!username) return "Username is required.";
-    const usernameRegex = /^[a-zA-Z0-9_.-]+$/;
-    if (!usernameRegex.test(username))
-      return "Username can only contain letters, numbers, underscores, dots, or hyphens.";
+    if (/\s/.test(username)) return "Username cannot contain spaces.";
     return null;
   };
 

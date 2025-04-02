@@ -7,6 +7,7 @@ import {
   Edit,
   Trash,
   ArrowUpDown,
+  Eye,
 } from "lucide-react";
 import {
   Table,
@@ -31,8 +32,14 @@ import {
 } from "../hooks/useGroupQueries";
 import groupService from "../api/service/groupService";
 import { Group } from "../api/type";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 import { copyToClipboard, formatId } from "../utils/handleId";
+import GroupUsersModal from "./modalGroup/groupUser";
 
 interface TableGroupProps {
   groups: Group[];
@@ -47,12 +54,19 @@ const TableGroup = ({ groups }: TableGroupProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("id");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
-
+  const [isUsersModalOpen, setIsUsersModalOpen] = useState(false);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [selectedGroupName, setSelectedGroupName] = useState<string>("");
   // Filter groups by name
   const filteredGroups = groupList.filter((group) =>
     group.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleShowUsers = (group: Group) => {
+    setSelectedGroupId(group.id);
+    setSelectedGroupName(group.name);
+    setIsUsersModalOpen(true);
+  };
   // Sort groups
   const sortedGroups = [...filteredGroups].sort((a, b) => {
     const aValue = a[sortKey];
@@ -141,11 +155,11 @@ const TableGroup = ({ groups }: TableGroupProps) => {
 
   const onCreate = async (newGroup: Group) => {
     try {
-      createGroupMutation.mutate(newGroup,{
-        onSuccess(createGroup){
+      createGroupMutation.mutate(newGroup, {
+        onSuccess(createGroup) {
           toast.success("create group successfully");
           setGroupList((prev) => [...prev, createGroup]);
-        }
+        },
       });
       setIsOpen(false);
     } catch (error) {
@@ -310,26 +324,25 @@ const TableGroup = ({ groups }: TableGroupProps) => {
                 />
               </TableCell>
 
-               <TableCell>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      className="cursor-pointer hover:underline"
-                      onClick={() => copyToClipboard(group.id)}
-                    >
-                      {formatId(group.id)}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{group.id}</p>
-                    <p>click to copy</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </TableCell>
+              <TableCell>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        className="cursor-pointer hover:underline"
+                        onClick={() => copyToClipboard(group.id)}
+                      >
+                        {formatId(group.id)}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{group.id}</p>
+                      <p>Click to copy</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </TableCell>
 
-            
               <TableCell>{group.name}</TableCell>
               <TableCell>{group.roleId}</TableCell>
               <TableCell>{group.description}</TableCell>
@@ -337,6 +350,13 @@ const TableGroup = ({ groups }: TableGroupProps) => {
                 {new Date(group.createdAt).toISOString().split("T")[0]}
               </TableCell>
               <TableCell className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleShowUsers(group)}
+                >
+                  <Eye className="w-4 h-4" />
+                </Button>
                 <Button
                   onClick={() => handleClickEdit(group)}
                   variant="outline"
@@ -386,6 +406,19 @@ const TableGroup = ({ groups }: TableGroupProps) => {
           onClose={handleCloseEditModal}
           groupToEdit={groupToEdit}
           onEdit={handleEditGroup}
+        />
+      )}
+
+      {selectedGroupId && (
+        <GroupUsersModal
+          isOpen={isUsersModalOpen}
+          onClose={() => {
+            setIsUsersModalOpen(false);
+            setSelectedGroupId(null);
+            setSelectedGroupName("");
+          }}
+          groupId={selectedGroupId}
+          groupName={selectedGroupName}
         />
       )}
       <DeleteConfirm

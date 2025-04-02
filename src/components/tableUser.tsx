@@ -33,7 +33,12 @@ import {
 import userService from "../api/service/userService";
 import ImportUser from "./modalUser/importUser";
 import { User } from "../api/type";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 import { copyToClipboard, formatId } from "../utils/handleId";
 interface TableUserProps {
   users: User[];
@@ -321,26 +326,26 @@ const TableUser = ({ users }: TableUserProps) => {
                   checked={selectedUsers.includes(user.id)}
                 />
               </TableCell>
-    
-               <TableCell>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      className="cursor-pointer hover:underline"
-                      onClick={() => copyToClipboard(user.id)}
-                    >
-                      {formatId(user.id)}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{user.id}</p>
-                    <p>click to copy</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </TableCell>
-                             <TableCell>{user.username}</TableCell>
+
+              <TableCell>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        className="cursor-pointer hover:underline"
+                        onClick={() => copyToClipboard(user.id)}
+                      >
+                        {formatId(user.id)}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{user.id}</p>
+                      <p>Click to copy</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </TableCell>
+              <TableCell>{user.username}</TableCell>
               <TableCell>{user.password}</TableCell>
               <TableCell>
                 {new Date(user.createdAt).toISOString().split("T")[0]}

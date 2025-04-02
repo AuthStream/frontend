@@ -1,6 +1,6 @@
 // import axiosClient from "../axiosClient";
 import axiosClient from "../axiosClient";
-import { CreateGroupResponse, EditGroupResponse, Group, GroupResponse } from "../type";
+import { CreateGroupResponse, EditGroupResponse, Group, GroupResponse, UserGroup } from "../type";
 const mockGroups = [
   { id: "ABC1", email: "truongkinhquinh", password: "bmchien1", created: "2025-02-21T16:51:11.872Z" },
   { id: "ABC2", email: "tolaokien", password: "bmchien2", created: "2025-02-21T16:51:11.872Z" },
@@ -54,6 +54,35 @@ const groupService = {
       throw error;
     }
   },
+  getAllGroupUser: async():Promise<UserGroup[]>=>{
+    try{
+      const response=await axiosClient.get("/user-groups");
+      return response.data;
+    }
+    catch(error){
+      throw error;
+    }
+  },
+  
+  addGroupUser: async(newGroupUser:UserGroup):Promise<UserGroup>=>{
+    try{
+      const response=await axiosClient.post("/user-groups",newGroupUser);
+      return response.data;
+    }
+    catch(error){
+      throw error;
+    }
+  },
+
+  editGroupUser: async(updatedGroupUser:UserGroup):Promise<UserGroup>=>{
+    try{
+      const response=await axiosClient.put("/user-groups", updatedGroupUser);
+      return response.data;
+    }
+    catch(error){
+      throw error;
+    }
+  }
 };
 
 export default groupService;

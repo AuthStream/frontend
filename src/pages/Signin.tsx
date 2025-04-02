@@ -140,6 +140,7 @@ const SignIn = () => {
           });
           setRegisterModalOpen(false);
           setConfigModalOpen(true);
+          setIsConnectionChecked(false);
         },
         onError: () => {
           toast.error("Failed to Register");

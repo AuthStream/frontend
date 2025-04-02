@@ -30,9 +30,13 @@ import {
 import { toast } from "react-toastify";
 import DeleteConfirm from "./confirmBox";
 import DeleteMultipleConfirm from "./confirmMultipleBox";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 import { copyToClipboard, formatId } from "../utils/handleId";
-
 
 interface TableProviderProps {
   providers: ProviderType[];
@@ -310,24 +314,24 @@ const TableProvider = ({ providers }: TableProviderProps) => {
                   checked={selectedProviders.includes(provider.id)}
                 />
               </TableCell>
-                <TableCell>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      className="cursor-pointer hover:underline"
-                      onClick={() => copyToClipboard(provider.id)}
-                    >
-                      {formatId(provider.id)}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{provider.id}</p>
-                    <p>click to copy</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </TableCell>
+              <TableCell>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        className="cursor-pointer hover:underline"
+                        onClick={() => copyToClipboard(provider.id)}
+                      >
+                        {formatId(provider.id)}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{provider.id}</p>
+                      <p>Click to copy</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </TableCell>
               <TableCell>{provider.name}</TableCell>
               <TableCell>{provider.type}</TableCell>
               <TableCell>{provider.domainName}</TableCell>

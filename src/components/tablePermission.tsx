@@ -31,8 +31,14 @@ import {
 } from "../hooks/usePermissionQueries";
 import permissionService from "../api/service/permissionService";
 import { Permission } from "../api/type";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 import { copyToClipboard, formatId } from "../utils/handleId";
+
 interface TablePermissionProps {
   permissions: Permission[];
 }
@@ -109,6 +115,15 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
     setCurrentPage(1);
   };
 
+  // Parse apiRoutes safely
+  const parseRoutes = (routes: string): { path: string; method: string }[] => {
+    try {
+      return JSON.parse(routes);
+    } catch {
+      return [];
+    }
+  };
+
   // Existing state and mutations
   const [isOpen, setIsOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -144,12 +159,11 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
 
   const onCreate = async (newPermission: Permission) => {
     try {
-      createPermissionMutation.mutate(newPermission,{
-        onSuccess (createPermission){
-          toast.success("create permission Successfully");
-                  setPermissionList((prev) => [...prev, createPermission]); 
-
-        }
+      createPermissionMutation.mutate(newPermission, {
+        onSuccess(createPermission) {
+          toast.success("Create permission successfully");
+          setPermissionList((prev) => [...prev, createPermission]);
+        },
       });
       setIsOpen(false);
     } catch (error) {
@@ -171,8 +185,6 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
 
   const handleEditPermission = async (updatedPermission: Permission) => {
     try {
-      console.log("fucking edit permission: ", updatedPermission);
-      
       editPermissionMutation.mutate(updatedPermission, {
         onSuccess: () => toast.success("Permission updated successfully"),
       });
@@ -294,7 +306,7 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
               className="cursor-pointer"
               onClick={() => handleSort("apiRoutes")}
             >
-              Route <ArrowUpDown className="inline w-4 h-4 ml-1" />
+              Routes <ArrowUpDown className="inline w-4 h-4 ml-1" />
             </TableHead>
             <TableHead
               className="cursor-pointer"
@@ -312,59 +324,95 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {currentPermissions.map((permission, index) => (
-            <TableRow key={index}>
-              <TableCell>
-                <input
-                  type="checkbox"
-                  onChange={() => handleCheckboxChange(permission.id)}
-                  checked={selectedPermissions.includes(permission.id)}
-                />
-              </TableCell>
-
-
-               <TableCell>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      className="cursor-pointer hover:underline"
-                      onClick={() => copyToClipboard(permission.id)}
-                    >
-                      {formatId(permission.id)}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{permission.id}</p>
-                    <p>click to copy</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </TableCell>
-              <TableCell>{permission.name}</TableCell>
-              <TableCell>{permission.apiRoutes}</TableCell>
-              <TableCell>{permission.description}</TableCell>
-              <TableCell>
-                {new Date(permission.createdAt).toISOString().split("T")[0]}
-              </TableCell>
-              <TableCell className="flex space-x-2">
-                <Button
-                  onClick={() => handleClickEdit(permission)}
-                  variant="outline"
-                  size="icon"
-                >
-                  <Edit className="w-4 h-4" />
-                </Button>
-                <Button
-                  onClick={() => handleClickDeletePermission(permission.id)}
-                  variant="destructive"
-                  size="icon"
-                >
-                  <Trash className="w-4 h-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
+          {currentPermissions.map((permission, index) => {
+            const routes = parseRoutes(permission.apiRoutes);
+            return (
+              <TableRow key={index}>
+                <TableCell>
+                  <input
+                    type="checkbox"
+                    onChange={() => handleCheckboxChange(permission.id)}
+                    checked={selectedPermissions.includes(permission.id)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span
+                          className="cursor-pointer hover:underline"
+                          onClick={() => copyToClipboard(permission.id)}
+                        >
+                          {formatId(permission.id)}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{permission.id}</p>
+                        <p>Click to copy</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </TableCell>
+                <TableCell>{permission.name}</TableCell>
+                <TableCell>
+                  {routes.length > 0 ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex flex-wrap gap-1 max-w-xs">
+                            {routes.slice(0, 2).map((route, idx) => (
+                              <span
+                                key={idx}
+                                className="inline-flex items-center px-2 py-1 text-xs font-medium text-white bg-blue-500 rounded-full"
+                              >
+                                {route.method} {route.path}
+                              </span>
+                            ))}
+                            {routes.length > 2 && (
+                              <span className="text-xs text-gray-500">
+                                +{routes.length - 2} more
+                              </span>
+                            )}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <ul className="list-disc pl-4">
+                            {routes.map((route, idx) => (
+                              <li key={idx}>
+                                {route.method} {route.path}
+                              </li>
+                            ))}
+                          </ul>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <span className="text-gray-500">No routes</span>
+                  )}
+                </TableCell>
+                <TableCell>{permission.description}</TableCell>
+                <TableCell>
+                  {new Date(permission.createdAt).toISOString().split("T")[0]}
+                </TableCell>
+                <TableCell className="flex space-x-2">
+                  <Button
+                    onClick={() => handleClickEdit(permission)}
+                    variant="outline"
+                    size="icon"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    onClick={() => handleClickDeletePermission(permission.id)}
+                    variant="destructive"
+                    size="icon"
+                  >
+                    <Trash className="w-4 h-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
 

@@ -70,11 +70,13 @@ const EditToken = ({
   };
 
   const handleEdit = () => {
-    if (editedToken && isValidJSON(bodyInput)) {
+    if (editedToken && isValidJSON(bodyInput) && editedToken.name.trim()) {
       onEdit(editedToken);
       onClose();
     } else {
-      console.error("Cannot save: Body must be valid JSON");
+      console.error(
+        "Cannot save: Body must be valid JSON and name is required"
+      );
     }
   };
 
@@ -98,6 +100,12 @@ const EditToken = ({
             onChange={handleChange}
             placeholder="Token ID"
             disabled
+          />
+          <Input
+            name="name" // Added name input
+            value={editedToken.name}
+            onChange={handleChange}
+            placeholder="Token Name"
           />
           <Input
             name="encryptToken"
@@ -126,7 +134,7 @@ const EditToken = ({
           <Button
             className="bg-blue-500 text-white hover:bg-blue-600"
             onClick={handleEdit}
-            disabled={!isValidJSON(bodyInput)}
+            disabled={!isValidJSON(bodyInput) || !editedToken.name.trim()}
           >
             Save Changes
           </Button>
