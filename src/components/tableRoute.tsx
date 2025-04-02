@@ -31,7 +31,12 @@ import DeleteConfirm from "./confirmBox";
 import DeleteMultipleConfirm from "./confirmMultipleBox";
 import DuplicateRoute from "./modalRoute/duplicateRoute";
 import CreateRouteModal from "./modalRoute/createRoute";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 import { copyToClipboard, formatId } from "../utils/handleId";
 
 interface TableRouteProps {
@@ -47,7 +52,6 @@ interface TableRouteProps {
 //     navigator.clipboard.writeText(id);
 //     toast.success("Copied ID to clipboard!");
 //   };
-
 
 type SortKey = keyof Route;
 type SortOrder = "asc" | "desc";
@@ -327,9 +331,8 @@ const TableRoute = ({ routes }: TableRouteProps) => {
   };
 
   const handleCreateRouteSubmit = (newRoute: Route) => {
-
     console.log("Fucking create new Route", newRoute);
-    
+
     createRouteMutation.mutate(newRoute, {
       onSuccess: () => {
         toast.success(`Route ${newRoute.name} created successfully`);
@@ -340,7 +343,6 @@ const TableRoute = ({ routes }: TableRouteProps) => {
       },
     });
   };
-
 
   return (
     <div className="w-full bg-white dark:bg-background border p-5 rounded-lg shadow-md">
@@ -466,28 +468,26 @@ const TableRoute = ({ routes }: TableRouteProps) => {
                     checked={selectedRoutes.includes(route.id)}
                   />
                 </TableCell>
-           
-               
-               <TableCell>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      className="cursor-pointer hover:underline"
-                      onClick={() => copyToClipboard(route.id)}
-                    >
-                      {formatId(route.id)}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{route.id}</p>
-                    <p>click to copy</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </TableCell>
-               
-               
+
+                <TableCell>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span
+                          className="cursor-pointer hover:underline"
+                          onClick={() => copyToClipboard(route.id)}
+                        >
+                          {formatId(route.id)}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{route.id}</p>
+                        <p>Click to copy</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </TableCell>
+
                 <TableCell>{route.name}</TableCell>
                 <TableCell>{route.route}</TableCell>
                 <TableCell>{route.method}</TableCell>

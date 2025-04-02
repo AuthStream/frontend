@@ -1,8 +1,11 @@
+// layouts/PrivateLayout.tsx
 import { Outlet } from "react-router-dom";
 import { SidebarProvider, useSidebar } from "../context/SidebarContext";
 import Sidebar from "../components/Sidebar";
-import Header from "../components/header";
+import HeaderPrivate from "../components/header"; // Rename to distinguish
+import HeaderPublic from "../components/headerPublic";
 import { ToastContainer } from "react-toastify";
+import { JWT_LOCAL_STORAGE_KEY } from "../constants/data";
 
 const Content = () => {
   const { isOpenSidebar } = useSidebar();
@@ -19,11 +22,13 @@ const Content = () => {
 };
 
 export default function PrivateLayout() {
+  const isAuthenticated = !!localStorage.getItem(JWT_LOCAL_STORAGE_KEY);
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex flex-col">
         <header className="fixed top-0 left-0 w-full z-20 bg-white shadow">
-          <Header />
+          {isAuthenticated ? <HeaderPrivate /> : <HeaderPublic />}
         </header>
 
         <div className="flex flex-1 mt-10">

@@ -25,7 +25,12 @@ import userService from "../api/service/userService";
 import ImportUser from "../components/modalGuestUser/importUser";
 import { useCreateBulkUsers } from "../hooks/useUserQueries";
 import { User } from "../api/type";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 import { copyToClipboard, formatId } from "../utils/handleId";
 
 interface TableGuestUserProps {
@@ -252,26 +257,25 @@ const TableGuestUser = ({ users }: TableGuestUserProps) => {
               </TableCell>
               <TableCell>{user.id}</TableCell>
 
+              <TableCell>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        className="cursor-pointer hover:underline"
+                        onClick={() => copyToClipboard(user.id)}
+                      >
+                        {formatId(user.id)}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{user.id}</p>
+                      <p>Click to copy</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </TableCell>
 
-               <TableCell>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      className="cursor-pointer hover:underline"
-                      onClick={() => copyToClipboard(user.id)}
-                    >
-                      {formatId(user.id)}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{user.id}</p>
-                    <p>click to copy</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </TableCell>
-              
               <TableCell>{user.username}</TableCell>
               <TableCell>{user.password}</TableCell>
               <TableCell>

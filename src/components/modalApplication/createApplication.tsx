@@ -11,7 +11,9 @@ import {
 import { Input } from "../ui/input";
 import { toast } from "react-toastify";
 import { useGetProviders } from "../../hooks/useProviderQueries";
+import { useGetTokens } from "../../hooks/useTokenQueries";
 import { Application } from "../../api/type";
+import { useNavigate } from "react-router-dom";
 
 interface CreateApplicationProps {
   isOpen: boolean;
@@ -24,8 +26,10 @@ const CreateApplication = ({
   onClose,
   onCreate,
 }: CreateApplicationProps) => {
-  const { data: providers, isLoading, error } = useGetProviders();
-  const [step, setStep] = useState(1);
+  const { data: providers, isLoading: providersLoading } = useGetProviders();
+  const { data: tokens, isLoading: tokensLoading } = useGetTokens();
+  const navigate = useNavigate();
+
   const [newApplication, setNewApplication] = useState<Application>({
     id: "",
     name: "",
@@ -35,8 +39,8 @@ const CreateApplication = ({
     createdAt: "",
     updateAt: "",
   });
-  const [extraFields, setExtraFields] = useState<string[]>([]);
-  const [inputValue, setInputValue] = useState("");
+
+  const [selectedTokenId, setSelectedTokenId] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -48,7 +52,13 @@ const CreateApplication = ({
     }));
   };
 
-  const resetApplication = () => {
+  const handleTokenSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSelectedTokenId(value);
+    setNewApplication((prev) => ({ ...prev, tokenId: value }));
+  };
+
+  const resetForm = () => {
     setNewApplication({
       id: "",
       name: "",
@@ -58,68 +68,54 @@ const CreateApplication = ({
       createdAt: "",
       updateAt: "",
     });
-    setStep(1);
-    setExtraFields([]);
+    setSelectedTokenId("");
   };
 
   const handleCreate = () => {
-    const { name, tokenId } = newApplication;
+    const trimmedName = newApplication.name.trim();
 
-    const trimmedName = name.trim();
-    const trimmedToken = tokenId.trim();
-
-    if (!trimmedName || !trimmedToken) {
-      toast.warning("All fields are required and cannot be empty.");
-      return;
-    }
-    // Kiểm tra token có hợp lệ không (ví dụ: tối thiểu 8 ký tự)
-    if (trimmedToken.length < 8) {
-      toast.warning("Application Token must be at least 8 characters long.");
+    if (!trimmedName) {
+      toast.warning("Application name is required.");
       return;
     }
 
-    // Gọi hàm onCreate với application đã được validate
+    if (!selectedTokenId) {
+      toast.warning("Please select a token.");
+      return;
+    }
+
     onCreate({
       ...newApplication,
-      adminId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       name: trimmedName,
-      tokenId: trimmedToken,
+      tokenId: selectedTokenId,
+      adminId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     });
-    resetApplication();
+
+    resetForm();
     onClose();
+    toast.success("Application created successfully!");
   };
-
-  // const handleCreate = () => {
-  //   //validate data ở đây
-
-  //   onCreate(newApplication);
-  //   resetApplication();
-  //   onClose();
-  // };
 
   const handleClose = () => {
-    resetApplication();
+    resetForm();
     onClose();
   };
 
-  const handleAddField = () => {
-    if (inputValue.trim() !== "") {
-      setExtraFields([...extraFields, inputValue.trim()]);
-      setInputValue("");
-    }
+  const handleNavigateToProvider = () => {
+    navigate("/provider");
   };
 
-  const handleRemoveField = (index: number) => {
-    setExtraFields(extraFields.filter((_, i) => i !== index));
+  const handleNavigateToToken = () => {
+    navigate("/token");
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>Create Application</DialogTitle>
           <DialogDescription>
-            {step === 1 ? "Select a provider." : "Enter application details."}
+            Enter application details and select an existing token.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -130,51 +126,72 @@ const CreateApplication = ({
             placeholder="Application Name"
           />
 
-          {isLoading ? (
-            <p>Loading providers...</p>
-          ) : providers && Array.isArray(providers) ? (
-            <select
-              name="providerId"
-              value={newApplication.providerId}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+          <div className="flex items-center space-x-2">
+            {providersLoading ? (
+              <p className="flex-1">Loading providers...</p>
+            ) : providers && Array.isArray(providers) ? (
+              <select
+                name="providerId"
+                value={newApplication.providerId}
+                onChange={handleChange}
+                className="flex-1 p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+              >
+                <option value="">Select Provider</option>
+                {providers.map((provider) => (
+                  <option key={provider.id} value={provider.id}>
+                    {provider.name
+                      ? `${provider.name} (${provider.id})`
+                      : provider.id}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="flex-1 text-red-500">No Providers Found</p>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleNavigateToProvider}
             >
-              <option value="">Select Provider</option>
-              {providers.map((provider) => (
-                <option key={provider.id} value={provider.id}>
-                  {provider.name}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <Button className="w-full bg-red-500 text-white hover:bg-red-600">
-              No Applications Found - Create One
+              New Provider
             </Button>
-          )}
-          <Input
-            name="tokenId"
-            value={newApplication.tokenId}
-            onChange={handleChange}
-            placeholder="Application Token"
-          />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            {tokensLoading ? (
+              <p className="flex-1">Loading tokens...</p>
+            ) : tokens && tokens.length > 0 ? (
+              <select
+                name="tokenId"
+                value={selectedTokenId}
+                onChange={handleTokenSelect}
+                className="flex-1 p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+              >
+                <option value="">Select a Token</option>
+                {tokens.map((token: any) => (
+                  <option key={token.id} value={token.id}>
+                    {token.name ? `${token.name} (${token.id})` : token.id}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="flex-1 text-red-500">No Tokens Found</p>
+            )}
+            <Button variant="outline" size="sm" onClick={handleNavigateToToken}>
+              New Token
+            </Button>
+          </div>
         </div>
         <DialogFooter>
-          {/* {step === 2 && (
-            <Button variant="outline" onClick={() => setStep(1)}>
-              Back
-            </Button>
-          )}
           <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
-          {step === 2 && ( */}
           <Button
             className="bg-blue-500 text-white hover:bg-blue-600"
             onClick={handleCreate}
           >
             Create
           </Button>
-          {/* )} */}
         </DialogFooter>
       </DialogContent>
     </Dialog>

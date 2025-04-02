@@ -9,10 +9,14 @@ import {
 import useMutationAction from "../provider/queryGlobal";
 
 export const useGetUsers = () => {
-  return useQuery<User>({
+  return useQuery<User[]>({
     queryKey: ["users"],
     queryFn: userService.getAllUsers,
   });
+};
+
+export const useGetUserById = () => {
+  return useMutationAction<User, string>(["users"], userService.getUserById);
 };
 
 export const useCreateUsers = () => {

@@ -11,6 +11,8 @@ import {
 import { Input } from "../ui/input";
 import { Application } from "../../api/type";
 import { useGetProviders } from "../../hooks/useProviderQueries";
+import { useGetTokens } from "../../hooks/useTokenQueries";
+import { useNavigate } from "react-router-dom";
 
 interface EditApplicationProps {
   isOpen: boolean;
@@ -25,7 +27,9 @@ const EditApplication = ({
   applicationToEdit,
   onEdit,
 }: EditApplicationProps) => {
-  const { data: providers, isLoading } = useGetProviders();
+  const { data: providers, isLoading: providersLoading } = useGetProviders();
+  const { data: tokens, isLoading: tokensLoading } = useGetTokens();
+  const navigate = useNavigate();
 
   const [editedApplication, setEditedApplication] =
     useState<Application | null>(null);
@@ -55,13 +59,17 @@ const EditApplication = ({
     }
   };
 
+  const handleNavigateToToken = () => {
+    navigate("/token");
+  };
+
   if (!editedApplication) {
     return null;
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>Edit Application</DialogTitle>
           <DialogDescription>
@@ -75,33 +83,62 @@ const EditApplication = ({
             onChange={handleChange}
             placeholder="Application Name"
           />
-          {isLoading ? (
-            <p>Loading providers...</p>
-          ) : providers && Array.isArray(providers) ? (
-            <select
-              name="providerId"
-              value={editedApplication.providerId}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+
+          <div className="flex items-center space-x-2">
+            {providersLoading ? (
+              <p className="flex-1">Loading providers...</p>
+            ) : providers && Array.isArray(providers) ? (
+              <select
+                name="providerId"
+                value={editedApplication.providerId}
+                onChange={handleChange}
+                className="flex-1 p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+              >
+                <option value="">Select Provider</option>
+                {providers.map((provider) => (
+                  <option key={provider.id} value={provider.id}>
+                    {provider.name
+                      ? `${provider.name} (${provider.id})`
+                      : provider.id}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="flex-1 text-red-500">No Providers Found</p>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/provider")}
             >
-              <option value="">Select Provider</option>
-              {providers.map((provider) => (
-                <option key={provider.id} value={provider.id}>
-                  {provider.name}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <Button className="w-full bg-red-500 text-white hover:bg-red-600">
-              No Applications Found - Create One
+              New Provider
             </Button>
-          )}
-          <Input
-            name="tokenId"
-            value={editedApplication.tokenId}
-            onChange={handleChange}
-            placeholder="Application Token"
-          />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            {tokensLoading ? (
+              <p className="flex-1">Loading tokens...</p>
+            ) : tokens && tokens.length > 0 ? (
+              <select
+                name="tokenId"
+                value={editedApplication.tokenId}
+                onChange={handleChange}
+                className="flex-1 p-2 border rounded-md bg-white dark:bg-gray-800 text-gray-600 text-sm"
+              >
+                <option value="">Select a Token</option>
+                {tokens.map((token: any) => (
+                  <option key={token.id} value={token.id}>
+                    {token.name ? `${token.name} (${token.id})` : token.id}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="flex-1 text-red-500">No Tokens Found</p>
+            )}
+            <Button variant="outline" size="sm" onClick={handleNavigateToToken}>
+              New Token
+            </Button>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>

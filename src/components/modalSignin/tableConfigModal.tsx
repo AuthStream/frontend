@@ -18,18 +18,18 @@ const argon2ConfigSchema = z.object({
   iterations: z.number().positive(),
   memory: z.number().positive(),
   parallelism: z.number().positive(),
-  salt: z.string().min(1, "Salt is required"),
+  salt: z.string().min(8, "Salt must be at least 8 characters long"),
 });
 
 const bcryptConfigSchema = z.object({
   workFactor: z.number().positive(),
-  salt: z.string().min(1, "Salt is required"),
+  salt: z.string().min(8, "Salt must be at least 8 characters long"),
 });
 
 const pbkdf2ConfigSchema = z.object({
   iterations: z.number().positive(),
   keyLength: z.number().positive(),
-  salt: z.string().min(1, "Salt is required"),
+  salt: z.string().min(8, "Salt must be at least 8 characters long"),
 });
 
 const scryptConfigSchema = z.object({
@@ -37,11 +37,11 @@ const scryptConfigSchema = z.object({
   r: z.number().positive(),
   p: z.number().positive(),
   keyLength: z.number().positive(),
-  salt: z.string().min(1, "Salt is required"),
+  salt: z.string().min(8, "Salt must be at least 8 characters long"),
 });
 
 const shaConfigSchema = z.object({
-  salt: z.string().min(1, "Salt is required"),
+  salt: z.string().min(8, "Salt must be at least 8 characters long"),
 });
 
 const tableConfigSchema = z.object({
@@ -49,7 +49,7 @@ const tableConfigSchema = z.object({
   usernameAttribute: z.string().min(1, "Username attribute is required"),
   passwordAttribute: z.string().min(1, "Password attribute is required"),
   hashingType: z.string().min(1, "Hashing type is required"),
-  salt: z.string().min(1, "Salt is required"),
+  salt: z.string().min(8, "Salt must be at least 8 characters long"),
   hashConfig: z.union([
     argon2ConfigSchema,
     bcryptConfigSchema,

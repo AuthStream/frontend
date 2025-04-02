@@ -21,6 +21,7 @@ interface CreateTokenProps {
 const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
   const [newToken, setNewToken] = useState<Token>({
     id: "",
+    name: "", // Added name field
     body: {},
     encryptToken: "",
     expiredDuration: 0,
@@ -60,9 +61,14 @@ const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
       console.error("Body must be valid JSON before creating token");
       return;
     }
+    if (!newToken.name.trim()) {
+      console.error("Name is required");
+      return;
+    }
     onCreate(newToken);
     setNewToken({
       id: "",
+      name: "", // Reset name
       body: {},
       encryptToken: "",
       expiredDuration: 0,
@@ -82,6 +88,12 @@ const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
+          <Input
+            name="name" // Added name input
+            value={newToken.name}
+            onChange={handleChange}
+            placeholder="Token Name"
+          />
           <Textarea
             name="body"
             value={bodyInput}
@@ -97,7 +109,7 @@ const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
           <Input
             type="number"
             name="expiredDuration"
-            value={newToken.expiredDuration}
+            value={newToken.expiredDuration.toString()}
             onChange={handleChange}
             placeholder="Token Expired Duration"
           />
@@ -109,7 +121,7 @@ const CreateToken = ({ isOpen, onClose, onCreate }: CreateTokenProps) => {
           <Button
             className="bg-blue-500 text-white hover:bg-blue-600"
             onClick={handleCreate}
-            disabled={!isValidJSON(bodyInput)}
+            disabled={!isValidJSON(bodyInput) || !newToken.name.trim()}
           >
             Create
           </Button>

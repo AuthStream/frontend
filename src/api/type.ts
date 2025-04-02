@@ -1,6 +1,8 @@
+import { StringToBoolean } from "class-variance-authority/types";
 
 export interface Token {
   id: string;
+  name:string;
   expiredDuration: number;
   body: object;
   encryptToken: string;
@@ -355,3 +357,11 @@ interface ScryptConfig extends BaseConfig {
 }
 
 interface ShaConfig extends BaseConfig {}
+
+export interface UserGroup
+{
+  userId:string;
+  groupId:string;
+  createdAt:string;
+  updatedAt:string;
+}

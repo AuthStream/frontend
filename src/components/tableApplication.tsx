@@ -30,7 +30,12 @@ import { toast } from "react-toastify";
 import DeleteMultipleConfirm from "./confirmMultipleBox";
 import DeleteConfirm from "./confirmBox";
 import { Application } from "../api/type";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 import { copyToClipboard, formatId } from "../utils/handleId";
 
 interface TableApplicationProps {
@@ -141,6 +146,7 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
     setApplicationToEdit(null);
   };
   const handleEditApplication = async (updatedApplication: Application) => {
+    // console.log("update", updatedApplication);
     try {
       editApplicationMutation.mutate(updatedApplication, {
         onSuccess: () => toast.success("Tokens Edit successfully"),
@@ -270,24 +276,24 @@ const TableApplication = ({ applications }: TableApplicationProps) => {
                 />
               </TableCell>
 
-               <TableCell>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      className="cursor-pointer hover:underline"
-                      onClick={() => copyToClipboard(application.id)}
-                    >
-                      {formatId(application.id)}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{application.id}</p>
-                    <p>click to copy</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </TableCell>
+              <TableCell>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        className="cursor-pointer hover:underline"
+                        onClick={() => copyToClipboard(application.id)}
+                      >
+                        {formatId(application.id)}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{application.id}</p>
+                      <p>Click to copy</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </TableCell>
 
               <TableCell>{application.name}</TableCell>
               <TableCell>{application.providerId}</TableCell>

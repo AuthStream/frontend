@@ -1,23 +1,37 @@
+// AppRouter.tsx
 import { Navigate, useRoutes } from "react-router-dom";
 import NotFound from "../pages/not-found/index";
-import { FC } from "react";
+import { FC, useState } from "react";
 import PrivateLayout from "../layouts/PrivateLayout";
 import PublicLayout from "../layouts/PublicLayout";
 import PrivateRoute from "./PrivateRoute";
 import PublicRoute from "./PublicRoute";
 import { JWT_LOCAL_STORAGE_KEY } from "../constants/data";
+import LoginConfirm from "../components/loginConfirm";
 
 const SignedRoute: FC<{
   element: JSX.Element;
-  requiredLogin: boolean;
-}> = ({ element, requiredLogin }) => {
+  path: string;
+}> = ({ element, path }) => {
   const isAuthenticated = localStorage.getItem(JWT_LOCAL_STORAGE_KEY);
-  if (!isAuthenticated && requiredLogin) {
-    return <Navigate to="/signin" />;
+  const [isLoginConfirmOpen, setIsLoginConfirmOpen] = useState(false);
+
+  // Allow dashboard without authentication
+  if (path === "/" || path === "/home") {
+    return element;
   }
 
-  if (isAuthenticated && !requiredLogin) {
-    return <Navigate to="/" />;
+  // If not authenticated, show login confirmation instead of direct redirect
+  if (!isAuthenticated) {
+    return (
+      <>
+        {element} {/* Render the page in the background */}
+        <LoginConfirm
+          isOpen={!isAuthenticated && !isLoginConfirmOpen}
+          onClose={() => setIsLoginConfirmOpen(false)}
+        />
+      </>
+    );
   }
 
   return element;
@@ -29,7 +43,7 @@ const routes = [
     children: [
       ...Object.values(PrivateRoute).map(({ path, component: Component }) => ({
         path,
-        element: <SignedRoute element={<Component />} requiredLogin={true} />,
+        element: <SignedRoute element={<Component />} path={path} />,
       })),
     ],
   },
@@ -38,7 +52,7 @@ const routes = [
     children: [
       ...Object.values(PublicRoute).map(({ path, component: Component }) => ({
         path,
-        element: <SignedRoute element={<Component />} requiredLogin={false} />,
+        element: <Component />,
       })),
     ],
   },
@@ -50,22 +64,6 @@ const routes = [
 
 const AppRouter: FC = () => {
   return useRoutes(routes);
-  // return (
-  //   <Routes>
-  //     <Route path="/home" element={<Dashboard />} />
-  //     <Route path="/about" element={<About />} />
-  //     <Route path="/route" element={<ProtectedRoute />} />
-  //     <Route path="/application" element={<Application />} />
-  //     <Route path="/provider" element={<Provider />} />
-  //     <Route path="/token" element={<Token />} />
-  //     <Route path="/message" element={<Message />} />
-  //     <Route path="/user" element={<User />} />
-  //     <Route path="/role" element={<Role />} />
-  //     <Route path="/group" element={<Group />} />
-  //     <Route path="/permission" element={<Permission />} />
-  //     <Route path="*" element={<NotFound />} />
-  //   </Routes>
-  // );
 };
 
 export default AppRouter;

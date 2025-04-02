@@ -16,7 +16,12 @@ import {
   TableHeader,
   TableRow,
 } from "../components/ui/table";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 import { copyToClipboard, formatId } from "../utils/handleId";
 
 import { Button } from "../components/ui/button";
@@ -43,7 +48,6 @@ interface TableRoleProps {
 
 type SortKey = keyof Role;
 type SortOrder = "asc" | "desc";
-
 
 export const useFetchRoles = () => {
   return useQuery({
@@ -151,43 +155,45 @@ const TableRole = ({ roles }: TableRoleProps) => {
 
   const handleCreateRole = () => setIsOpen(true);
 
-  
-const onCreate = async (newRole: Role) => {
-  try {
-    if (!newRole.name.trim()) {
-      toast.error("Role name is required");
-      return;
-    }
+  const onCreate = async (newRole: Role) => {
     try {
-      const parsedPermissions = JSON.parse(newRole.permissionId);
-      if (!Array.isArray(parsedPermissions) || parsedPermissions.length === 0) {
-        toast.error("At least one permission ID is required");
+      if (!newRole.name.trim()) {
+        toast.error("Role name is required");
         return;
       }
-    } catch {
-      toast.error("Invalid permission ID format");
-      return;
-    }
+      try {
+        const parsedPermissions = JSON.parse(newRole.permissionId);
+        if (
+          !Array.isArray(parsedPermissions) ||
+          parsedPermissions.length === 0
+        ) {
+          toast.error("At least one permission ID is required");
+          return;
+        }
+      } catch {
+        toast.error("Invalid permission ID format");
+        return;
+      }
 
-    console.log("New role: ", newRole);
-    
-    createRoleMutation.mutate(newRole, {
-      onSuccess: (createdRole) => {
-        toast.success(`Role ${newRole.name} created successfully`);
-        setRoleList((prev) => [...prev, createdRole]); // Thêm role mới vào state
-      },
-      onError: (error) => {
-        console.error("Error creating role: ", error);
-        toast.error(error.message);
-      },
-    });
-    setIsOpen(false);
-  } catch (error) {
-    console.error("Unexpected error in onCreate: ", error);
-    toast.error("Failed to create role");
-  }
-};
-const handleClickRefresh = () => refreshRoleMutation.refresh();
+      console.log("New role: ", newRole);
+
+      createRoleMutation.mutate(newRole, {
+        onSuccess: (createdRole) => {
+          toast.success(`Role ${newRole.name} created successfully`);
+          setRoleList((prev) => [...prev, createdRole]); // Thêm role mới vào state
+        },
+        onError: (error) => {
+          console.error("Error creating role: ", error);
+          toast.error(error.message);
+        },
+      });
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Unexpected error in onCreate: ", error);
+      toast.error("Failed to create role");
+    }
+  };
+  const handleClickRefresh = () => refreshRoleMutation.refresh();
 
   const handleClickEdit = (role: Role) => {
     setRoleToEdit(role);
@@ -201,22 +207,22 @@ const handleClickRefresh = () => refreshRoleMutation.refresh();
 
   const handleEditRole = async (updatedRole: Role) => {
     try {
-      console.log("fucking update role: ",updatedRole);
-      
-  editRoleMutation.mutate(updatedRole, {
-      onSuccess: (updatedData) => {
-        toast.success("Role updated successfully");
-        // Cập nhật roleList thủ công
-        setRoleList((prev) =>
-          prev.map((role) =>
-            role.id === updatedRole.id ? { ...role, ...updatedData } : role
-          )
-        );
-      },
-      onError: () => {
-        toast.error("Failed to edit role");
-      },
-    });
+      console.log("fucking update role: ", updatedRole);
+
+      editRoleMutation.mutate(updatedRole, {
+        onSuccess: (updatedData) => {
+          toast.success("Role updated successfully");
+          // Cập nhật roleList thủ công
+          setRoleList((prev) =>
+            prev.map((role) =>
+              role.id === updatedRole.id ? { ...role, ...updatedData } : role
+            )
+          );
+        },
+        onError: () => {
+          toast.error("Failed to edit role");
+        },
+      });
       setIsEditOpen(false);
     } catch (error) {
       toast.error("Failed to edit role");
@@ -356,24 +362,24 @@ const handleClickRefresh = () => refreshRoleMutation.refresh();
                   checked={selectedRoles.includes(role.id)}
                 />
               </TableCell>
-                <TableCell>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      className="cursor-pointer hover:underline"
-                      onClick={() => copyToClipboard(role.id)}
-                    >
-                      {formatId(role.id)}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{role.id}</p>
-                    <p>click to copy</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </TableCell>
+              <TableCell>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        className="cursor-pointer hover:underline"
+                        onClick={() => copyToClipboard(role.id)}
+                      >
+                        {formatId(role.id)}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{role.id}</p>
+                      <p>Click to copy</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </TableCell>
               <TableCell>{role.name}</TableCell>
               <TableCell>{role.groupId}</TableCell>
               <TableCell>{role.permissionId}</TableCell>
