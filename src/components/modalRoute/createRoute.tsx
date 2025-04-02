@@ -74,7 +74,11 @@ const CreateRouteModal = ({
       toast.warning("Name, Route, and Method are required.");
       return;
     }
-
+const routeRegex = /^\/.+/;
+  if (!routeRegex.test(trimmedRoute)) {
+    toast.warning("Route must start with '/' and have at least one character (e.g., '/home').");
+    return;
+  }
     onCreate({
       ...newRoute,
       name: trimmedName,

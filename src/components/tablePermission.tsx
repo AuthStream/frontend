@@ -143,7 +143,13 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
 
   const onCreate = async (newPermission: Permission) => {
     try {
-      createPermissionMutation.mutate(newPermission);
+      createPermissionMutation.mutate(newPermission,{
+        onSuccess (createPermission){
+          toast.success("create permission Successfully");
+                  setPermissionList((prev) => [...prev, createPermission]); 
+
+        }
+      });
       setIsOpen(false);
     } catch (error) {
       toast.error("Failed to create permission");
@@ -164,6 +170,8 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
 
   const handleEditPermission = async (updatedPermission: Permission) => {
     try {
+      console.log("fucking edit permission: ", updatedPermission);
+      
       editPermissionMutation.mutate(updatedPermission, {
         onSuccess: () => toast.success("Permission updated successfully"),
       });

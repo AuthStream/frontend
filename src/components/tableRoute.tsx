@@ -314,6 +314,9 @@ const TableRoute = ({ routes }: TableRouteProps) => {
   };
 
   const handleCreateRouteSubmit = (newRoute: Route) => {
+
+    console.log("Fucking create new Route", newRoute);
+    
     createRouteMutation.mutate(newRoute, {
       onSuccess: () => {
         toast.success(`Route ${newRoute.name} created successfully`);

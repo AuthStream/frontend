@@ -61,10 +61,10 @@ const EditRole = ({ isOpen, onClose, roleToEdit, onEdit }: EditRoleProps) => {
       return;
     }
 
-    if (!editedRole.groupId) {
-      toast.warning("A group must be selected.");
-      return;
-    }
+    // if (!editedRole.groupId) {
+    //   toast.warning("A group must be selected.");
+    //   return;
+    // }
 
     if (!editedRole.permissionId) {
       toast.warning("A permission must be selected.");

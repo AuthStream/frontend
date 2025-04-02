@@ -31,6 +31,8 @@ import {
 } from "../hooks/useRoleQueries";
 import roleService from "../api/service/roleService";
 import { Role } from "../api/type";
+import { useQuery } from "@tanstack/react-query";
+import axiosClient from "../api/axiosClient";
 
 interface TableRoleProps {
   roles: Role[];
@@ -38,6 +40,17 @@ interface TableRoleProps {
 
 type SortKey = keyof Role;
 type SortOrder = "asc" | "desc";
+
+
+export const useFetchRoles = () => {
+  return useQuery({
+    queryKey: ["roles"],
+    queryFn: async () => {
+      const response = await axiosClient.get("/roles");
+      return response.data as Role[];
+    },
+  });
+};
 
 const TableRole = ({ roles }: TableRoleProps) => {
   const [roleList, setRoleList] = useState(roles);
@@ -135,16 +148,43 @@ const TableRole = ({ roles }: TableRoleProps) => {
 
   const handleCreateRole = () => setIsOpen(true);
 
-  const onCreate = async (newRole: Role) => {
-    try {
-      createRoleMutation.mutate(newRole);
-      setIsOpen(false);
-    } catch (error) {
-      toast.error("Failed to create role");
+  
+const onCreate = async (newRole: Role) => {
+  try {
+    if (!newRole.name.trim()) {
+      toast.error("Role name is required");
+      return;
     }
-  };
+    try {
+      const parsedPermissions = JSON.parse(newRole.permissionId);
+      if (!Array.isArray(parsedPermissions) || parsedPermissions.length === 0) {
+        toast.error("At least one permission ID is required");
+        return;
+      }
+    } catch {
+      toast.error("Invalid permission ID format");
+      return;
+    }
 
-  const handleClickRefresh = () => refreshRoleMutation.refresh();
+    console.log("New role: ", newRole);
+    
+    createRoleMutation.mutate(newRole, {
+      onSuccess: (createdRole) => {
+        toast.success(`Role ${newRole.name} created successfully`);
+        setRoleList((prev) => [...prev, createdRole]); // Thêm role mới vào state
+      },
+      onError: (error) => {
+        console.error("Error creating role: ", error);
+        toast.error(error.message);
+      },
+    });
+    setIsOpen(false);
+  } catch (error) {
+    console.error("Unexpected error in onCreate: ", error);
+    toast.error("Failed to create role");
+  }
+};
+const handleClickRefresh = () => refreshRoleMutation.refresh();
 
   const handleClickEdit = (role: Role) => {
     setRoleToEdit(role);
@@ -158,9 +198,22 @@ const TableRole = ({ roles }: TableRoleProps) => {
 
   const handleEditRole = async (updatedRole: Role) => {
     try {
-      editRoleMutation.mutate(updatedRole, {
-        onSuccess: () => toast.success("Role updated successfully"),
-      });
+      console.log("fucking update role: ",updatedRole);
+      
+  editRoleMutation.mutate(updatedRole, {
+      onSuccess: (updatedData) => {
+        toast.success("Role updated successfully");
+        // Cập nhật roleList thủ công
+        setRoleList((prev) =>
+          prev.map((role) =>
+            role.id === updatedRole.id ? { ...role, ...updatedData } : role
+          )
+        );
+      },
+      onError: () => {
+        toast.error("Failed to edit role");
+      },
+    });
       setIsEditOpen(false);
     } catch (error) {
       toast.error("Failed to edit role");

@@ -139,7 +139,12 @@ const TableGroup = ({ groups }: TableGroupProps) => {
 
   const onCreate = async (newGroup: Group) => {
     try {
-      createGroupMutation.mutate(newGroup);
+      createGroupMutation.mutate(newGroup,{
+        onSuccess(createGroup){
+          toast.success("create group successfully");
+          setGroupList((prev) => [...prev, createGroup]);
+        }
+      });
       setIsOpen(false);
     } catch (error) {
       toast.error("Failed to create group");
