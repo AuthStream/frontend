@@ -6,7 +6,6 @@ import { DbConfig, DbPreviewRequest, TableConfig, RegisterData, RegisterResponse
       try{
         // console.log(data);
         const response=await axiosClient.post("/auth/login",data);
-        console.log(response.data);
 
         return response.data;
       }
@@ -50,7 +49,6 @@ import { DbConfig, DbPreviewRequest, TableConfig, RegisterData, RegisterResponse
     previewData: async (data: DbPreviewRequest ): Promise<any>=>
     {
       try{
-        // console.log(data);
         const response = await axiosClient.post("/previews/preview-data",data);
         return response.data;
       }
@@ -62,7 +60,6 @@ import { DbConfig, DbPreviewRequest, TableConfig, RegisterData, RegisterResponse
     submitConfig: async (data: DbConfig ): Promise<any>=>
       {
         try{
-          console.log(data);
           const response = await axiosClient.post("/admins/config",data);
           return response.data.data;
         }
@@ -88,7 +85,6 @@ import { DbConfig, DbPreviewRequest, TableConfig, RegisterData, RegisterResponse
       submitTableConfig: async (data: TableConfig ): Promise<any>=>
         {
           try{
-            console.log(data);
             const response = await axiosClient.post("/auth-table-configs",data);
             return response.data;
           }

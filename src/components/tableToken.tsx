@@ -18,13 +18,15 @@ import {
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import CreateToken from "./modalToken/createToken";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import EditToken from "./modalToken/editToken";
 import {
   useCreateToken,
   useEditToken,
   useDeleteToken,
   useDeleteMultipleToken,
+  useGetTokens,
+  useRefreshTokens,
 } from "../hooks/useTokenQueries";
 import { toast } from "react-toastify";
 import { Token } from "../api/type";
@@ -38,22 +40,29 @@ import {
 } from "./ui/tooltip";
 import { copyToClipboard, formatId } from "../utils/handleId";
 
-interface TableTokenProps {
-  tokens: Token[];
-}
-
 type SortKey = keyof Token;
 type SortOrder = "asc" | "desc";
 
-const TableToken = ({ tokens }: TableTokenProps) => {
-  const [tokenList, setTokenList] = useState(tokens);
+interface TableTokenProps {
+  onLoadingChange?: (isLoading: boolean) => void; // New prop to pass loading state
+}
+
+const TableToken = ({ onLoadingChange }: TableTokenProps) => {
+  const { data: tokens = [], isLoading } = useGetTokens();
+
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
+
   const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("id");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
   // Filter tokens by encryptToken or name
-  const filteredTokens = tokenList.filter(
+  const filteredTokens = tokens.filter(
     (token) =>
       token.encryptToken.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (token.name &&
@@ -94,7 +103,6 @@ const TableToken = ({ tokens }: TableTokenProps) => {
     }
   };
 
-  // Sort handler
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -105,13 +113,12 @@ const TableToken = ({ tokens }: TableTokenProps) => {
     setCurrentPage(1);
   };
 
-  // Search handler
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
   };
 
-  // Existing state and mutations
+  // Mutations and state
   const [isOpen, setIsOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [tokenToEdit, setTokenToEdit] = useState<Token | null>(null);
@@ -123,6 +130,7 @@ const TableToken = ({ tokens }: TableTokenProps) => {
   const editTokenMutation = useEditToken();
   const deleteTokenMutation = useDeleteToken();
   const deleteMultipleTokenMutation = useDeleteMultipleToken();
+  const refreshTokenMutation = useRefreshTokens();
 
   const handleCheckboxChange = (id: string) => {
     setSelectedTokens((prev) =>
@@ -136,34 +144,31 @@ const TableToken = ({ tokens }: TableTokenProps) => {
     setSelectedTokens(e.target.checked ? sortedTokens.map((t) => t.id) : []);
   };
 
-  const onCreate = async (newToken: Token) => {
-    try {
-      createTokenMutation.mutate(newToken, {
-        onSuccess: (createdToken) => {
-          setTokenList((prev) => [...prev, createdToken]);
-          toast.success("Token created successfully");
-          setIsOpen(false);
-        },
-        onError: () => {
-          toast.error("Failed to create token");
-        },
-      });
-    } catch (error) {
-      toast.error("Failed to create token");
-    }
+  const onCreate = (newToken: Token) => {
+    createTokenMutation.mutate(newToken, {
+      onSuccess: () => {
+        setIsOpen(false);
+        toast.success("Token created successfully");
+      },
+      onError: () => toast.error("Failed to create token"),
+    });
   };
 
   const handleCreateToken = () => setIsOpen(true);
 
-  const handleEditToken = async (updatedToken: Token) => {
-    try {
-      editTokenMutation.mutate(updatedToken, {
-        onSuccess: () => toast.success("Token updated successfully"),
-      });
-      setIsEditOpen(false);
-    } catch (error) {
-      toast.error("Failed to edit token");
-    }
+  const handleRefresh = () => {
+    // We'll define useRefreshTokens in the next step
+    refreshTokenMutation.refresh();
+  };
+
+  const handleEditToken = (updatedToken: Token) => {
+    editTokenMutation.mutate(updatedToken, {
+      onSuccess: () => {
+        setIsEditOpen(false);
+        toast.success("Token updated successfully");
+      },
+      onError: () => toast.error("Failed to edit token"),
+    });
   };
 
   const handleClickDeleteToken = (id: string) => {
@@ -171,18 +176,13 @@ const TableToken = ({ tokens }: TableTokenProps) => {
     setIsOpenConfirm(true);
   };
 
-  const handleDeleteToken = async (id: string) => {
-    try {
-      deleteTokenMutation.mutate(id, {
-        onSuccess: () => {
-          const updatedTokens = tokenList.filter((token) => token.id !== id);
-          setTokenList(updatedTokens);
-          toast.success("Token deleted successfully");
-        },
-      });
-    } catch (error) {
-      toast.error("Failed to delete token");
-    }
+  const handleDeleteToken = (id: string) => {
+    deleteTokenMutation.mutate(id, {
+      onSuccess: () => {
+        setIsOpenConfirm(false);
+        toast.success("Token deleted successfully");
+      },
+    });
   };
 
   const handleDeleteSelected = () => {
@@ -198,21 +198,19 @@ const TableToken = ({ tokens }: TableTokenProps) => {
       toast.warn("No tokens selected");
       return;
     }
-    try {
-      deleteMultipleTokenMutation.mutate(selectedTokens, {
-        onSuccess: () => {
-          const updatedToken = tokenList.filter(
-            (token) => !selectedTokens.includes(token.id)
-          );
-          setTokenList(updatedToken);
-          setSelectedTokens([]);
-          toast.success("Tokens deleted successfully");
-        },
-      });
-    } catch (error) {
-      toast.error("Failed to delete selected tokens");
-    }
+    deleteMultipleTokenMutation.mutate(selectedTokens, {
+      onSuccess: () => {
+        setSelectedTokens([]);
+        setIsOpenConfirmMultiple(false);
+        toast.success("Tokens deleted successfully");
+      },
+      onError: () => toast.error("Failed to delete selected tokens"),
+    });
   };
+
+  if (isLoading) {
+    return <div>Loading tokens...</div>;
+  }
 
   return (
     <div className="w-full bg-white dark:bg-background border p-5 rounded-lg shadow-md">
@@ -234,7 +232,7 @@ const TableToken = ({ tokens }: TableTokenProps) => {
           >
             <Plus className="w-4 h-4 mr-2" /> Create
           </Button>
-          <Button variant="outline">
+          <Button onClick={handleRefresh} variant="outline">
             <RefreshCw className="w-4 h-4 mr-2" /> Refresh
           </Button>
           <Button
@@ -253,7 +251,10 @@ const TableToken = ({ tokens }: TableTokenProps) => {
               <input
                 type="checkbox"
                 onChange={handleSelectAll}
-                checked={selectedTokens.length === sortedTokens.length}
+                checked={
+                  selectedTokens.length === sortedTokens.length &&
+                  sortedTokens.length > 0
+                }
               />
             </TableHead>
             <TableHead
@@ -284,57 +285,65 @@ const TableToken = ({ tokens }: TableTokenProps) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {currentTokens.map((token) => (
-            <TableRow key={token.id}>
-              <TableCell>
-                <input
-                  type="checkbox"
-                  onChange={() => handleCheckboxChange(token.id)}
-                  checked={selectedTokens.includes(token.id)}
-                />
-              </TableCell>
-              <TableCell>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span
-                        className="cursor-pointer hover:underline"
-                        onClick={() => copyToClipboard(token.id)}
-                      >
-                        {formatId(token.id)}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{token.id}</p>
-                      <p>Click to copy</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </TableCell>
-              <TableCell>{token.name || "N/A"}</TableCell>
-              <TableCell>{token.encryptToken}</TableCell>
-              <TableCell>{token.expiredDuration}</TableCell>
-              <TableCell>
-                <Button
-                  onClick={() => {
-                    setTokenToEdit(token);
-                    setIsEditOpen(true);
-                  }}
-                  variant="outline"
-                  size="icon"
-                >
-                  <Edit className="w-4 h-4" />
-                </Button>
-                <Button
-                  onClick={() => handleClickDeleteToken(token.id)}
-                  variant="destructive"
-                  size="icon"
-                >
-                  <Trash className="w-4 h-4" />
-                </Button>
+          {currentTokens.length > 0 ? (
+            currentTokens.map((token) => (
+              <TableRow key={token.id}>
+                <TableCell>
+                  <input
+                    type="checkbox"
+                    onChange={() => handleCheckboxChange(token.id)}
+                    checked={selectedTokens.includes(token.id)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span
+                          className="cursor-pointer hover:underline"
+                          onClick={() => copyToClipboard(token.id)}
+                        >
+                          {formatId(token.id)}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{token.id}</p>
+                        <p>Click to copy</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </TableCell>
+                <TableCell>{token.name || "N/A"}</TableCell>
+                <TableCell>{token.encryptToken}</TableCell>
+                <TableCell>{token.expiredDuration}</TableCell>
+                <TableCell>
+                  <Button
+                    onClick={() => {
+                      setTokenToEdit(token);
+                      setIsEditOpen(true);
+                    }}
+                    variant="outline"
+                    size="icon"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    onClick={() => handleClickDeleteToken(token.id)}
+                    variant="destructive"
+                    size="icon"
+                  >
+                    <Trash className="w-4 h-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center">
+                No tokens found
               </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
 
@@ -346,7 +355,7 @@ const TableToken = ({ tokens }: TableTokenProps) => {
           Previous
         </Button>
         <span>
-          Page {currentPage} of {totalPages}
+          Page {currentPage} of {totalPages || 1}
         </span>
         <Button
           onClick={() => handlePageChange(currentPage + 1)}

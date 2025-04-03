@@ -1,11 +1,15 @@
 import { AppWindow } from "lucide-react";
-import TableApplication from "../components/tableApplication.tsx";
+import TableApplication from "../components/tableApplication";
 import { ToggleButton } from "../context/SidebarContext";
-import { useGetApplications } from "../hooks/useApplicationQueries.tsx";
-import LoadingBar from "../components/LoadingBar.tsx";
+import LoadingBar from "../components/LoadingBar";
+import { useState } from "react";
 
 const Application = () => {
-  const { data: applications, isLoading, error } = useGetApplications();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLoadingChange = (loading: boolean) => {
+    setIsLoading(loading);
+  };
 
   return (
     <div className="h-full w-full flex items-center justify-center dark:bg-gray-950 p-6">
@@ -28,21 +32,7 @@ const Application = () => {
             </div>
           </div>
         </div>
-        {isLoading ? (
-          <p className="text-center text-gray-600 dark:text-gray-400">
-            Loading applications...
-          </p>
-        ) : error ? (
-          <p className="text-center text-red-500">
-            {error instanceof Error
-              ? error.message
-              : "An unknown error occurred"}
-          </p>
-        ) : applications && Array.isArray(applications) ? (
-          <TableApplication applications={applications} />
-        ) : (
-          <p>No tokens available</p>
-        )}
+        <TableApplication onLoadingChange={handleLoadingChange} />
       </div>
     </div>
   );

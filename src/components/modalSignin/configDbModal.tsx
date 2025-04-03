@@ -16,7 +16,7 @@ interface ConfigDBModalProps {
   onCheck: (dbConfig: DbConfig) => void;
   onClose: () => void;
   isConnectionChecked: boolean;
-  loading: boolean; // Passed from parent, used locally
+  loading: boolean;
 }
 
 const ConfigDBModal = ({
@@ -45,7 +45,9 @@ const ConfigDBModal = ({
     updatedAt: "",
   });
 
-  const [, setErrors] = useState<Partial<Record<keyof DbConfig, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof DbConfig, string>>>(
+    {}
+  );
   const [isFormValid, setIsFormValid] = useState(false);
 
   const parseUri = (uri: string) => {
@@ -54,7 +56,6 @@ const ConfigDBModal = ({
       const protocol = url.protocol.replace(":", "").toUpperCase();
       const hostname = url.hostname;
       const port = url.port ? parseInt(url.port) : 0;
-      // const pathname = url.pathname.slice(1);
       const params = new URLSearchParams(url.search);
       const username = params.get("user") || "";
       const password = params.get("password") || "";
@@ -109,6 +110,17 @@ const ConfigDBModal = ({
     }:${portStr}/${dbName}?user=${databaseUsername}&password=${databasePassword}&sslmode=${sslModeStr}`;
   };
 
+  const validateConnectionString = (
+    connectionString: string
+  ): string | null => {
+    if (!connectionString) return null;
+    const connStringRegex =
+      /^(?:[a-zA-Z]+):\/\/(?:[a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+(?::\d+)?(?:\/[a-zA-Z0-9-]+)*(?:\?.*)?$/;
+    if (!connStringRegex.test(connectionString))
+      return "Invalid connection string format.";
+    return null;
+  };
+
   const validateUri = (uri: string): string | null => {
     if (!uri) return "Database URI is required.";
     const uriRegex =
@@ -148,20 +160,31 @@ const ConfigDBModal = ({
   const validateForm = () => {
     const newErrors: Partial<Record<keyof DbConfig, string>> = {};
 
-    const uriError = validateUri(dbConfig.uri);
-    if (uriError) newErrors.uri = uriError;
+    // If connectionString is provided and valid, skip other validations
+    const connStringError = validateConnectionString(dbConfig.connectionString);
+    if (dbConfig.connectionString && !connStringError) {
+      setErrors({});
+      setIsFormValid(true);
+      return;
+    }
 
-    const hostError = validateHost(dbConfig.host);
-    if (hostError) newErrors.host = hostError;
+    // If no connectionString, validate other fields
+    if (!dbConfig.connectionString) {
+      const uriError = validateUri(dbConfig.uri);
+      if (uriError) newErrors.uri = uriError;
 
-    const portError = validatePort(dbConfig.port);
-    if (portError) newErrors.port = portError;
+      const hostError = validateHost(dbConfig.host);
+      if (hostError) newErrors.host = hostError;
 
-    const dbTypeError = validateDatabaseType(dbConfig.databaseType);
-    if (dbTypeError) newErrors.databaseType = dbTypeError;
+      const portError = validatePort(dbConfig.port);
+      if (portError) newErrors.port = portError;
 
-    const sslModeError = validateSslMode(dbConfig.sslMode);
-    if (sslModeError) newErrors.sslMode = sslModeError;
+      const dbTypeError = validateDatabaseType(dbConfig.databaseType);
+      if (dbTypeError) newErrors.databaseType = dbTypeError;
+
+      const sslModeError = validateSslMode(dbConfig.sslMode);
+      if (sslModeError) newErrors.sslMode = sslModeError;
+    }
 
     setErrors(newErrors);
     setIsFormValid(Object.keys(newErrors).length === 0);
@@ -174,7 +197,7 @@ const ConfigDBModal = ({
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    if (loading) return; // Prevent changes when loading
+    if (loading) return;
     const { name, value } = e.target;
     const newValue = name === "port" ? parseInt(value) || 0 : value;
     setDbConfig((prev) => ({ ...prev, [name]: newValue }));

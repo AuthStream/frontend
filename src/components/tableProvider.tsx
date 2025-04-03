@@ -18,7 +18,7 @@ import {
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import CreateProvider from "./modalProvider/createProvider";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import EditProvider from "./modalProvider/editProvider";
 import { ProviderType } from "../api/type";
 import {
@@ -26,6 +26,8 @@ import {
   useDeleteMultipleProvider,
   useDeleteProviders,
   useEditProviders,
+  useGetProviders,
+  useRefreshProviders,
 } from "../hooks/useProviderQueries";
 import { toast } from "react-toastify";
 import DeleteConfirm from "./confirmBox";
@@ -38,26 +40,31 @@ import {
 } from "./ui/tooltip";
 import { copyToClipboard, formatId } from "../utils/handleId";
 
-interface TableProviderProps {
-  providers: ProviderType[];
-}
-
 type SortKey = keyof ProviderType;
 type SortOrder = "asc" | "desc";
 
-const TableProvider = ({ providers }: TableProviderProps) => {
-  const [providerList, setProviderList] = useState(providers);
+interface TableProviderProps {
+  onLoadingChange?: (isLoading: boolean) => void; // New prop to pass loading state
+}
+
+const TableProvider = ({ onLoadingChange }: TableProviderProps) => {
+  const { data: providers = [], isLoading } = useGetProviders();
+
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
+
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("id");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
-  // Filter providers by name
-  const filteredProviders = providerList.filter((provider) =>
+  const filteredProviders = providers.filter((provider) =>
     provider.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Sort providers
   const sortedProviders = [...filteredProviders].sort((a, b) => {
     const aValue = a[sortKey];
     const bValue = b[sortKey];
@@ -82,7 +89,6 @@ const TableProvider = ({ providers }: TableProviderProps) => {
       : -1;
   });
 
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const totalPages = Math.ceil(sortedProviders.length / itemsPerPage);
@@ -97,7 +103,6 @@ const TableProvider = ({ providers }: TableProviderProps) => {
     }
   };
 
-  // Sort handler
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -108,13 +113,11 @@ const TableProvider = ({ providers }: TableProviderProps) => {
     setCurrentPage(1);
   };
 
-  // Search handler
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
   };
 
-  // Existing state and mutations
   const [isOpen, setIsOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [providerToEdit, setProviderToEdit] = useState<ProviderType | null>(
@@ -128,6 +131,7 @@ const TableProvider = ({ providers }: TableProviderProps) => {
   const editProviderMutation = useEditProviders();
   const deleteProviderMutation = useDeleteProviders();
   const deleteMultipleProviderMutation = useDeleteMultipleProvider();
+  const refreshProviderMutation = useRefreshProviders();
 
   const handleCheckboxChange = (id: string) => {
     setSelectedProviders((prev) =>
@@ -143,28 +147,28 @@ const TableProvider = ({ providers }: TableProviderProps) => {
     );
   };
 
-  const onCreate = async (newProvider: ProviderType) => {
-    try {
-      createProviderMutation.mutate(newProvider, {
-        onSuccess: () => toast.success("Provider created successfully"),
-      });
-      setIsOpen(false);
-    } catch (error) {
-      toast.error("Failed to create Provider");
-    }
+  const onCreate = (newProvider: ProviderType) => {
+    createProviderMutation.mutate(newProvider, {
+      onSuccess: () => {
+        setIsOpen(false);
+        toast.success("Provider created successfully");
+      },
+      onError: () => toast.error("Failed to create Provider"),
+    });
   };
 
   const handleCreateProvider = () => setIsOpen(true);
 
-  const handleEditProvider = async (updatedProvider: ProviderType) => {
-    try {
-      editProviderMutation.mutate(updatedProvider, {
-        onSuccess: () => toast.success("Provider updated successfully"),
-      });
-      setIsEditOpen(false);
-    } catch (error) {
-      toast.error("Failed to edit Provider");
-    }
+  const handleClickRefresh = () => refreshProviderMutation.refresh();
+
+  const handleEditProvider = (updatedProvider: ProviderType) => {
+    editProviderMutation.mutate(updatedProvider, {
+      onSuccess: () => {
+        setIsEditOpen(false);
+        toast.success("Provider updated successfully");
+      },
+      onError: () => toast.error("Failed to edit Provider"),
+    });
   };
 
   const handleClickDeleteProvider = (id: string) => {
@@ -173,19 +177,13 @@ const TableProvider = ({ providers }: TableProviderProps) => {
   };
 
   const handleDeleteProvider = (id: string) => {
-    try {
-      deleteProviderMutation.mutate(id, {
-        onSuccess: () => {
-          const updatedProvider = providerList.filter(
-            (provider) => provider.id !== id
-          );
-          setProviderList(updatedProvider);
-          toast.success("Provider deleted successfully");
-        },
-      });
-    } catch (error) {
-      toast.error("Something went wrong with delete provider");
-    }
+    deleteProviderMutation.mutate(id, {
+      onSuccess: () => {
+        setIsOpenConfirm(false);
+        toast.success("Provider deleted successfully");
+      },
+      onError: () => toast.error("Something went wrong with delete provider"),
+    });
   };
 
   const handleDeleteSelected = () => {
@@ -196,26 +194,24 @@ const TableProvider = ({ providers }: TableProviderProps) => {
     setIsOpenConfirmMultiple(true);
   };
 
-  const handleDeleteSelectedProviders = async () => {
+  const handleDeleteSelectedProviders = () => {
     if (selectedProviders.length === 0) {
       toast.warn("No providers selected");
       return;
     }
-    try {
-      deleteMultipleProviderMutation.mutate(selectedProviders, {
-        onSuccess: () => {
-          const updatedProvider = providerList.filter(
-            (provider) => !selectedProviders.includes(provider.id)
-          );
-          setProviderList(updatedProvider);
-          setSelectedProviders([]);
-          toast.success("Providers deleted successfully");
-        },
-      });
-    } catch (error) {
-      toast.error("Failed to delete selected providers");
-    }
+    deleteMultipleProviderMutation.mutate(selectedProviders, {
+      onSuccess: () => {
+        setSelectedProviders([]);
+        setIsOpenConfirmMultiple(false);
+        toast.success("Providers deleted successfully");
+      },
+      onError: () => toast.error("Failed to delete selected providers"),
+    });
   };
+
+  if (isLoading) {
+    return <div>Loading providers...</div>;
+  }
 
   return (
     <div className="w-full bg-white dark:bg-background border p-5 rounded-lg shadow-md">
@@ -237,7 +233,7 @@ const TableProvider = ({ providers }: TableProviderProps) => {
           >
             <Plus className="w-4 h-4 mr-2" /> Create
           </Button>
-          <Button variant="outline">
+          <Button onClick={handleClickRefresh} variant="outline">
             <RefreshCw className="w-4 h-4 mr-2" /> Refresh
           </Button>
           <Button
@@ -256,7 +252,10 @@ const TableProvider = ({ providers }: TableProviderProps) => {
               <input
                 type="checkbox"
                 onChange={handleSelectAll}
-                checked={selectedProviders.length === sortedProviders.length}
+                checked={
+                  selectedProviders.length === sortedProviders.length &&
+                  sortedProviders.length > 0
+                }
               />
             </TableHead>
             <TableHead
@@ -305,60 +304,88 @@ const TableProvider = ({ providers }: TableProviderProps) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {currentProviders.map((provider) => (
-            <TableRow key={provider.id}>
-              <TableCell>
-                <input
-                  type="checkbox"
-                  onChange={() => handleCheckboxChange(provider.id)}
-                  checked={selectedProviders.includes(provider.id)}
-                />
-              </TableCell>
-              <TableCell>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span
-                        className="cursor-pointer hover:underline"
-                        onClick={() => copyToClipboard(provider.id)}
-                      >
-                        {formatId(provider.id)}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{provider.id}</p>
-                      <p>Click to copy</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </TableCell>
-              <TableCell>{provider.name}</TableCell>
-              <TableCell>{provider.type}</TableCell>
-              <TableCell>{provider.domainName}</TableCell>
-              <TableCell>{provider.applicationId}</TableCell>
-              <TableCell>{provider.callbackUrl}</TableCell>
-              <TableCell>{provider.createdAt}</TableCell>
-              <TableCell className="flex space-x-2">
-                <Button
-                  onClick={() => {
-                    setProviderToEdit(provider);
-                    setIsEditOpen(true);
-                  }}
-                  variant="outline"
-                  size="icon"
-                >
-                  <Edit className="w-4 h-4" />
-                </Button>
-                <Button
-                  onClick={() => handleClickDeleteProvider(provider.id)}
-                  variant="destructive"
-                  size="icon"
-                >
-                  <Trash className="w-4 h-4" />
-                </Button>
+          {currentProviders.length > 0 ? (
+            currentProviders.map((provider) => (
+              <TableRow key={provider.id}>
+                <TableCell>
+                  <input
+                    type="checkbox"
+                    onChange={() => handleCheckboxChange(provider.id)}
+                    checked={selectedProviders.includes(provider.id)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span
+                          className="cursor-pointer hover:underline"
+                          onClick={() => copyToClipboard(provider.id)}
+                        >
+                          {formatId(provider.id)}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{provider.id}</p>
+                        <p>Click to copy</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </TableCell>
+                <TableCell>{provider.name}</TableCell>
+                <TableCell>{provider.type}</TableCell>
+                <TableCell>{provider.domainName}</TableCell>
+                <TableCell>
+                  {" "}
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span
+                          className="cursor-pointer hover:underline"
+                          onClick={() =>
+                            copyToClipboard(provider.applicationId)
+                          }
+                        >
+                          {formatId(provider.applicationId)}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{provider.applicationId}</p>
+                        <p>Click to copy</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </TableCell>
+                <TableCell>{provider.callbackUrl}</TableCell>
+                <TableCell>{provider.createdAt}</TableCell>
+                <TableCell className="flex space-x-2">
+                  <Button
+                    onClick={() => {
+                      setProviderToEdit(provider);
+                      setIsEditOpen(true);
+                    }}
+                    variant="outline"
+                    size="icon"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    onClick={() => handleClickDeleteProvider(provider.id)}
+                    variant="destructive"
+                    size="icon"
+                  >
+                    <Trash className="w-4 h-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={9} className="text-center">
+                No providers found
               </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
 
@@ -370,7 +397,7 @@ const TableProvider = ({ providers }: TableProviderProps) => {
           Previous
         </Button>
         <span>
-          Page {currentPage} of {totalPages}
+          Page {currentPage} of {totalPages || 1}
         </span>
         <Button
           onClick={() => handlePageChange(currentPage + 1)}

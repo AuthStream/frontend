@@ -109,7 +109,6 @@ const CreateRole = ({ isOpen, onClose, onCreate }: CreateRoleProps) => {
       return;
     }
 
-    console.log("Permission ID string: ", permissionId);
 
     onCreate({
       ...newRole,

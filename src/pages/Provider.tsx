@@ -1,10 +1,16 @@
 import { Search } from "lucide-react";
 import TableProvider from "../components/tableProvider";
 import { ToggleButton } from "../context/SidebarContext";
-import { useGetProviders } from "../hooks/useProviderQueries";
 import LoadingBar from "../components/LoadingBar";
+import { useState } from "react";
+
 const Provider = () => {
-  const { data: providers, isLoading, error } = useGetProviders();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLoadingChange = (loading: boolean) => {
+    setIsLoading(loading);
+  };
+
   return (
     <div className="h-full w-full flex items-center justify-center dark:bg-gray-950 p-6">
       <LoadingBar isLoading={isLoading} />
@@ -25,21 +31,7 @@ const Provider = () => {
             </div>
           </div>
         </div>
-        {isLoading ? (
-          <p className="text-center text-gray-600 dark:text-gray-400">
-            Loading providers...
-          </p>
-        ) : error ? (
-          <p className="text-center text-red-500">
-            {error instanceof Error
-              ? error.message
-              : "An unknown error occurred"}
-          </p>
-        ) : providers && Array.isArray(providers) ? (
-          <TableProvider providers={providers} />
-        ) : (
-          <p>No provider available</p>
-        )}
+        <TableProvider onLoadingChange={handleLoadingChange} />
       </div>
     </div>
   );

@@ -66,12 +66,10 @@ const TableRole = ({ roles }: TableRoleProps) => {
   const [sortKey, setSortKey] = useState<SortKey>("id");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
-  // Filter roles by name
   const filteredRoles = roleList.filter((role) =>
     role.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Sort roles
   const sortedRoles = [...filteredRoles].sort((a, b) => {
     const aValue = a[sortKey];
     const bValue = b[sortKey];
@@ -96,7 +94,6 @@ const TableRole = ({ roles }: TableRoleProps) => {
       : -1;
   });
 
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const totalPages = Math.ceil(sortedRoles.length / itemsPerPage);
@@ -111,7 +108,6 @@ const TableRole = ({ roles }: TableRoleProps) => {
     }
   };
 
-  // Sort handler
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -122,13 +118,11 @@ const TableRole = ({ roles }: TableRoleProps) => {
     setCurrentPage(1);
   };
 
-  // Search handler
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
   };
 
-  // Existing state and mutations
   const [isOpen, setIsOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [roleToEdit, setRoleToEdit] = useState<Role | null>(null);
@@ -175,7 +169,6 @@ const TableRole = ({ roles }: TableRoleProps) => {
         return;
       }
 
-      console.log("New role: ", newRole);
 
       createRoleMutation.mutate(newRole, {
         onSuccess: (createdRole) => {
@@ -207,12 +200,10 @@ const TableRole = ({ roles }: TableRoleProps) => {
 
   const handleEditRole = async (updatedRole: Role) => {
     try {
-      console.log("fucking update role: ", updatedRole);
 
       editRoleMutation.mutate(updatedRole, {
         onSuccess: (updatedData) => {
           toast.success("Role updated successfully");
-          // Cập nhật roleList thủ công
           setRoleList((prev) =>
             prev.map((role) =>
               role.id === updatedRole.id ? { ...role, ...updatedData } : role
