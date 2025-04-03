@@ -3,7 +3,7 @@ import axiosClient from "../axiosClient.ts";
 
 const providerService = {
     
-    getAllProviders: async (): Promise<{ contents: ProviderType[] }> => {
+    getAllProviders: async (): Promise<ProviderType[]> => {
         try {
             const response = await axiosClient.get("/providers");
             return response.data.data;

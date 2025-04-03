@@ -53,12 +53,10 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
   const [sortKey, setSortKey] = useState<SortKey>("id");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
-  // Filter permissions by name
   const filteredPermissions = permissionList.filter((permission) =>
     permission.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Sort permissions
   const sortedPermissions = [...filteredPermissions].sort((a, b) => {
     const aValue = a[sortKey];
     const bValue = b[sortKey];
@@ -83,7 +81,6 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
       : -1;
   });
 
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const totalPages = Math.ceil(sortedPermissions.length / itemsPerPage);
@@ -98,7 +95,6 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
     }
   };
 
-  // Sort handler
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -109,13 +105,11 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
     setCurrentPage(1);
   };
 
-  // Search handler
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
   };
 
-  // Parse apiRoutes safely
   const parseRoutes = (routes: string): { path: string; method: string }[] => {
     try {
       return JSON.parse(routes);
@@ -124,7 +118,6 @@ const TablePermission = ({ permissions }: TablePermissionProps) => {
     }
   };
 
-  // Existing state and mutations
   const [isOpen, setIsOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [permissionToEdit, setPermissionToEdit] = useState<Permission | null>(

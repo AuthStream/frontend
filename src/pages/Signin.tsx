@@ -89,7 +89,6 @@ const SignIn = () => {
     try {
       loginMutation.mutate(signinData, {
         onSuccess: (response) => {
-          console.log(response);
           if (signinData.username === "admin@authstream.com") {
             setRegisterModalOpen(true);
           } else {
@@ -221,6 +220,7 @@ const SignIn = () => {
   };
 
   const handlePreviewTable = async (data: tableSchema[]) => {
+    // console.log("alo", data);
     try {
       previewDataMutation.mutate(
         { tables: data, connectionString: config.connectionString },

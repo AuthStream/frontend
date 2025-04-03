@@ -6,7 +6,6 @@ const applicationService = {
   getAllApplications: async (): Promise<Application[]> => {
     try {
       const response = await axiosClient.get("/applications");
-      console.log(response.data);
       return response.data.data;
   } catch (error) {
       throw error;

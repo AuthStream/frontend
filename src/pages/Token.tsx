@@ -1,11 +1,15 @@
 import { Shield } from "lucide-react";
 import TableToken from "../components/tableToken";
 import { ToggleButton } from "../context/SidebarContext";
-import { useGetTokens } from "../hooks/useTokenQueries";
 import LoadingBar from "../components/LoadingBar";
+import { useState } from "react";
 
 const Token = () => {
-  const { data: tokens, isLoading, error } = useGetTokens();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLoadingChange = (loading: boolean) => {
+    setIsLoading(loading);
+  };
 
   return (
     <div className="h-full w-full flex items-center justify-center dark:bg-gray-950 p-6">
@@ -26,22 +30,7 @@ const Token = () => {
             </div>
           </div>
         </div>
-
-        {isLoading ? (
-          <p className="text-center text-gray-600 dark:text-gray-400">
-            Loading tokens...
-          </p>
-        ) : error ? (
-          <p className="text-center text-red-500">
-            {error instanceof Error
-              ? error.message
-              : "An unknown error occurred"}
-          </p>
-        ) : tokens && Array.isArray(tokens) ? (
-          <TableToken tokens={tokens} />
-        ) : (
-          <p>No tokens available</p>
-        )}
+        <TableToken onLoadingChange={handleLoadingChange} />
       </div>
     </div>
   );

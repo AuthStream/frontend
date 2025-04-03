@@ -22,7 +22,6 @@ const permissionService = {
 
   createPermission: async (newPermission: Permission): Promise<Permission> => {
     try {
-      console.log(newPermission);
       const response = await axiosClient.post("/permissions", newPermission);
       return response.data;
     } catch (error) {

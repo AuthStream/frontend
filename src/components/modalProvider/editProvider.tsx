@@ -55,11 +55,7 @@ const EditProvider = ({
 
   const handleEdit = () => {
     if (!editedProvider) return;
-    if (
-      !editedProvider.name ||
-      !editedProvider.type ||
-      !editedProvider.applicationId
-    ) {
+    if (!editedProvider.name || !editedProvider.type) {
       alert("Please fill in all required fields.");
       return;
     }
